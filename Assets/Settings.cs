@@ -48,15 +48,17 @@ public class Settings : MonoBehaviour
         if (OpenFileDialog.GetOpenFileName(pth))
         {
             ExcelPath = pth.file; //选择的文件路径;  
-            Debug.Log(ExcelPath);
+            Debug.Log("path "+ExcelPath);
 
             PathText.text = ExcelPath;
 
             if (ExcelPath != PlayerPrefs.GetString(keyName))
             {
+                Debug.Log("!=");
                 MyHomePage.Instance.ClearAllData();
                 PriceManager.Instance.ClearAllData();
                 PriceManager.Instance.DoLoadThread(ExcelPath);
+                PriceManager.Instance.count = 1;
             }
             PlayerPrefs.SetString(keyName, ExcelPath);
         }

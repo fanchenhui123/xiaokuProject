@@ -678,7 +678,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 3553910729015622626, guid: a23d0a44e9e4a0f429f101737d4ebc1d,
           type: 3}
-        m_MethodName: countToggle
+        m_MethodName: CountToggle
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 448268771972015456}
