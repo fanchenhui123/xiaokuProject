@@ -165,7 +165,6 @@ public class PriceManager : MonoBehaviour
             DoPostCarType();
             UpdateUI();
             LoadExcelEndEvent();
-            
         }
     }
 
@@ -524,9 +523,21 @@ public class PriceManager : MonoBehaviour
         GameObject go,gos;
         RegistorItem reItem;
         PriceManagerItem item;
-        
+        string carType=priceInfos[0].carType;
         for (int i = 0; i < priceInfos.Count; i++)
         {
+            gos = Instantiate(registorMgrItem,regisItemContainer);
+            registorItems.Add(gos);
+            reItem = gos.GetComponent<RegistorItem>();
+            if (string.IsNullOrEmpty(priceInfos[i].carType))
+            {
+                carType = priceInfos[i - 1].carType;
+                 priceInfos[i].carType=carType;
+            }
+            reItem.SetItemContent((i+1).ToString(),priceInfos[i].carNumber,priceInfos[i].vehicleSystem,priceInfos[i].memo,priceInfos[i].carType);//库存管理显示的
+
+            
+            
             if (priceInfos[i].carNumber != null && !carNumberList.Contains(priceInfos[i].carNumber))
                 carNumberList.Add(priceInfos[i].carNumber);             //避免读取Excel表格时候，重复添加 
             if (priceInfos[i].carType != "" && !carTypeList.Contains(priceInfos[i].carType))
@@ -536,11 +547,7 @@ public class PriceManager : MonoBehaviour
                 item = go.GetComponent<PriceManagerItem>();
                 item.SetItemContent(count.ToString(), priceInfos[i].guidancePrice, priceInfos[i].vehicleSystem, priceInfos[i].carType, "未上架");//订单管理显示的
 
-                gos = Instantiate(registorMgrItem,regisItemContainer);
-                registorItems.Add(gos);
-                reItem = gos.GetComponent<RegistorItem>();
-                reItem.SetItemContent(count.ToString(),priceInfos[i].carNumber,priceInfos[i].vehicleSystem,priceInfos[i].memo,priceInfos[i].carType);//库存管理显示的
-                
+               
                 
                 if (item.offerPriceData == null)
                     item.offerPriceData = new PostDataForOfferPrice();

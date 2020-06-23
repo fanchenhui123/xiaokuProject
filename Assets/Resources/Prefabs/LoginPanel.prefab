@@ -653,7 +653,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &7044770586614910081
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3724,9 +3724,7 @@ MonoBehaviour:
   remember: {fileID: 9052511719113998183}
   LoginPanel: {fileID: 8448858351069904874}
   RegisterPanel: {fileID: 6383308339701926526}
-  messagePanelManager: {fileID: 0}
-  bodyView: {fileID: 0}
-  tableView: {fileID: 0}
+  homePage: {fileID: 0}
 --- !u!1 &8303712056574468106
 GameObject:
   m_ObjectHideFlags: 0

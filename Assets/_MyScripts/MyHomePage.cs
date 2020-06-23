@@ -82,7 +82,9 @@ public class MyHomePage : MonoBehaviour
 
     private void PriceManager_LoadExcelEndEvent()
     {
-        priceInfos = dBManager.QueryTable<PriceInfo>();
+        Debug.Log(" event load excel");
+            // priceInfos = dBManager.QueryTable<PriceInfo>();
+       priceInfos = PriceManager.Instance.priceInfos;
         if (priceInfos.Count > 0)
         {
             UpdateUI();
@@ -175,6 +177,12 @@ public class MyHomePage : MonoBehaviour
     //    }
 
     //}
+
+
+    public void RefreshItem()
+    {
+        UpdateUI();
+    }
 
     /// <summary>
     /// 依据数据库或Excel内数据，刷新报价列表

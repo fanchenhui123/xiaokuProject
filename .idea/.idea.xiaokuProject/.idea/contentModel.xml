@@ -50,7 +50,10 @@
           <e p="fch" t="Include">
             <e p="AccountReset.cs" t="Include" />
             <e p="carSourceMgr.cs" t="Include" />
+            <e p="ChangeWindowScale.cs" t="Include" />
             <e p="RegistorItem.cs" t="Include" />
+            <e p="SpecialCarAdd.cs" t="Include" />
+            <e p="SpecialOfferCar.cs" t="Include" />
           </e>
           <e p="MsgCard.cs" t="Include" />
           <e p="MsgCenterCtrl.cs" t="Include" />

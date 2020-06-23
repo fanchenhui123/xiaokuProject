@@ -18,7 +18,7 @@ public class carSourceMgr : MonoBehaviour
 
     public void CreatCarCode()//生成车架号方法
     {
-       //_carCode += LoginManager.Instance.userId;
+       _carCode += PlayerPrefs.GetString("username", "");
         for (int i = 0; i < 2; i++)
         {
             if (!string.IsNullOrEmpty(texts[i].text))
@@ -74,16 +74,7 @@ public class carSourceMgr : MonoBehaviour
         _item.carType = texts[1].text;
         _item.vehicleSystem = texts[0].text;
         PriceManager.Instance.priceInfos.Add(_item);
-        /*//读取填写的数据并加入到priceInfos里；
-        _gameObject = Instantiate(registorMgrItem,regisItemContainer);
-        _registorItem = _gameObject.GetComponent<RegistorItem>();
-        _registorItem.SetItemContent(PriceManager.Instance.count.ToString(),_carCode,texts[0].text,texts[3].text,texts[1].text);
-        //车库管理页面添加此条信息
-        go = Instantiate(priceManagerItem, itemContainer.transform);
-        item = go.GetComponent<PriceManagerItem>();
-        item.SetItemContent(PriceManager.Instance.count.ToString(), "",
-            texts[0].text,texts[1].text, "未上架");//订单管理显示的*/
-        //价格管理页面添加此条信息
+      
     }
 
    
@@ -130,16 +121,13 @@ public class carSourceMgr : MonoBehaviour
         {
             if (allRegistor[i].isOn)
             {
-               // Debug.Log("before "+PriceManager.Instance.priceInfos[28].carNumber);
-                //removeCar.Add(allRegistor[i].transform.parent.gameObject);
+               
                 j = (allRegistor[i].transform.parent.Find("Text_carNumber").GetComponent<Text>().text);
                 for (int k = 0; k < PriceManager.Instance.priceInfos.Count; k++)
                 {
-                   // Debug.Log(PriceManager.Instance.carNumberList[k]);
                     if (PriceManager.Instance.priceInfos[k].carNumber==j)
                     {
                         PriceManager.Instance.priceInfos.Remove(PriceManager.Instance.priceInfos[k]);
-                       // Debug.Log(PriceManager.Instance.priceInfos[k].carNumber+"   "+k);
                     }
                 }
             }
