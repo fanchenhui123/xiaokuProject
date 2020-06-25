@@ -121,7 +121,8 @@ public class LoginManager : MonoBehaviour
                 else
                 {
                     warnText.text = jdata["msg"].ToString();
-                }               
+                }
+                Debug.Log(jdata.ToString());
             }
             else
             {

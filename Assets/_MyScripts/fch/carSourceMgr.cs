@@ -9,25 +9,20 @@ public class carSourceMgr : MonoBehaviour
 {
     public List<Text> texts=new List<Text>();
     private string _carCode;
-    List<string> _removeCarIndexList=new List<string>();
 
-    private void Start()
-    {
-       
-    }
-
+    
     public void CreatCarCode()//生成车架号方法
     {
-       _carCode += PlayerPrefs.GetString("username", "");
+        _carCode += PlayerPrefs.GetString("username", "");
         for (int i = 0; i < 2; i++)
         {
             if (!string.IsNullOrEmpty(texts[i].text))
             {
-                _carCode += texts[i].text;
+                _carCode += PinYinHelper.ToPinYin(texts[i].text);
             }
             else
             {
-                Debug.Log("缺少信息");
+                texts[texts.Count - 1].text = "缺少信息";
                 return;
             }
         }
@@ -41,7 +36,7 @@ public class carSourceMgr : MonoBehaviour
     {
         if (string.IsNullOrEmpty(_carCode))
         {
-            Debug.Log("无车架号信息");
+            texts[texts.Count - 1].text = "无车架号";
         }
         else
         {
@@ -50,15 +45,15 @@ public class carSourceMgr : MonoBehaviour
             _carCode = null;
             texts[texts.Count - 1].text = null;
         }
+        
+        
     }
 
     private PriceInfo _item=new PriceInfo();
     private RegistorItem _registorItem;
     private GameObject _gameObject,go;
-    public GameObject registorMgrItem;
-    public Transform regisItemContainer;
     private PriceManagerItem item;
-    public GameObject priceManagerItem, itemContainer;
+    
     public void UpdateItems()
     {
         _item.carNumber = _carCode;
@@ -113,7 +108,6 @@ public class carSourceMgr : MonoBehaviour
    // List<GameObject> removeCar=new List<GameObject>();
     public void RemoveCar()
     {
-       
         
         Toggle[] allRegistor = registorContent.GetComponentsInChildren<Toggle>().ToArray();
         string j=null;
@@ -146,22 +140,7 @@ public class carSourceMgr : MonoBehaviour
         PriceManager.Instance.priceItems.Clear();
         PriceManager.Instance.carTypeList.Clear();
         PriceManager.Instance.count = 1;
-       // PriceManager.Instance.loadEnd = true;
         PriceManager.Instance.UpdateUI();
-        /*Debug.Log(_removeCarIndexList.Count+"   选择的数量");
-        for (int i = 0; i < _removeCarIndexList.Count; i++)
-        {
-            _removeCarPrice.Add( PriceManager.Instance.priceInfos[Convert.ToInt32( _removeCarIndexList[i])]);
-        }
-        
-        for (int i = 0; i < _removeCarPrice.Count; i++)
-        {
-            Debug.Log("remove car"+_removeRegisItem[i].name);
-            PriceManager.Instance.priceInfos.Remove(_removeCarPrice[i]);
-            _removeRegisItem[i].SetActive(false);
-        }
-
-        _removeCarIndexList = null;*/
     }
 
     public void OpenAddCar(Transform trans)

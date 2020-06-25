@@ -79,7 +79,7 @@ public class PriceManagerItem : MonoBehaviour
     
 }
 
-public class PostDataForOfferPrice
+public class PostDataForOfferPrice 
 {
     public PostDataForOfferPrice()
     {

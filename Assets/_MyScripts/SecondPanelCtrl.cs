@@ -13,6 +13,10 @@ public class SecondPanelCtrl : View
     public GameObject PageMsgCenter;
     public GameObject PageOrderManager;
     public GameObject PageSettings;
+
+    public GameObject priceM;
+
+    public GameObject SpecialCar;
    // public GameObject pageCarSourceMgr;
     public GameObject pageRegistorMgr;
 
@@ -65,6 +69,14 @@ public class SecondPanelCtrl : View
                 CloseAllPages();
                 PagePriceManager.SetActive(true);
                 break;
+            case "btn_priceM":
+                CloseAllPages();
+                PagePriceManager.SetActive(true);
+                break;
+            case "btn_specialCar":
+               // CloseAllPages();
+                SpecialCar.SetActive(true);
+                break;
             case "btn_msgCenter":
                 CloseAllPages();
                 PageMsgCenter.SetActive(true);
@@ -89,6 +101,9 @@ public class SecondPanelCtrl : View
                 CloseAllPages();
                 pageRegistorMgr.SetActive(true);
                 break;
+            /*case "btn_SpecialOfferMgr"
+                CloseAllPages();*/
+                
             default:
                 break;
         }
@@ -120,6 +135,17 @@ public class SecondPanelCtrl : View
         }
     }
 
+    private bool biu=true;
+    public List<Transform> priceMgrSons=new List<Transform>();
+    public void OpenPriceMgr()//打开关闭 消息管理子按钮，小三角按钮的方法
+    {
+        for (int i = 0; i < priceMgrSons.Count; i++)
+        {
+            priceMgrSons[i].gameObject.SetActive(biu);
+        }
+
+        biu = !biu;
+    }
 
     public void CloseAllPages()
     {
@@ -130,6 +156,7 @@ public class SecondPanelCtrl : View
         PageSettings.SetActive(false);
         //pageCarSourceMgr.SetActive(false);
         pageRegistorMgr.SetActive(false);
+        SpecialCar.SetActive(false);
     }
 
     
