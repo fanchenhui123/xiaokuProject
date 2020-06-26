@@ -121,7 +121,6 @@ public class MyLoginManager : MonoBehaviour
 
         networkManager.DoPost(API.LoginUrl1, form, delegate (string responseCode, string data)
         {
-            Debug.Log("responseCode:" + responseCode + "|" + data);
             if (responseCode == "200")
             {
                 JsonData jdata = JsonMapper.ToObject(data);

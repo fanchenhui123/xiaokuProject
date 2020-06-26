@@ -116,7 +116,6 @@ public class DBManager
     //更新表操作
     public void CreateTable(Type type)
     {
-        Debug.Log("测试新的创建表格方式");
         //获取一个类型的所有属性
         PropertyInfo[] p_list = type.GetProperties();
 
@@ -549,12 +548,11 @@ public class DBManager
         {
             //数据库存放在 Asset/StreamingAssets
             string path = Application.streamingAssetsPath + "/" + dbName + ".sqlite";
-            Debug.Log("打印地址"+ path);
+           
             //新建数据库连接
             connection = new SqliteConnection(@"Data Source = " + path);
             //打开数据库
             connection.Open();
-            Debug.Log("打开数据库");
         }
         catch (Exception ex)
         {

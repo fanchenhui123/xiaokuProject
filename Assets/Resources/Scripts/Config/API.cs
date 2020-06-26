@@ -35,6 +35,15 @@ public class API
 
     public static string _GetMsgList = "https://service.xiaokucc.cn/api/merchant/order";
     public static string _GetMsgList1 = "http://test.cheyuw.cn/api/merchant/order";
+    
+    //2020.6.25新增
+    public static string _GetMsgList23 = "http://op.cunguangmed.com:3000/mock/54/api/client/order/show";
+    public static string PostYiJia = "http://op.cunguangmed.com:3000/mock/54/api/client/reply";
+    public static string GetCarInfo = "http://op.cunguangmed.com:3000/mock/54/api/client/cart/show";
+    public static string PostConfirmYiJia = "http://op.cunguangmed.com:3000/mock/54/api/client/approve";
+
+    public static string PostDeleteCarinfo = "http://test.cheyuw.cn//api/merchant/data/delete";
+    //2020.6.25新增
 
     public static string _PostReply = "https://service.xiaokucc.cn/api/merchant/reply";
     public static string _PostReply1 = "http://test.cheyuw.cn/api/merchant/reply";

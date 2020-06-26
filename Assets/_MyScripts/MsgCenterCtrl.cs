@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using LitJson;
 using System;
+using System.Text;
+using UnityEngine.Networking;
 
 public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
 {
@@ -31,10 +33,9 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
     public Transform contentParentJYWC;
     public Transform contentParentYJ;
 
-
     private void Start()
     {
-        confirmAndBack.onClick.AddListener(OnClickConfirm);
+       // confirmAndBack.onClick.AddListener(OnClickConfirm);
         continueAndBack.onClick.AddListener(OnClickContinue);
 
         networkManager = NetworkManager.Instance;
@@ -59,6 +60,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                     msgCard.GetComponent<MsgCard>().text_yajin.text = "押金已支付";
                     msgCard.GetComponent<MsgCard>().text_yajin.color = Color.green;
                 }
+              
                 for (int i = 0; i < repliesOrders.Count; i++)
                 {
                     GameObject msgCard = Instantiate(messageCardPrefab, contentParentYJ);
@@ -66,7 +68,8 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                     msgCard.GetComponent<MsgCard>().text_carNumber.text = "车架号：" + repliesOrders[i].cart.carNumber;
                     msgCard.GetComponent<MsgCard>().text_cart_type.text = "车型：" + repliesOrders[i].cart.carType;
                     msgCard.GetComponent<MsgCard>().text_order_no.text = "订单号：" + repliesOrders[i].order_no;
-                    if (completedOrders[i].repies.Length > 0)
+                   
+                    if ( repliesOrders[i].repies.Length > 0)
                     {
                         msgCard.GetComponent<MsgCard>().text_price.text = "报价：" + repliesOrders[i].repies[repliesOrders[i].repies.Length - 1].price;
                         msgCard.GetComponent<MsgCard>().text_user_id.text = "用户ID：" + repliesOrders[i].repies[repliesOrders[i].repies.Length - 1].user_id.ToString();
@@ -74,11 +77,36 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                     msgCard.GetComponent<MsgCard>().text_vehicleSystem.text = "车系：" + repliesOrders[i].cart.vehicleSystem;
                     msgCard.GetComponent<MsgCard>().text_yajin.text = "押金已支付";
                     msgCard.GetComponent<MsgCard>().text_yajin.color = Color.green;
+                    
+                    msgCard.GetComponent<MsgCard>().GetData(repliesOrders[i]);
+                  
+                   // StartCoroutine(GetYJinfo(repliesOrders[i].order_no));
                 }
             });
         }
 
     }
+
+    public Transform dialog;
+    public  IEnumerator GetYJinfo(string id)
+    {
+        yield return new WaitForSeconds(10);
+        Debug.Log("start cor");
+        UnityWebRequest request=new UnityWebRequest();
+        request.url = API._GetMsgList23+"?order_id="+id;
+        
+        yield return request.SendWebRequest();
+        if (request.responseCode==200)
+        {
+            Debug.Log("222");
+        }
+        else
+        {
+            Debug.Log("2222211112   " +request.responseCode);
+        }
+    }
+
+
 
 
     /// <summary>
@@ -114,8 +142,6 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
         string url = API._GetMsgList1;
         networkManager.DoGet1(url, (responseCode, data) =>
         {
-            Debug.Log("responseCode:" + responseCode + "|" + data);
-
             if (responseCode == 200)
             {
                 //Response_Msg responseMsg = JsonMapper.ToObject<Response_Msg>(data);
@@ -182,6 +208,10 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                 }
                 updateUI();
                 //Debug.Log("________" + msgItemList[msgItemList.Count - 1].cart_id);
+            }
+            else
+            {
+                Debug.Log("Get YJinfo list error  "+responseCode.ToString());
             }
         }, networkManager.token);
 
@@ -278,8 +308,10 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
         public string create_time;
         public string update_time;
         public int deposit;
+        public cost costInfo;
     }
 
+   
     public class CartLoanInfo
     {
         public int id;
@@ -346,6 +378,20 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
         public string per_page;
         public int to;
         public int total;
+    }
+    
+    public class  YiJia
+    {
+        public string cart_id;
+        public string price;
+        public string content;
+        public string cart_loan_id;
+        public string cart_boutique_id;
+    }
+    
+    public class  ConfirmYJ
+    {
+        public string cart_id;
     }
 
 }

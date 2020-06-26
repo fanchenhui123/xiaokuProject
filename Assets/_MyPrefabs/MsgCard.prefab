@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6257878182011001156}
   - component: {fileID: 6257878182011001157}
   m_Layer: 5
-  m_Name: Button
+  m_Name: resBtn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -286,8 +286,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b421f8af46500545a084dea91346d49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  commit: {fileID: 0}
-  msgs: []
+  commit: {fileID: 6257878182011001157}
   text_order_no: {fileID: 6257878183059673230}
   text_cart_type: {fileID: 6257878182148884202}
   text_vehicleSystem: {fileID: 6257878182465427332}
@@ -296,6 +295,8 @@ MonoBehaviour:
   text_user_id: {fileID: 6257878182496816801}
   text_price: {fileID: 6257878183402293981}
   text_yajin: {fileID: 1887453932392026732}
+  dialogItem: {fileID: 1782129247890738798, guid: b0a0f6fd743160445afa7d0089ee5d1f,
+    type: 3}
 --- !u!114 &7050555594668490707
 MonoBehaviour:
   m_ObjectHideFlags: 0

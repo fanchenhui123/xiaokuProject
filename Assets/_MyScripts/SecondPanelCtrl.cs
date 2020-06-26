@@ -101,9 +101,10 @@ public class SecondPanelCtrl : View
                 CloseAllPages();
                 pageRegistorMgr.SetActive(true);
                 break;
-            /*case "btn_SpecialOfferMgr"
-                CloseAllPages();*/
-                
+            case "btn_SpecialOfferMgr":
+                CloseAllPages();
+                SpecialCar.SetActive(true);
+                break;
             default:
                 break;
         }
