@@ -139,8 +139,7 @@ public class DBManager
         //开始构造sql命令
         string sql = "create table if not exists ";
         sql += table_name + field_list + ";";
-
-        Debug.Log(sql);
+        
 
         ExecuteQuery(sql);
 
@@ -302,7 +301,6 @@ public class DBManager
         //生成查询语句
         string sql = "select * from " + tableName
             + " where " + key + "='" + value + "';";
-        Debug.Log(sql);
         var result = ExecuteQuery(sql);
         //	定义结果数据列表
         Dictionary<string, string> rowDic = new Dictionary<string, string>();
@@ -360,8 +358,7 @@ public class DBManager
 
         string sql = (sqlPrefix + sqlMiddle1.Substring(0, sqlMiddle1.Length - 1) +
             sqlMiddle2.Substring(0, sqlMiddle2.Length - 1) + sqlSuffix);
-
-        Debug.Log(sql);
+        
         //执行插入操作
         ExecuteQuery(sql);
         //完毕
@@ -375,8 +372,7 @@ public class DBManager
         //生成查询语句
         string sql = "select * from " + tableName
             + " group by " + groupName + " order by id;";
-
-        Debug.Log(sql);
+        
 
         var result = ExecuteQuery(sql);
 

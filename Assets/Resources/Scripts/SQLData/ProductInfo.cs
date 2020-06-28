@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -32,6 +33,7 @@ public class ProductInfo
     //颜色（外/内）
     [SQLField(Name = "color", Type = "text", Title = "颜色")]
     public string color { get; set; }
+
 
     //车架号
     [SQLField(Name = "carNumber", Type = "text", Title = "车架号", IsUnique = true)]
@@ -82,7 +84,12 @@ public class ProductInfo
     [SQLField(Name = "memo", Type = "text", Title = "备注")]
     public string memo { get; set; }
 
-
+    public object GetValue(string propertyName) 
+    {   
+        return this.GetType().GetProperty(propertyName).GetValue(this, null);   
+    } 
+ 
+    
 }
 [SQLTable(Name = "product_info1")]
 public class ProductInfo1 : ProductInfo

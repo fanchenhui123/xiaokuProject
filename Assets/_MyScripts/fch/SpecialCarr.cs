@@ -14,10 +14,16 @@ public class SpecialCarr : MonoBehaviour
    private string currRegisterAreaType;
    public ToggleGroup togglGroup;
    public Toggle toggleCity, toggleProvince, toggleCountry;
-   PriceInfo needPost=new PriceInfo();
+   public PriceInfo needPost=new PriceInfo();
+   public Dropdown SearchResDropdown;
+   public List<Dropdown.OptionData>  optionList;//精品方案
+   public List<string> TJSJ=new List<string>();//特价车上架
+   public List<PriceInfo> ChangeStatus=new List<PriceInfo>();
    private void Awake()
    {
       instance = this;
+      
+      optionList = new List<Dropdown.OptionData>();
       toggleCity.onValueChanged.AddListener((value)=> {
          currRegisterAreaType = "3";
       });
@@ -31,19 +37,70 @@ public class SpecialCarr : MonoBehaviour
       });
    }
 
+   private void OnEnable()
+   {
+     
+   }
+
+   List<PriceInfo> SearchResults=new List<PriceInfo>();
+List<Dropdown.OptionData> carNumList=new List<Dropdown.OptionData>();
    public void  BtnSearch()
    {
+      SearchResults.Clear();
+      carNumList.Clear();
       for (int i = 0; i < PriceManager.Instance.priceInfos.Count; i++)
       {
-         if (PriceManager.Instance.priceInfos[i].carNumber==CarNumText.text)
+         if (PriceManager.Instance.priceInfos[i].carNumber.Contains(CarNumText.text))
          {
-            InfoTexts[0].text = PriceManager.Instance.priceInfos[i].carType;
-            InfoTexts[1].text = PriceManager.Instance.priceInfos[i].vehicleSystem;
-            needPost=(PriceManager.Instance.priceInfos[i]);
+            if (!PriceManager.Instance.putSJ.Contains(CarNumText.text))
+            {
+               if (!TJSJ.Contains(CarNumText.text))
+               {
+                  SearchResults.Add(PriceManager.Instance.priceInfos[i]);
+               }
+            }
+           
          }
       }
+
+      if (SearchResults.Count==0)
+      {
+         tip.instance.SetMessae("未查找到符合条件的结果",1.5f);
+      }
+      else if (SearchResults.Count==1)
+      {
+         Dropdown.OptionData opdt=new Dropdown.OptionData();
+         opdt.text = SearchResults[0].carNumber;
+         carNumList.Add(opdt);
+         InfoTexts[0].text = SearchResults[0].carType;
+         InfoTexts[1].text = SearchResults[0].vehicleSystem;
+         needPost=SearchResults[0];
+      }
+      else
+      {
+         for (int i = 0; i < SearchResults.Count; i++)
+         {
+            Dropdown.OptionData opdt=new Dropdown.OptionData();
+            opdt.text = SearchResults[i].carNumber;
+            carNumList.Add(opdt);
+         } 
+         SearchResDropdown.onValueChanged.AddListener(showSearchData);
+      }
+      
+     
+     
+      SearchResDropdown.options = carNumList;
+      //SearchResDropdown.onValueChanged.
    }
-   
+
+   private void showSearchData(int index)
+   {
+      Debug.Log("????");
+      InfoTexts[0].text = SearchResults[index].carType;
+      InfoTexts[1].text = SearchResults[index].vehicleSystem;
+      needPost=SearchResults[index];
+   }
+
    /*IEnumerator getCarinfo()
    {
       UnityWebRequest request=new UnityWebRequest();
@@ -77,25 +134,37 @@ public class SpecialCarr : MonoBehaviour
 
    public void BtnSave()
    {
-      StartCoroutine(PostNeedChangeData(needPost));
+      if (string.IsNullOrEmpty(InfoTexts[0].text) || string.IsNullOrEmpty(InfoTexts[1].text) )
+      {
+         tip.instance.SetMessae("未选择车辆");
+      }
+      else
+      {
+         ChangeStatus.Add(needPost);
+         StartCoroutine(PostNeedChangeData(ChangeStatus));
+      }
    }
 
    
-   IEnumerator  PostNeedChangeData(PriceInfo ned)//post特价车
+   IEnumerator  PostNeedChangeData(List<PriceInfo> ned)//post特价车
    {
       WWWForm form = new WWWForm();
 
-      try
+
+      for (int i = 0; i < ned.Count; i++)
       {
-         ned.vehicleSystem = ned.vehicleSystem.Replace("库存", "");
-      }
-      catch (Exception e)
-      {
-         Debug.Log(e);
-        // throw;
-      }
-      string jsonString = JsonMapper.ToJson(ned);
+         ned[i].vehicleSystem = ned[i].vehicleSystem.Replace("库存", "");
+           
+         string jsonString = JsonMapper.ToJson(ned[i]);
          JsonData jsonData = JsonMapper.ToObject(jsonString);
+         
+         for (int j = 0; j < jsonData.Count; j++)
+         {
+            if (jsonData[j]==null)
+            {
+               jsonData[j] = "";
+            }
+         } // Debug.Log(jsonString);
          jsonData["net_price"] = InfoTexts[2].text;
          jsonData["registration_price"] = InfoTexts[3].text;
          jsonData["insurance_price"] = InfoTexts[4].text;
@@ -103,14 +172,22 @@ public class SpecialCarr : MonoBehaviour
          jsonData["financial_agents_price"] = InfoTexts[6].text;
          jsonData["other_price"] = InfoTexts[7].text;
          jsonData["content_remark"] = InfoTexts[8].text;//装饰费
-                                                        //界面编辑的//的信息
+         //界面编辑的//的信息
+         
+         jsonData["registration_type"] = ""; 
+         jsonData["insurance_type"] = "";
+         jsonData["appear_color"] = "";
+         
          
          jsonData["cart_price_type"] ="2" ;//特价车
          jsonData["registration_area_type"] = currRegisterAreaType;//车的地区国 省 市
-         Debug.Log("________准备上传的 jsonData:" + jsonData["net_price"]);
+         Debug.Log("________准备上传的 jsonData:" + jsonData.ToJson());
          jsonString = jsonData.ToJson();
          form.AddField("d[]", jsonString);
-         PriceManager.Instance.networkManager.DoPost1(API._PostOfferPrice1, form, (responseCode, content) =>
+      }
+
+      
+      PriceManager.Instance.networkManager.DoPost1(API.PostCarsInfo, form, (responseCode, content) =>
       {
          if (responseCode=="200")
          {
@@ -118,16 +195,29 @@ public class SpecialCarr : MonoBehaviour
             {
                InfoTexts[i].text = "";
             }
+            tip.instance.SetMessae("保存成功");
+            for (int i = 0; i < ned.Count; i++)
+            {
+               TJSJ.Add(ned[i].carNumber);
+            }
+           
+         }
+         else
+         {
+            tip.instance.SetMessae("保存失败");
          }
          Debug.Log("____responseCode:" + responseCode + ", content:" + content);
       },  PriceManager.Instance.networkManager.token);
+
+       
+         
+         
       yield break;
    }
 
    public Text EditorText;
    public Dropdown EditorDropdown;
-   public Button add, remove;
-   public List<Dropdown.OptionData>  optionList=new List<Dropdown.OptionData>();//精品方案
+
    public void addInfo()//添加按钮功能
    {
       Dropdown.OptionData optionData=new Dropdown.OptionData();

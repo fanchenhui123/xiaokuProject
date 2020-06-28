@@ -41,6 +41,7 @@ public class API
     public static string PostYiJia = "http://op.cunguangmed.com:3000/mock/54/api/client/reply";
     public static string GetCarInfo = "http://op.cunguangmed.com:3000/mock/54/api/client/cart/show";
     public static string PostConfirmYiJia = "http://op.cunguangmed.com:3000/mock/54/api/client/approve";
+    public static string PostCarsInfo = "http://test.cheyuw.cn/api/merchant/data/batch";
 
     public static string PostDeleteCarinfo = "http://test.cheyuw.cn//api/merchant/data/delete";
     //2020.6.25新增

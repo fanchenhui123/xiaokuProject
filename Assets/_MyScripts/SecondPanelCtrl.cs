@@ -16,7 +16,7 @@ public class SecondPanelCtrl : View
 
     public GameObject priceM;
 
-    public GameObject SpecialCar;
+    public GameObject SpecialCarPanel;
    // public GameObject pageCarSourceMgr;
     public GameObject pageRegistorMgr;
 
@@ -28,12 +28,14 @@ public class SecondPanelCtrl : View
     protected override void Awake()
     {
         Instance = this;
+        
     }
 
     protected override void Start()
     {
         base.Start();
         networkManager = NetworkManager.Instance;
+        PagePriceManager.SetActive(true);
     }
 
     protected override void Update()
@@ -61,10 +63,10 @@ public class SecondPanelCtrl : View
         base.OnBtnClick(go);
         switch (go.name)
         {
-            case "btn_home":
+            /*case "btn_home":
                 CloseAllPages();
                 PageHome.SetActive(true);
-                break;
+                break;*/
             case "btn_priceManager":
                 CloseAllPages();
                 PagePriceManager.SetActive(true);
@@ -74,8 +76,8 @@ public class SecondPanelCtrl : View
                 PagePriceManager.SetActive(true);
                 break;
             case "btn_specialCar":
-               // CloseAllPages();
-                SpecialCar.SetActive(true);
+                CloseAllPages();
+                SpecialCarPanel.SetActive(true);
                 break;
             case "btn_msgCenter":
                 CloseAllPages();
@@ -103,7 +105,7 @@ public class SecondPanelCtrl : View
                 break;
             case "btn_SpecialOfferMgr":
                 CloseAllPages();
-                SpecialCar.SetActive(true);
+                SpecialCarPanel.SetActive(true);
                 break;
             default:
                 break;
@@ -157,7 +159,7 @@ public class SecondPanelCtrl : View
         PageSettings.SetActive(false);
         //pageCarSourceMgr.SetActive(false);
         pageRegistorMgr.SetActive(false);
-        SpecialCar.SetActive(false);
+        SpecialCarPanel.SetActive(false);
     }
 
     

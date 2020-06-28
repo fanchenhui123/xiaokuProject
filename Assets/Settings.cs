@@ -52,13 +52,17 @@ public class Settings : MonoBehaviour
 
             PathText.text = ExcelPath;
 
-            if (ExcelPath != PlayerPrefs.GetString(keyName))
+            if (ExcelPath != PlayerPrefs.GetString(keyName))//路径相同文件名不同也是！=,如果文件不同就删除数据重新读
             {
                 Debug.Log("!=");
-                MyHomePage.Instance.ClearAllData();
                 PriceManager.Instance.ClearAllData();
                 PriceManager.Instance.DoLoadThread(ExcelPath);
-                PriceManager.Instance.count = 1;
+               // PriceManager.Instance.ReadCarPrice(ExcelPath);
+                tip.instance.SetMessae("删除数据，重新读取表格");
+            }
+            else//否则不删除数据重新读
+            {
+               // PriceManager.Instance.DoLoadThread(ExcelPath);
             }
             PlayerPrefs.SetString(keyName, ExcelPath);
         }
@@ -71,9 +75,9 @@ public class Settings : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(Interval*60 );
-            Debug.Log("jiazai");
+            tip.instance.SetMessae("自动重新读取表格");
             //考虑什么时候开始自动加载，决定了自动加载的路径是否是离线数据
-            //PriceManager.Instance.ReadCarPrice(ExcelPath);
+            PriceManager.Instance.ReadCarPrice(ExcelPath);
         }
     }
 

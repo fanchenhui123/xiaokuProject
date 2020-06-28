@@ -53,7 +53,8 @@ public class MsgCard : MonoBehaviour
             }
             
             //聊天模式下确认按键添加新的监听
-            NegotiatePrice.Instance.msg=msg;
+            MsgCenterCtrl.Instance.chatMessage = msg;
+            //NegotiatePrice.Instance.msg=msg;
             //聊天界面
         }
         else if (msg.repies.Length==0)

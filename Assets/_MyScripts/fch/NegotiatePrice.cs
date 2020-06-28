@@ -11,12 +11,12 @@ public class NegotiatePrice : MonoBehaviour
 {
     public static NegotiatePrice Instance;
     public List<Text> Texts=new List<Text>();
-    public List<string> methodList=new List<string>();//金融方案
+    private List<string> methodList=new List<string>();//金融方案
     private float num = 1f;
     private string carid;//当前议价车辆ID ，确认议价时需要
     public List<Toggle>  toggles;
     public GameObject SkipWindowPanel;//弹窗
-    public Dropdown dropDown;//精品方案
+    public Dropdown JPdropDown;//精品方案
     public List<Text> mehodTextList=new List<Text>();//金融方案的三个text
     //加数字的方法，小箭头的方法
     public void AddCount(InputField tt)
@@ -57,8 +57,7 @@ public class NegotiatePrice : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-        SkipWindowPanel=GameObject.Find("SkipWindow");
-        SkipWindowPanel.SetActive(false);
+        SkipWindowPanel=MyLoginManager.instance.skipWindow;
         SF = GameObject.Find("SF").GetComponent<InputField>();
         FQ = GameObject.Find("FQ").GetComponent<InputField>();
         YG = GameObject.Find("YG").GetComponent<InputField>();
@@ -69,17 +68,27 @@ public class NegotiatePrice : MonoBehaviour
         mehodTextList.Add(GameObject.Find("FAO").GetComponent<Text>());
         mehodTextList.Add(GameObject.Find("FAS").GetComponent<Text>());
         mehodTextList.Add(GameObject.Find("FAT").GetComponent<Text>());
-        RefreshPriceMeth();
         btnConfirm = GameObject.Find("confirm").GetComponent<Button>();
         btnConfirm.onClick.AddListener(ShowWindow);
         btnConfirm = GameObject.Find("keepLast").GetComponent<Button>();
         btnConfirm.onClick.AddListener(ShowWindow);
-        dropDown.options = SpecialCarr.instance.optionList;
+      
+       
+        RefreshPriceMeth();
         
     }
 
-   
     
+    private void Start()
+    {
+       // SkipWindowPanel.SetActive(false);
+        GameObject JPdrop = GameObject.FindGameObjectWithTag("JPDD");
+        JPdropDown = JPdrop.transform.GetComponent<Dropdown>();
+        Debug.Log(SpecialCarr.instance);
+        JPdropDown.options = SpecialCarr.instance.optionList;
+    }
+
+
     /// <summary>
     /// 新建贷款方案并显示
     /// </summary>
@@ -171,43 +180,16 @@ public class NegotiatePrice : MonoBehaviour
             }
         }
         firstYiJia.cart_loan_id=index;//金融方案
-        firstYiJia.cart_boutique_id = dropDown.value.ToString();
+        firstYiJia.cart_boutique_id = JPdropDown.value.ToString();
 
         string jsonData = JsonMapper.ToJson(firstYiJia);
-        StartCoroutine(postYJ(jsonData));
+        StartCoroutine(chaYJMgr.instance.postYJ(jsonData));
     }
     
-    public Text chatPrice, chatMemo;
-    private string ChatYJString;
-    public MsgCenterCtrl.MessageDataItem msg=new MsgCenterCtrl.MessageDataItem();
-    public void ChatYJ()
-    {
-        Debug.Log("msg.cartid "+msg.body);
-      //  btnChatSend.onClick.RemoveAllListeners();
-        MsgCenterCtrl.YiJia ChatYiJia=new MsgCenterCtrl.YiJia();
-        ChatYiJia.cart_id = msg.cart_id.ToString();
-        ChatYiJia.price = chatPrice.text;
-        ChatYiJia.content = chatMemo.text;
-        ChatYiJia.cart_loan_id = msg.cart_loan_id;
-        ChatYiJia.cart_boutique_id = msg.cart_boutique_id.ToString();
-         ChatYJString = JsonMapper.ToJson(ChatYiJia);
-         StartCoroutine(postYJ(ChatYJString));
-       
-    }
+   
 
     public GameObject  dialogItem;
-    IEnumerator postYJ(string jsonstring )
-    {
-        UnityWebRequest webRequest=new UnityWebRequest(API.PostYiJia);
-        webRequest.uploadHandler=new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonstring));
-        yield return webRequest.SendWebRequest();
-        if (webRequest.responseCode==200)
-        {
-            Debug.Log("议价发送成功");
-            chatPrice.text = "";
-            chatMemo.text = "";
-        }
-    }
+   
 
     public Button btnConfirm;
 
@@ -233,7 +215,7 @@ public class NegotiatePrice : MonoBehaviour
         yield return  webRequest.SendWebRequest();
         if (webRequest.responseCode==200)
         {
-            Debug.Log("确认议价成功");
+            tip.instance.SetMessae("确认议价发送成功");
             SkipWindowPanel.SetActive(false);
         }
     }

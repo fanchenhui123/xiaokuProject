@@ -10,7 +10,7 @@ public class PriceManagerItem : MonoBehaviour
     public Text text_series;
     public Text text_type;
     public Text text_status;
-
+    public string carNumber;
     public Button btn_bjsz;
 
     public PriceInfo priceInfo;
@@ -30,7 +30,7 @@ public class PriceManagerItem : MonoBehaviour
     }
 
 
-    public void SetItemContent(string index, string price, string series, string type = "NA", string status = "未上架")
+    public void SetItemContent(string index,string carNum, string price, string series, string type = "NA", string status = "未上架")
     {
         text_index.text = index;
         text_price.text = price;
@@ -48,7 +48,7 @@ public class PriceManagerItem : MonoBehaviour
         text_series.text = series1;
         text_type.text = type;
         text_status.text = status;
-
+        carNumber = carNum;
         btn_bjsz.onClick.RemoveAllListeners();
         btn_bjsz.onClick.AddListener(OnBtnBjszClick);
     }

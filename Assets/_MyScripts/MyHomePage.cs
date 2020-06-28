@@ -181,15 +181,20 @@ public class MyHomePage : MonoBehaviour
 
     public void RefreshItem()
     {
+        for (int i = 0; i < priceManagerItems.Count; i++)
+        {
+            Destroy(priceManagerItems[i]);
+        }
         UpdateUI();
     }
 
     /// <summary>
     /// 依据数据库或Excel内数据，刷新报价列表
     /// </summary>
-    private void UpdateUI()
+    public void UpdateUI()
     {
         int count = 1;
+        Debug.Log("count   "+priceInfos.Count);
         for (int i = 0; i < priceInfos.Count; i++)
         {
             if (priceInfos[i].carType != "" && !carTypeList.Contains(priceInfos[i].carType))
@@ -217,12 +222,14 @@ public class MyHomePage : MonoBehaviour
                 count++;
             }
         }
-        
+        Debug.Log("count   "+priceManagerItems.Count);
     }
 
 
     public void UpdateTargetItem(int index)
     {
+        Debug.Log(index);
+        Debug.Log(this.priceManagerItems.Count);
         var priceManagerItem = priceManagerItems[index];
 
         priceManagerItem.UpdateItem(priceManagerItem.offerPriceData.officialPrice, "已上架");

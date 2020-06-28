@@ -1,6 +1,8 @@
 ﻿using LitJson;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,6 +14,53 @@ public class MyRegisterManager : MonoBehaviour
     NetworkManager NetworkManager;
 
     // Start is called before the first frame update
+    public string cityDataStr;
+    public Dictionary<string,string> DicProvineToCity=new Dictionary<string, string>();
+    private List<string> ProvinceNames=new List<string>();
+    private List<string> CityNames=new List<string>();
+    public Dropdown ProDropdown, CityDeopdown;
+    JsonData allCityDataJson=new JsonData();
+    private void Awake()
+    {
+         cityDataStr = File.ReadAllText(Application.streamingAssetsPath + "/CityData.json");//
+         allCityDataJson = JsonMapper.ToObject(cityDataStr);//转成json格式
+         
+        for (int i = 0; i < allCityDataJson["provinces"].Count; i++)
+        {
+           ProvinceNames.Add(allCityDataJson["provinces"][i]["provinceName"].ToString());
+           DicProvineToCity.Add(ProvinceNames[i],allCityDataJson["provinces"][i]["citys"].ToString());
+        }
+        
+        List<Dropdown.OptionData> optionProvinceList=new List<Dropdown.OptionData>();//省下拉菜单的数据链表
+        for (int i = 0; i < ProvinceNames.Count; i++)
+        {
+            Dropdown.OptionData provinceDropData=new Dropdown.OptionData();
+            provinceDropData.text = ProvinceNames[i];
+            optionProvinceList.Add(provinceDropData);
+        }
+        ProDropdown.options = optionProvinceList; 
+        ProDropdown.value = 15;//初始化显示广东省
+        ChooseCity(15);//初始化显示广东省下的市
+        ProDropdown.onValueChanged.AddListener(ChooseCity);
+    }
+
+    public void ChooseCity(int index)
+    {
+        // index = ProDropdown.value;
+        JsonData cityDta = allCityDataJson["provinces"][index]["citys"];
+        List<Dropdown.OptionData> optionCityList=new List<Dropdown.OptionData>();//市下拉菜单的数据链表
+        for (int i = 0; i < cityDta.Count; i++)
+        {
+            Dropdown.OptionData cityDropData=new Dropdown.OptionData();
+            cityDropData.text = cityDta[i]["citysName"].ToString();
+            optionCityList.Add(cityDropData);
+           // Debug.Log(CityNames[i]);
+        }
+        CityDeopdown.options = optionCityList;
+    }
+
+    
+    
     void Start()
     {
         NetworkManager = FindObjectOfType<NetworkManager>();
@@ -39,8 +88,10 @@ public class MyRegisterManager : MonoBehaviour
         string email = inputFields[0].text;
         //string merchant = inputFields[1].text;
         string password = inputFields[1].text;
-        //string password2 = inputFields[3].text;
-        string address = inputFields[2].text;
+        string password2 = inputFields[2].text;
+        StringBuilder add=new StringBuilder();
+        add.Append(ProDropdown.captionText).Append(CityDeopdown.captionText);
+        string address =add.Append(inputFields[3].text ).ToString();
         //string linkman = inputFields[5].text;
         //string linkphone = inputFields[6].text;
         string ip = IPManager.GetIP(ADDRESSFAM.IPv4);
@@ -48,11 +99,11 @@ public class MyRegisterManager : MonoBehaviour
         //string nickname = inputFields[7].text;
         string brand_id = "1";
 
-        //if (password != password2)
-        //{
-        //    warnText.text = "两次密码不一致";
-        //    return;
-        //}
+        if (password != password2)
+        {
+            warnText.text = "两次密码不一致";
+            return;
+        }
 
         WWWForm form = new WWWForm();
         form.AddField("email", email);

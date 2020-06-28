@@ -32,7 +32,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
     public GameObject messageCardPrefab;
     public Transform contentParentJYWC;
     public Transform contentParentYJ;
-
+    public MessageDataItem chatMessage=new MessageDataItem();
     private void Start()
     {
        // confirmAndBack.onClick.AddListener(OnClickConfirm);
@@ -79,7 +79,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                     msgCard.GetComponent<MsgCard>().text_yajin.color = Color.green;
                     
                     msgCard.GetComponent<MsgCard>().GetData(repliesOrders[i]);
-                  
+                    
                    // StartCoroutine(GetYJinfo(repliesOrders[i].order_no));
                 }
             });
@@ -387,7 +387,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
         public string content;
         public string cart_loan_id;
         public string cart_boutique_id;
-    }
+    }//议价接口
     
     public class  ConfirmYJ
     {

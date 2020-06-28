@@ -49,13 +49,16 @@
           </e>
           <e p="fch" t="Include">
             <e p="AccountReset.cs" t="Include" />
-            <e p="carSourceMgr.cs" t="Include" />
+            <e p="AddStoreMgr.cs" t="Include" />
             <e p="ChangeWindowScale.cs" t="Include" />
+            <e p="chaYJMgr.cs" t="Include" />
+            <e p="coroutine.cs" t="Include" />
             <e p="NegotiatePrice.cs" t="Include" />
-            <e p="newlogin.cs" t="Include" />
             <e p="PinYinHelper.cs" t="Include" />
             <e p="RegistorItem.cs" t="Include" />
             <e p="SpecialCarr.cs" t="Include" />
+            <e p="storeMgr.cs" t="Include" />
+            <e p="tip.cs" t="Include" />
             <e p="WindowMessage.cs" t="Include" />
           </e>
           <e p="MsgCard.cs" t="Include" />
@@ -165,9 +168,6 @@
             <e p="readme.txt" t="Include" />
           </e>
           <e p="upgrading from 1.x to 2.x.txt" t="Include" />
-        </e>
-        <e p="JsonDotNet" t="Include">
-          <e p="link.xml" t="Include" />
         </e>
         <e p="pointFollow.cs" t="Include" />
         <e p="Resources" t="Include">

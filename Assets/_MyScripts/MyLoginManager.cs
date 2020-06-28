@@ -11,7 +11,8 @@ public class MyLoginManager : MonoBehaviour
     public Button openLoginPanel;
     public Button openRegisterPanel;
     public Text warnText;
-
+    public GameObject skipWindow;
+    public static MyLoginManager instance;
     public InputField userName;
     public InputField pwd;
     public Toggle remember;
@@ -36,6 +37,8 @@ public class MyLoginManager : MonoBehaviour
 
     private void Awake()
     {
+        instance = this;
+        skipWindow.SetActive(false);
         loginBtn.onClick.AddListener(Login);
         closeBtn.onClick.AddListener(() =>
         {
@@ -61,6 +64,7 @@ public class MyLoginManager : MonoBehaviour
 
         remember.onValueChanged.AddListener(RememberValChange);
         InitLoginPanel();
+       
     }
 
     // Start is called before the first frame update
