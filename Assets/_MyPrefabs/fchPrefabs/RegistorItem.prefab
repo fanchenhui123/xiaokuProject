@@ -511,7 +511,7 @@ MonoBehaviour:
   index: 0
   carSeris: 
   carType: 
-  carCode: 
+  carNumber: 
   carMemo: 
   text_index: {fileID: 7958102205248311882}
   text_price: {fileID: 5675798070560620533}
@@ -674,7 +674,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: "Q8 55 TSFI quattro\n\u81FB\u9009\u52A8\u611F\u578B"
+  m_Text: Q8 55 TSF
 --- !u!1 &9208209444854645362
 GameObject:
   m_ObjectHideFlags: 0

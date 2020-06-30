@@ -2,7 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using LitJson;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 
 public class storeMgr : MonoBehaviour
@@ -11,58 +14,96 @@ public class storeMgr : MonoBehaviour
     private List<Dropdown.OptionData> ctList=new List<Dropdown.OptionData>();
     private List<Dropdown.OptionData> cbList=new List<Dropdown.OptionData>();
     private  List<string> brandList=new List<string>();
-    private List<PriceInfo> priceInfos =new List<PriceInfo>();
+    private List<PriceInfo> priceInfos;
     public GameObject registorMgrItem;
     public Transform regisItemContainer;
     public GameObject addCarPanel;
-    private List<GameObject> StoreCarItems=new List<GameObject>();
+    public static List<GameObject> StoreCarItems=new List<GameObject>();
   //  public GameObject registorContent;
     private void OnEnable()
-    { 
-        priceInfos = PriceManager.Instance.priceInfos;//拿到读Excel表的数据
-      
+    {
+        if (PriceManager.Instance!=null)
+        {
+            priceInfos = PriceManager.Instance.priceInfos;//拿到读Excel表的数据
+        }
+       
         DataForTwoDrop();//顶部两个DropDown的数据
       
         RefreshUi();//刷新UI
-        Debug.Log("shuxin");
     }
 
     public void DataForTwoDrop()
     {
+        cbList.Clear();
         Dropdown.OptionData opdaAll=new Dropdown.OptionData();
         opdaAll.text = "全部";
         cbList.Add(opdaAll);
         ctList.Add(opdaAll);
-        for (int i = 0; i < PriceManager.Instance.carTypeList.Count; i++)
+
+        foreach ( var s in PriceManager.Instance.vehicleSystemsDic)
         {
             Dropdown.OptionData opda=new Dropdown.OptionData();
-            opda.text = PriceManager.Instance.carTypeList[i];
-            ctList.Add(opda);
-        }
-        dropDownCT.options = ctList;
-      
-        foreach (string brands in PriceManager.Instance.vehicleSystemsDic.Keys)
-        {
-            Dropdown.OptionData opda=new Dropdown.OptionData();
-            opda.text = brands;
-            brandList.Add(brands);
+            opda.text = s.Key;
             cbList.Add(opda);
         }
 
         dropDownCB.options = cbList;
+        dropDownCB.onValueChanged.AddListener(CBTListenerFirst);
+
+        
+    }
+    
+
+    public void CBTListenerFirst(int index)//根据CB读CT
+    {
+        for (int i = 0; i < StoreCarItems.Count; i++)
+        {
+            if (StoreCarItems[i].GetComponent<RegistorItem>().text_series.text ==
+                dropDownCB.captionText.text)
+            {
+                StoreCarItems[i].SetActive(true);
+            }
+            else
+            {
+                StoreCarItems[i].SetActive(false);
+            }
+        }
+        dropDownCT.value = 0;
+        ctList.Clear();
+        Dropdown.OptionData opdaAll=new Dropdown.OptionData();
+        opdaAll.text = "全部";
+        ctList.Add(opdaAll);
+        foreach (var s in PriceManager.Instance.vehicleSystemsDic)
+        {
+            if (s.Key==dropDownCB.captionText.text)
+            {
+                for (int i = 0; i < s.Value.Count; i++)
+                {
+                    Dropdown.OptionData opda=new Dropdown.OptionData();
+                    opda.text = s.Value[i].Replace("库存","");
+                    ctList.Add(opda);
+                }
+            }
+        }
+       
         dropDownCT.options = ctList;
-        dropDownCB.onValueChanged.AddListener(CBTListener);
         dropDownCT.onValueChanged.AddListener(CBTListener);
     }
 
     public void RefreshUi()
     {
-        Debug.Log("srefresh"+priceInfos.Count);
+        PriceManager.Instance.CleanBeforeUpdataUi();
+       
+       
         GameObject gos;
         RegistorItem reItem;
         int countRe=1;
-        string CurcarType=priceInfos[0].carType;
-       
+        string CurcarType="";
+        if (priceInfos.Count>0)
+        {
+            CurcarType=priceInfos[0].carType;
+        }
+      
         for (int i = 0; i < StoreCarItems.Count; i++)
         {
             Destroy(StoreCarItems[i]);
@@ -72,62 +113,44 @@ public class storeMgr : MonoBehaviour
         
         for (int i = 0; i < priceInfos.Count; i++)
         {
-            
-            if (string.IsNullOrEmpty(priceInfos[i].adviser) && string.IsNullOrEmpty(priceInfos[i].userName) &&
-                !string.IsNullOrEmpty(priceInfos[i].carNumber)) //客户用户都是空再显示
+            if (!string.IsNullOrEmpty(priceInfos[i].carType)) //当表格空白时与上一次的一样
             {
-               
-                if (!string.IsNullOrEmpty(priceInfos[i].carType))
-                {
-                    CurcarType = priceInfos[i].carType;
-                }
+                CurcarType = priceInfos[i].carType;
 
-
-                if (SpecialCarr.instance != null && SpecialCarr.instance.TJSJ.Count>0) //当前车的车不是已经报价的特价车
-                {
-                    if (!SpecialCarr.instance.TJSJ.Contains(priceInfos[i].carNumber))
-                    {
-                        gos = Instantiate(registorMgrItem, regisItemContainer);
-                        reItem = gos.GetComponent<RegistorItem>();
-                        StoreCarItems.Add(gos);
-                        reItem.SetItemContent(countRe.ToString(), priceInfos[i].carNumber, priceInfos[i].vehicleSystem,
-                            priceInfos[i].memo, CurcarType); //库存管理显示的
-                        countRe++;
-                    }
-                }
-                else
-                {
-                    gos = Instantiate(registorMgrItem, regisItemContainer);
-                    reItem = gos.GetComponent<RegistorItem>();
-                    StoreCarItems.Add(gos);
-                    reItem.SetItemContent(countRe.ToString(), priceInfos[i].carNumber, priceInfos[i].vehicleSystem,
-                        priceInfos[i].memo, CurcarType); //库存管理显示的
-                    countRe++;
-                }
-                
-              
             }
             
+            gos = Instantiate(registorMgrItem, regisItemContainer);
+            reItem = gos.GetComponent<RegistorItem>();
+            StoreCarItems.Add(gos);
+            reItem.SetItemContent(countRe.ToString(), priceInfos[i].carNumber, priceInfos[i].vehicleSystem,
+                priceInfos[i].memo, CurcarType); //库存管理显示的
+            countRe++;
         }
     }
 
-    private void CBTListener(int index)
+    private void CBTListener(int index)//车系dropdown的监听
     {
-        
+       
         for (int i = 0; i < StoreCarItems.Count; i++)
         {
             if ( StoreCarItems[i]!=null)
             {
                 StoreCarItems[i].SetActive(true);
             }
-            
         }
 
         //Debug.Log(dropDownCT.value+"    "+dropDownCB.value);
       //  Debug.Log( ctList[dropDownCT.value-1].text+"   "+brandList[dropDownCB.value-1]);
         if (dropDownCB.value==0 && dropDownCT.value==0)
         {
-            return;
+            for (int i = 0; i < StoreCarItems.Count; i++)
+            {
+                if ( StoreCarItems[i]!=null)
+                {
+                    StoreCarItems[i].SetActive(true);
+                }
+            }
+            
         }
 
         if (dropDownCB.value==0 && dropDownCT.value!=0)
@@ -138,7 +161,6 @@ public class storeMgr : MonoBehaviour
                 if (StoreCarItems[i].GetComponent<RegistorItem>().text_type.text ==
                     ctList[dropDownCT.value].text)
                 {
-                    Debug.Log(StoreCarItems[i].GetComponent<RegistorItem>().text_type.text);
                     StoreCarItems[i].SetActive(true);
                 }
                 else
@@ -154,7 +176,7 @@ public class storeMgr : MonoBehaviour
             for (int i = 0; i < StoreCarItems.Count; i++)
             {
                 if (StoreCarItems[i].GetComponent<RegistorItem>().text_series.text ==
-                    brandList[dropDownCB.value-1])
+                    dropDownCB.captionText.text)
                 {
                     StoreCarItems[i].SetActive(true);
                 }
@@ -172,7 +194,7 @@ public class storeMgr : MonoBehaviour
             {
                 if (StoreCarItems[i].GetComponent<RegistorItem>().text_type.text==ctList[dropDownCT.value].text)
                 {
-                    if (StoreCarItems[i].GetComponent<RegistorItem>().text_series.text==brandList[dropDownCB.value-1] )
+                    if (StoreCarItems[i].GetComponent<RegistorItem>().text_series.text==dropDownCB.captionText.text )
                     {
                         StoreCarItems[i].SetActive(true);
                     }
@@ -189,7 +211,7 @@ public class storeMgr : MonoBehaviour
         }
         
     }
-     
+     private List<string> needRemoveCarNum=new List<string>();
      
      public void RemoveCar()
      {
@@ -210,21 +232,15 @@ public class storeMgr : MonoBehaviour
                  {
                      if (priceInfos[k].carNumber==j && PriceManager.Instance!=null)
                      {
+                         needRemoveCarNum.Add(priceInfos[k].carNumber);
                          priceInfos.Remove(priceInfos[k]);
                      }
                  }
              }
          }
 
-         
-         for (int i = 0; i < StoreCarItems.Count; i++)
-         {
-             Destroy(StoreCarItems[i]);
-         }
-         StoreCarItems.Clear();
-         RefreshUi();
-        
-         tip.instance.SetMessae("删除成功");
+         StartCoroutine(PostNeedRemoveCar(needRemoveCarNum));
+       
      }
 
      public void AddCar()
@@ -233,4 +249,39 @@ public class storeMgr : MonoBehaviour
          gameObject.SetActive(false);
      }
 
+
+     private void OnDestroy()
+     {
+         dropDownCB.onValueChanged.RemoveAllListeners();
+         dropDownCT.onValueChanged.RemoveAllListeners();
+     }
+     
+     public IEnumerator PostNeedRemoveCar(List<string> carNumbers)
+     {
+         carNumbs carNumbs=new carNumbs();
+         StringBuilder stringBuilder=new StringBuilder();
+         for (int i = 0; i < carNumbers.Count; i++)
+         {
+             stringBuilder =stringBuilder.Append(',').Append(carNumbers[i]);
+         }
+         carNumbs.car_numbers = stringBuilder.ToString();
+         String jsonData = JsonMapper.ToJson(carNumbers);
+         UnityWebRequest request=new UnityWebRequest(API.PostDeleteCarinfo,"POST");
+         request.uploadHandler=new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonData));
+         yield return request.SendWebRequest();
+         if (request.responseCode==200)
+         {
+             for (int i = 0; i < StoreCarItems.Count; i++)
+             {
+                 Destroy(StoreCarItems[i]);
+             }
+             StoreCarItems.Clear();
+             RefreshUi();
+             tip.instance.SetMessae("删除成功");
+         }
+         else
+         {
+             tip.instance.SetMessae("删除失败");
+         }
+     }
 }

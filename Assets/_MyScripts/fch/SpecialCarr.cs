@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Text;
 using LitJson;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -11,7 +13,7 @@ public class SpecialCarr : MonoBehaviour
    public static SpecialCarr instance;
    public Text CarNumText;
    public List<Text> InfoTexts=new List<Text>();
-   private string currRegisterAreaType;
+   private string currRegisterAreaType="3";
    public ToggleGroup togglGroup;
    public Toggle toggleCity, toggleProvince, toggleCountry;
    public PriceInfo needPost=new PriceInfo();
@@ -19,6 +21,7 @@ public class SpecialCarr : MonoBehaviour
    public List<Dropdown.OptionData>  optionList;//精品方案
    public List<string> TJSJ=new List<string>();//特价车上架
    public List<PriceInfo> ChangeStatus=new List<PriceInfo>();
+   private NetworkManager networkManager = NetworkManager.Instance;
    private void Awake()
    {
       instance = this;
@@ -43,24 +46,47 @@ public class SpecialCarr : MonoBehaviour
    }
 
    List<PriceInfo> SearchResults=new List<PriceInfo>();
-List<Dropdown.OptionData> carNumList=new List<Dropdown.OptionData>();
+   List<Dropdown.OptionData> carNumList=new List<Dropdown.OptionData>();
    public void  BtnSearch()
    {
       SearchResults.Clear();
       carNumList.Clear();
-      for (int i = 0; i < PriceManager.Instance.priceInfos.Count; i++)
+      /*for (int i = 0; i < PriceManager.Instance.priceInfos.Count; i++)
       {
-         if (PriceManager.Instance.priceInfos[i].carNumber.Contains(CarNumText.text))
+         if (string.IsNullOrEmpty(PriceManager.Instance.priceInfos[i].adviser) && string.IsNullOrEmpty(PriceManager.Instance.priceInfos[i].userName))
          {
-            if (!PriceManager.Instance.putSJ.Contains(CarNumText.text))
+            if (PriceManager.Instance.priceInfos[i].carNumber.Contains(CarNumText.text))
             {
-               if (!TJSJ.Contains(CarNumText.text))
+               if (!PriceManager.Instance.putSJ.Contains(PriceManager.Instance.priceInfos[i].carType))
                {
-                  SearchResults.Add(PriceManager.Instance.priceInfos[i]);
+                  if (!TJSJ.Contains(PriceManager.Instance.priceInfos[i].carNumber))
+                  {
+                     SearchResults.Add(PriceManager.Instance.priceInfos[i]);
+                     Debug.Log(PriceManager.Instance.priceInfos[i].carType);
+                  }
                }
             }
-           
          }
+        
+      }*/
+      for (int i = 0; i < storeMgr.StoreCarItems.Count; i++)
+      {
+         if (storeMgr.StoreCarItems[i].GetComponent<RegistorItem>().carNumber.Contains(CarNumText.text))
+         {
+            for (int j = 0; j < PriceManager.Instance.priceInfos.Count; j++)
+            {
+               if (PriceManager.Instance.priceInfos[j].carNumber==storeMgr.StoreCarItems[i].GetComponent<RegistorItem>().carNumber)
+               {
+               
+                  PriceManager.Instance.priceInfos[j].carType =
+                     storeMgr.StoreCarItems[i].transform.Find("Text_type").GetComponent<Text>().text;
+                  SearchResults.Add(PriceManager.Instance.priceInfos[j]);
+                 
+               }
+            }
+             
+         }
+         
       }
 
       if (SearchResults.Count==0)
@@ -73,6 +99,7 @@ List<Dropdown.OptionData> carNumList=new List<Dropdown.OptionData>();
          opdt.text = SearchResults[0].carNumber;
          carNumList.Add(opdt);
          InfoTexts[0].text = SearchResults[0].carType;
+         Debug.Log("   11   "+SearchResults[0].carType);
          InfoTexts[1].text = SearchResults[0].vehicleSystem;
          needPost=SearchResults[0];
       }
@@ -95,12 +122,12 @@ List<Dropdown.OptionData> carNumList=new List<Dropdown.OptionData>();
 
    private void showSearchData(int index)
    {
-      Debug.Log("????");
       InfoTexts[0].text = SearchResults[index].carType;
       InfoTexts[1].text = SearchResults[index].vehicleSystem;
       needPost=SearchResults[index];
    }
 
+ 
    /*IEnumerator getCarinfo()
    {
       UnityWebRequest request=new UnityWebRequest();
@@ -130,18 +157,21 @@ List<Dropdown.OptionData> carNumList=new List<Dropdown.OptionData>();
    public void BtnBack()
    {
       SpcialPriceCar.SetActive(false);
+      
    }
 
    public void BtnSave()
    {
+      ChangeStatus.Clear();
       if (string.IsNullOrEmpty(InfoTexts[0].text) || string.IsNullOrEmpty(InfoTexts[1].text) )
       {
          tip.instance.SetMessae("未选择车辆");
       }
       else
       {
-         ChangeStatus.Add(needPost);
+         ChangeStatus.Add(needPost);//链表形式（后台要求格式）做参数传递
          StartCoroutine(PostNeedChangeData(ChangeStatus));
+       //  postpostpost(ChangeStatus);
       }
    }
 
@@ -166,26 +196,21 @@ List<Dropdown.OptionData> carNumList=new List<Dropdown.OptionData>();
             }
          } // Debug.Log(jsonString);
          jsonData["net_price"] = InfoTexts[2].text;
-         jsonData["registration_price"] = InfoTexts[3].text;
-         jsonData["insurance_price"] = InfoTexts[4].text;
-         jsonData["purchase_tax"] = InfoTexts[5].text;
          jsonData["financial_agents_price"] = InfoTexts[6].text;
+         jsonData["insurance_price"] = InfoTexts[4].text;
+         jsonData["registration_price"] = InfoTexts[3].text;
+         jsonData["purchase_tax"] = InfoTexts[5].text;
          jsonData["other_price"] = InfoTexts[7].text;
-         jsonData["content_remark"] = InfoTexts[8].text;//装饰费
-         //界面编辑的//的信息
-         
+         jsonData["cart_price_type"] ="2" ;//特价车
          jsonData["registration_type"] = ""; 
          jsonData["insurance_type"] = "";
+         jsonData["content_remark"] = InfoTexts[8].text;//装饰费
          jsonData["appear_color"] = "";
-         
-         
-         jsonData["cart_price_type"] ="2" ;//特价车
          jsonData["registration_area_type"] = currRegisterAreaType;//车的地区国 省 市
          Debug.Log("________准备上传的 jsonData:" + jsonData.ToJson());
          jsonString = jsonData.ToJson();
          form.AddField("d[]", jsonString);
       }
-
       
       PriceManager.Instance.networkManager.DoPost1(API.PostCarsInfo, form, (responseCode, content) =>
       {
@@ -198,15 +223,15 @@ List<Dropdown.OptionData> carNumList=new List<Dropdown.OptionData>();
             tip.instance.SetMessae("保存成功");
             for (int i = 0; i < ned.Count; i++)
             {
-               TJSJ.Add(ned[i].carNumber);
+               TJSJ.Add(ned[i].carNumber);//存入特价上架 链表
             }
            
          }
          else
          {
-            tip.instance.SetMessae("保存失败");
+            tip.instance.SetMessae("保存失败:"+responseCode);
          }
-         Debug.Log("____responseCode:" + responseCode + ", content:" + content);
+         Debug.Log("____responseCode:" + responseCode + ", content:" + System.Net.WebUtility.UrlDecode(content));
       },  PriceManager.Instance.networkManager.token);
 
        
@@ -215,6 +240,7 @@ List<Dropdown.OptionData> carNumList=new List<Dropdown.OptionData>();
       yield break;
    }
 
+  
    public Text EditorText;
    public Dropdown EditorDropdown;
 

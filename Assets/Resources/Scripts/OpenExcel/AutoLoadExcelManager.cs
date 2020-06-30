@@ -27,7 +27,8 @@ public class AutoLoadExcelManager : MonoBehaviour
         AutoDir = PlayerPrefs.GetString("DefaultPath", defaultPath);
         if (!Directory.Exists(AutoDir)) AutoDir = defaultPath;
         Debug.Log(AutoDir);
-        PriceManager.Instance.ReadCarPrice(PlayerPrefs.GetString(AutoDir));
+        
+       // PriceManager.Instance.ReadCarPrice(PlayerPrefs.GetString(AutoDir));
         excelManager = FindObjectOfType<ExcelManager>();
     }
 

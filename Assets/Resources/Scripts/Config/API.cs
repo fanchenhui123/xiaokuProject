@@ -38,12 +38,14 @@ public class API
     
     //2020.6.25新增
     public static string _GetMsgList23 = "http://op.cunguangmed.com:3000/mock/54/api/client/order/show";
-    public static string PostYiJia = "http://op.cunguangmed.com:3000/mock/54/api/client/reply";
+    public static string PostYiJia = "http://op.cunguangmed.com:3000/mock/54/api/client/reply";//议价
     public static string GetCarInfo = "http://op.cunguangmed.com:3000/mock/54/api/client/cart/show";
-    public static string PostConfirmYiJia = "http://op.cunguangmed.com:3000/mock/54/api/client/approve";
+    public static string PostConfirmYiJia = "http://op.cunguangmed.com:3000/mock/54/api/client/approve";//确认议价
     public static string PostCarsInfo = "http://test.cheyuw.cn/api/merchant/data/batch";
-
-    public static string PostDeleteCarinfo = "http://test.cheyuw.cn//api/merchant/data/delete";
+    public static string GetServerVehcle = "http://op.cunguangmed.com:3000/mock/54/api/client/line";//获取服务器车系列表
+    public static string PostDeleteCarinfo = "http://test.cheyuw.cn//api/merchant/data/delete";//删除车辆信息
+    public static string GetServerBrand = "http://op.cunguangmed.com:3000/mock/54/api/client/brand";//获取服务器品牌列表
+    public static string _PostCarType = "http://test.cheyuw.cn/api/merchant/data/up_lines_models";//更新车型车系
     //2020.6.25新增
 
     public static string _PostReply = "https://service.xiaokucc.cn/api/merchant/reply";
@@ -72,6 +74,6 @@ public class API
     public static string _PostDeleteJingPin = "https://service.xiaokucc.cn/api/merchant/cart_boutique/delete";
     public static string _PostDeleteJingPin1 = "http://test.cheyuw.cn/api/merchant/cart_boutique/delete";
 
-    public static string _PostCarType = "http://test.cheyuw.cn/api/merchant/data/up_lines_models";
+   
 
 }

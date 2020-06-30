@@ -54,6 +54,7 @@
             <e p="chaYJMgr.cs" t="Include" />
             <e p="coroutine.cs" t="Include" />
             <e p="NegotiatePrice.cs" t="Include" />
+            <e p="OpenDialogFile.cs" t="Include" />
             <e p="PinYinHelper.cs" t="Include" />
             <e p="RegistorItem.cs" t="Include" />
             <e p="SpecialCarr.cs" t="Include" />

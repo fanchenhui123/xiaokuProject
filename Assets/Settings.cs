@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -20,6 +21,7 @@ public class Settings : MonoBehaviour
     void Start()
     {
         OpenPathBtn.onClick.AddListener(LoadExcel);
+       // OpenPathBtn.onClick.AddListener(loadExcelsTest);
         if (PlayerPrefs.HasKey(keyName))
         {
             PathText.text = PlayerPrefs.GetString(keyName);
@@ -48,28 +50,25 @@ public class Settings : MonoBehaviour
         if (OpenFileDialog.GetOpenFileName(pth))
         {
             ExcelPath = pth.file; //选择的文件路径;  
-            Debug.Log("path "+ExcelPath);
+           
 
             PathText.text = ExcelPath;
 
-            if (ExcelPath != PlayerPrefs.GetString(keyName))//路径相同文件名不同也是！=,如果文件不同就删除数据重新读
+            if (true)//路径相同文件名不同也是！=,如果文件不同就删除数据重新读ExcelPath != PlayerPrefs.GetString(keyName)
             {
-                Debug.Log("!=");
+               
                 PriceManager.Instance.ClearAllData();
-                PriceManager.Instance.DoLoadThread(ExcelPath);
-               // PriceManager.Instance.ReadCarPrice(ExcelPath);
+               PriceManager.Instance. loadExcelsTest(ExcelPath);
                 tip.instance.SetMessae("删除数据，重新读取表格");
             }
-            else//否则不删除数据重新读
-            {
-               // PriceManager.Instance.DoLoadThread(ExcelPath);
-            }
+           
             PlayerPrefs.SetString(keyName, ExcelPath);
         }
     }
 
-
+    private string SourceExcelPath;
    
+
     public IEnumerator AutoLoadExcel()
     {
         while (true)
@@ -77,7 +76,8 @@ public class Settings : MonoBehaviour
             yield return new WaitForSeconds(Interval*60 );
             tip.instance.SetMessae("自动重新读取表格");
             //考虑什么时候开始自动加载，决定了自动加载的路径是否是离线数据
-            PriceManager.Instance.ReadCarPrice(ExcelPath);
+           // PriceManager.Instance.ReadCarPrice(ExcelPath);
+           PriceManager.Instance. loadExcelsTest(ExcelPath);
         }
     }
 

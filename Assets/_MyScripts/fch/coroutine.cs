@@ -9,10 +9,11 @@ using UnityEngine.Networking;
 public class coroutine : MonoBehaviour
 {
     public static coroutine instance;
-
+public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
     private void Awake()
     {
         instance = this;
+        StartCoroutine(GetServerBrand());
     }
 
     public List<PriceInfo> priceInfosLast=new List<PriceInfo>(); 
@@ -60,7 +61,7 @@ public class coroutine : MonoBehaviour
 
     public IEnumerator PostNeedChangeData(List<PriceInfo> needPost)
     {
-        NetworkManager networkManager=new NetworkManager();
+        NetworkManager networkManager=NetworkManager.Instance;
         WWWForm form = new WWWForm();
         for (int i = 0; i < needPost.Count; i++)
         {
@@ -97,7 +98,7 @@ public class coroutine : MonoBehaviour
         StringBuilder stringBuilder=new StringBuilder();
         for (int i = 0; i < carNumbers.Count; i++)
         {
-            stringBuilder = stringBuilder.Append(carNumbers[i]);
+            stringBuilder =stringBuilder.Append(',').Append(carNumbers[i]);
         }
         carNumbs.car_numbers = stringBuilder.ToString();
         String jsonData = JsonMapper.ToJson(carNumbers);
@@ -106,12 +107,52 @@ public class coroutine : MonoBehaviour
         yield return request.SendWebRequest();
         if (request.responseCode==200)
         {
-            tip.instance.SetMessae("对比数据后删除成功");
+            tip.instance.SetMessae("删除成功");
         }
         else
         {
-            tip.instance.SetMessae("对比数据后删除失败");
+            tip.instance.SetMessae("删除失败");
         }
     }
 
+    
+    //一开始获取品牌列表--获取车系列表--获取车型列表。
+    public IEnumerator GetServerBrand()
+    {
+        UnityWebRequest request=new UnityWebRequest();
+        request.url = API.GetServerBrand;
+        request.downloadHandler=new DownloadHandlerBuffer();
+        yield return request.SendWebRequest();
+        if (request.responseCode==200)
+        {
+            JsonData jsonData= JsonMapper.ToObject(request.downloadHandler.text)["data"];
+            Debug.Log(JsonMapper.ToJson(jsonData));
+            for (int i = 0; i < jsonData.Count; i++)
+            {
+                DicBrand.Add(jsonData[i]["id"].ToJson(),jsonData[i]["title"].ToJson());
+            }
+        }
+    }
+
+    public IEnumerator GetServerVeh()
+    {
+        UnityWebRequest request=new UnityWebRequest();
+        request.url = API.GetServerVehcle+"brand_id="+1263;
+        request.downloadHandler=new DownloadHandlerBuffer();
+        yield return request.SendWebRequest();
+        if (request.responseCode==200)
+        {
+            JsonData jsonData= JsonMapper.ToObject(request.downloadHandler.text)["data"];
+            Debug.Log(JsonMapper.ToJson(jsonData));
+            for (int i = 0; i < jsonData.Count; i++)
+            {
+                DicBrand.Add(jsonData[i]["id"].ToJson(),jsonData[i]["title"].ToJson());
+            }
+        }
+    }
+
+    /*public IEnumerator CreatCarTypeVehic(ChangeCarTypeVehic changeData )
+    {
+        
+    }*/
 }
