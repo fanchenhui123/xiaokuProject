@@ -281,7 +281,7 @@ public class storeMgr : MonoBehaviour
          }
          else
          {
-             tip.instance.SetMessae("删除失败");
+             tip.instance.SetMessae("删除失败"+request.responseCode);
          }
      }
 }

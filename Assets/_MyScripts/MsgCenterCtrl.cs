@@ -32,7 +32,10 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
     public GameObject messageCardPrefab;
     public Transform contentParentJYWC;
     public Transform contentParentYJ;
-    public MessageDataItem chatMessage=new MessageDataItem();
+  
+    
+    
+    
     private void Start()
     {
        // confirmAndBack.onClick.AddListener(OnClickConfirm);
@@ -77,10 +80,10 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                     msgCard.GetComponent<MsgCard>().text_vehicleSystem.text = "车系：" + repliesOrders[i].cart.vehicleSystem;
                     msgCard.GetComponent<MsgCard>().text_yajin.text = "押金已支付";
                     msgCard.GetComponent<MsgCard>().text_yajin.color = Color.green;
-                    
-                    msgCard.GetComponent<MsgCard>().GetData(repliesOrders[i]);
-                    
-                   // StartCoroutine(GetYJinfo(repliesOrders[i].order_no));
+
+                    msgCard.GetComponent<MsgCard>().Messae = repliesOrders[i];   ;//每个消息卡的数据传过去
+
+                    // StartCoroutine(GetYJinfo(repliesOrders[i].order_no));
                 }
             });
         }
@@ -88,25 +91,8 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
     }
 
     public Transform dialog;
-    public  IEnumerator GetYJinfo(string id)
-    {
-        yield return new WaitForSeconds(10);
-        Debug.Log("start cor");
-        UnityWebRequest request=new UnityWebRequest();
-        request.url = API._GetMsgList23+"?order_id="+id;
-        
-        yield return request.SendWebRequest();
-        if (request.responseCode==200)
-        {
-            Debug.Log("222");
-        }
-        else
-        {
-            Debug.Log("2222211112   " +request.responseCode);
-        }
-    }
 
-
+    
 
 
     /// <summary>
@@ -236,38 +222,38 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
 
     public class MessageDataItem
     {
-        public int id;              //自增ID
-        public int user_id;         //用户ID
-        public int cart_id;         //车辆ID	
-        public int cart_type;       //车辆类型 1-原价车 2-特价车
-        public int merchant_id;     //商家ID
-        public string order_no;     //订单号	
-        public string trade_no;     //支付订单号
-        public string body;         //支付标题
-        public string total;        //定金
-        public string final_total;  //最终的车辆价格（议价后）	
-        public string trade_status; //支付商家返回的状态	
-        public string pay_time;     //支付时间	
-        public int status;          //状态 0 未付款 1 已付款 2-用户已确认 3-商家已确认 4-订单完成	
-        public int if_mortgage;     //是否按揭 0-不按揭 1-按揭	
-        public string cart_loan_id;    //按揭方案ID	(---null!!!!!!) JsonException: Can't assign null to an instance of type System.Int32
+        public int id { get; set; } //自增ID
+        public int user_id{ get; set; }        //用户ID
+        public int cart_id{ get; set; }       //车辆ID	
+        public int cart_type{ get; set; }       //车辆类型 1-原价车 2-特价车
+        public int merchant_id{ get; set; }    //商家ID
+        public string order_no{ get; set; }    //订单号	
+        public string trade_no{ get; set; }    //支付订单号
+        public string body{ get; set; }        //支付标题
+        public string total{ get; set; }     //定金
+        public string final_total{ get; set; } //最终的车辆价格（议价后）	
+        public string trade_status{ get; set; }//支付商家返回的状态	
+        public string pay_time{ get; set; }    //支付时间	
+        public int status{ get; set; }         //状态 0 未付款 1 已付款 2-用户已确认 3-商家已确认 4-订单完成	
+        public int if_mortgage{ get; set; }     //是否按揭 0-不按揭 1-按揭	
+        public string cart_loan_id{ get; set; }    //按揭方案ID	(---null!!!!!!) JsonException: Can't assign null to an instance of type System.Int32
 
-        public LoanData loan_data;
+        public LoanData loan_data{ get; set; }
 
-        public int cart_boutique_id;//精品方案ID	(INT)
-        public string name;         //用户姓名
-        public string phone;
-        public string id_card;      //用户身份证信息
-        public int closed;          //订单是否关闭 0-未关闭 1-已关闭
-        public int last_reply_user_type;    //最近回复的用户类型 1-用户回复 2-商家回复
-        public string created_at;   //订单创建时间
-        public string updated_at;
+        public int cart_boutique_id{ get; set; }//精品方案ID	(INT)
+        public string name{ get; set; }       //用户姓名
+        public string phone{ get; set; }
+        public string id_card{ get; set; }     //用户身份证信息
+        public int closed{ get; set; }          //订单是否关闭 0-未关闭 1-已关闭
+        public int last_reply_user_type{ get; set; }    //最近回复的用户类型 1-用户回复 2-商家回复
+        public string created_at{ get; set; }   //订单创建时间
+        public string updated_at{ get; set; }
 
-        public UserInfo user;         //用户信息
-        public CarInfo cart;         //车辆信息
-        public CartLoanInfo cart_loan;    //贷款信息	
-        public CartBoutiqueInfo cart_boutique;//精品方案信息	
-        public ReplyContent[] repies;       //议价过程	
+        public UserInfo user{ get; set; }     //用户信息
+        public CarInfo cart{ get; set; }       //车辆信息
+        public CartLoanInfo cart_loan{ get; set; }   //贷款信息	
+        public CartBoutiqueInfo cart_boutique{ get; set; }//精品方案信息	
+        public ReplyContent[] repies{ get; set; }      //议价过程	
 
 
     }

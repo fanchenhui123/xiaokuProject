@@ -295,8 +295,7 @@ MonoBehaviour:
   text_user_id: {fileID: 6257878182496816801}
   text_price: {fileID: 6257878183402293981}
   text_yajin: {fileID: 1887453932392026732}
-  dialogItem: {fileID: 1782129247890738798, guid: b0a0f6fd743160445afa7d0089ee5d1f,
-    type: 3}
+  resBtn: {fileID: 6257878182011001157}
 --- !u!114 &7050555594668490707
 MonoBehaviour:
   m_ObjectHideFlags: 0

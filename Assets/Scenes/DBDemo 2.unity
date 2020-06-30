@@ -2669,18 +2669,6 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 3532602250837963127}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1110350391 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 684495322803589526, guid: 6d9f2da2a9b3fb14dbc420f9a5a3cfd0,
-    type: 3}
-  m_PrefabInstance: {fileID: 3532602250837963127}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d61a1152eea3194438d68f6bd26379aa, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1137170320 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1612694022165908414, guid: 6d9f2da2a9b3fb14dbc420f9a5a3cfd0,
@@ -2883,9 +2871,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d61a1152eea3194438d68f6bd26379aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Name: 
+  m_EditorClassIdentifier: 
   btnChatMessage: {fileID: 0}
   chatPrice: {fileID: 0}
   chatMemo: {fileID: 0}
+  ChatYJString: 
+  curOrderNum: 
 --- !u!1 &1300534076
 GameObject:
   m_ObjectHideFlags: 0
@@ -6242,6 +6258,16 @@ PrefabInstance:
       propertyPath: skipWindow
       value: 
       objectReference: {fileID: 1460045285}
+    - target: {fileID: 1106968199016349822, guid: 6d9f2da2a9b3fb14dbc420f9a5a3cfd0,
+        type: 3}
+      propertyPath: homePage
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 1106968199016349822, guid: 6d9f2da2a9b3fb14dbc420f9a5a3cfd0,
+        type: 3}
+      propertyPath: skipWindow
+      value: 
+      objectReference: {fileID: 1460045285}
     - target: {fileID: 1106968199016356078, guid: 6d9f2da2a9b3fb14dbc420f9a5a3cfd0,
         type: 3}
       propertyPath: m_IsActive
@@ -7967,7 +7993,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1110350391}
+      objectReference: {fileID: 0}
     - target: {fileID: 5225180443928516645, guid: 6d9f2da2a9b3fb14dbc420f9a5a3cfd0,
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName

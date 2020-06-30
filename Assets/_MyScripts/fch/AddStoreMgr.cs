@@ -84,7 +84,7 @@ public class AddStoreMgr : MonoBehaviour
         _item.guidancePrice = texts[3].text;
         _item.carNumber = _carCode;
         _item.vehicleSystem = texts[0].text;
-       _item.carType = texts[1].text;
+       _item.carType = texts[1].text.ToUpper();
        _item.brand = "奥迪";
         if (string.IsNullOrEmpty(texts[4].text))
         {

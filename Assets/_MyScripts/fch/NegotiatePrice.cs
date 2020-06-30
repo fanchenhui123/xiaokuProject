@@ -183,7 +183,7 @@ public class NegotiatePrice : MonoBehaviour
         firstYiJia.cart_boutique_id = JPdropDown.value.ToString();
 
         string jsonData = JsonMapper.ToJson(firstYiJia);
-        StartCoroutine(chaYJMgr.instance.postYJ(jsonData));
+        StartCoroutine(ChatYJ.instance.postYJ(jsonData));
     }
     
    
