@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using LitJson;
 using System;
+using System.Linq;
 using System.Text;
 using UnityEngine.Networking;
 
@@ -27,11 +28,15 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
 
     public List<MessageDataItem> completedOrders = new List<MessageDataItem>();
     public List<MessageDataItem> repliesOrders = new List<MessageDataItem>();
-
+    public CarTypeInfo carInfo=new CarTypeInfo();
+    
     [Header("page1")]
     public GameObject messageCardPrefab;
     public Transform contentParentJYWC;
     public Transform contentParentYJ;
+
+    public Transform YJPage2;
+    public MessageDataItem curYJInfo=new MessageDataItem();
   
     
     
@@ -81,8 +86,8 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                     msgCard.GetComponent<MsgCard>().text_yajin.text = "押金已支付";
                     msgCard.GetComponent<MsgCard>().text_yajin.color = Color.green;
 
-                    msgCard.GetComponent<MsgCard>().Messae = repliesOrders[i];   ;//每个消息卡的数据传过去
-
+                    msgCard.GetComponent<MsgCard>().MessaeID = repliesOrders[i].order_no;   ;//每个消息卡的数据传过去
+                   // msgCard.GetComponent<MsgCard>().resBtn.onClick.AddListener(()=>curYJInfo=repliesOrders[i]);
                     // StartCoroutine(GetYJinfo(repliesOrders[i].order_no));
                 }
             });
@@ -90,7 +95,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
 
     }
 
-    public Transform dialog;
+  //  public Transform dialog;
 
     
 
@@ -123,6 +128,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
         ChangeToPage(1);
     }
 
+    private List<ReplyContent>  chatMessage=new List<ReplyContent>();
     public void DoGetMessageList(Action updateUI)
     {
         string url = API._GetMsgList1;
@@ -211,6 +217,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
 
 
 
+   
 
     public class Response_Msg
     {
@@ -368,7 +375,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
     
     public class  YiJia
     {
-        public string cart_id;
+        public string order_id;
         public string price;
         public string content;
         public string cart_loan_id;
@@ -377,7 +384,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
     
     public class  ConfirmYJ
     {
-        public string cart_id;
+        public string order_id;
     }
 
 }

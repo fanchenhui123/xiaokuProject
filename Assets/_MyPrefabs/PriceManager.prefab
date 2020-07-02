@@ -11977,12 +11977,10 @@ MonoBehaviour:
   page2: {fileID: 4079985840618741075}
   priceManagerItem: {fileID: 6665598481192273287, guid: 38eb2727d61156e40af54bc865e35896,
     type: 3}
-  registorMgrItem: {fileID: 0}
   itemContainer: {fileID: 6024500369533318853}
-  regisItemContainer: {fileID: 0}
-  priceInfosRemove: []
   carNumberList: []
   carTypeList: []
+  putSJ: []
   textCarType: {fileID: 868084601816501758}
   textCarSeries: {fileID: 4064535730713477211}
   toggleCity: {fileID: 5192385041313190708}
@@ -12010,7 +12008,7 @@ MonoBehaviour:
   networkManager: {fileID: 0}
   priceManagerItems: []
   priceItems: []
-  registorItems: []
+  vehicSys: []
 --- !u!1 &8044630554329009462
 GameObject:
   m_ObjectHideFlags: 0
@@ -13770,7 +13768,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.00002168758}
+  m_AnchoredPosition: {x: 0, y: 0.000025945175}
   m_SizeDelta: {x: 0, y: 590}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &9096202597438887134

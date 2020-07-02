@@ -7,6 +7,7 @@ using System.Threading;
 using System.IO;
 using System.Text.RegularExpressions;
 using System;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using LitJson;
 using UnityEngine.Networking;
@@ -817,7 +818,7 @@ public class PriceManager : MonoBehaviour
     private List<Dictionary<string,cost>> dics=new List<Dictionary<string, cost>>();
   //  private List<string> HavaPriceInfoCarType=new List<string>();
  
-    public void DoPostOfferPrice()
+    /*public void DoPostOfferPrice1()
     {
         Debug.Log("提交表单信息 ！！！");
         WWWForm form = new WWWForm();
@@ -837,6 +838,17 @@ public class PriceManager : MonoBehaviour
         for (int i = 0; i < tempInfoList.Count; i++)
         {
             tempInfoList[i].vehicleSystem = tempInfoList[i].vehicleSystem.Replace("库存", "");
+            cost postCost=new cost();
+            postCost.cart_id = tempInfoList[i].id.ToString();
+            postCost.net_price= inputCarPrice.text;
+            postCost.registration_price=inputRegistrationPrice.text;
+            postCost.insurance_price=inputInsurance.text;
+            postCost.purchase_tax=inputTax.text;
+            postCost.financial_agents_price=inputFinancial.text;
+            postCost.other_price= inputOtherPrice.text;
+            postCost.boutique= inputJingPin.text;
+            postCost.content_remark=inputDecorationContent.text;
+            postCost.registration_area_type=currRegisterAreaType.ToString();
             
             string jsonString = JsonMapper.ToJson(tempInfoList[i]);
             JsonData jsonData = JsonMapper.ToObject(jsonString);
@@ -856,8 +868,8 @@ public class PriceManager : MonoBehaviour
             jsonData["cart_price_type"] = "1";//原价车
             jsonData["registration_type"] = ""; 
             jsonData["insurance_type"] = "";
+            jsonData["boutique"] = inputJingPin.text;
             jsonData["content_remark"] = inputDecorationContent.text;
-            jsonData["appear_color"] = tempInfoList[i].color;
             jsonData["registration_area_type"] = currRegisterAreaType.ToString();
             Debug.Log("________准备上传的 jsonData:" + jsonData.ToJson());
             jsonString = jsonData.ToJson();
@@ -892,13 +904,39 @@ public class PriceManager : MonoBehaviour
         }, networkManager.token);
         
         
+    }*/
+
+
+    public void DoPostOfferPrice()//普通报价
+    {
+       // string carType = currPriceInfo.carType;//竟然不需要车型信息？？？
+        cost postCost=new cost();
+        postCost.cart_id ="";
+        postCost.carNumber = currPriceInfo.carNumber;
+        postCost.net_price= inputCarPrice.text;
+        postCost.registration_price=inputRegistrationPrice.text;
+        postCost.insurance_price=inputInsurance.text;
+        postCost.purchase_tax=inputTax.text;
+        postCost.financial_agents_price=inputFinancial.text;
+        postCost.other_price= inputOtherPrice.text;
+        postCost.offer_price = currPriceInfo.guidancePrice;
+        postCost.cart_price_type = "1";
+        postCost.vin = "";
+        postCost.boutique= inputJingPin.text;
+        postCost.content_remark=inputDecorationContent.text;
+        postCost.registration_area_type=currRegisterAreaType.ToString();
+        StartCoroutine(coroutine.instance.PostTypePrice(postCost));
+
     }
-/// <summary>
+
+  
+
+    /// <summary>
 /// 组装报价车型对应的数据
 /// </summary>
 /// <param name="curInfo"></param>当前车辆的数据
 /// <returns></returns>
-    private cost PackCartypeInfo(PriceInfo curInfo)
+    /*private cost PackCartypeInfo(PriceInfo curInfo)
     {
         cost cost=new cost();
 
@@ -917,7 +955,7 @@ public class PriceManager : MonoBehaviour
         cost.appear_color = curInfo.color;
         
         return cost;
-    }
+    }*/
 
     private int index;
 
@@ -1054,24 +1092,23 @@ public class PriceManager : MonoBehaviour
 }
 
 
-public class cost
+public class cost//报价
 {
-    
+    public string cart_id;//多余接口
+    public string carNumber;
     public string net_price;
-    public string financial_agents_price;
-    public string insurance_price;
     public string registration_price;
+    public string insurance_price;
     public string purchase_tax;
+    public string financial_agents_price;
     public string other_price;
-    
+    public string vin;//特价车车架号
     public string cart_price_type;
-    public string registration_type;
-    public string insurance_type;
+    public string offer_price;
+    public string boutique;
     public string content_remark;
-    public string appear_color;
     public string registration_area_type;
     
-
 }
 
 public class carNumbs
@@ -1081,29 +1118,28 @@ public class carNumbs
 
 public class CarTypeInfo
 {
-    public int index;
+    public int id;
+    public int merchant_id;
+    public int brand_id;
     public string vehicleSystem;
     public string carType;
-    public string price;           //报价
-    public string status;          //是否上架
-    public string[] carNumbers;    //车架号
-    public int area;
-
-    public string netPrice;
-    public string registerPrice;
-    public string insurance;
-    public string tax;
-    public string financialServicePrice;
-    public string otherPrice;
-
-    public int registerType;       //0:自付上牌资格  1:代办上牌资格   2:全选
-    public int insuranceType;      //0:100万以上   1:其他险种
-
-    public string bargainPrice;
-
-    public string[] jingpin;
-
-    public string remarkOfDecoration;
+    public string discharge;
+    public string guidancePrice;
+    public string carNumber;    //车架号
+    public string appear_color;
+    public string interoi_color	;
+    public string garageAge;
+    public string note;
+    public string qualityloss;
+    public string memo;
+    public string registration_area_type;
+    public string province_id;
+    public string city_id;
+    public string status;
+    public string create_time;           //报价
+    public string update_time;          //是否上架
+    public int deposit;
+    
 }
 
 public class ChangeCarTypeVehic

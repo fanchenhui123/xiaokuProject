@@ -80,7 +80,6 @@ public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
             jsonData["registration_type"] = "";
             jsonData["insurance_type"] = "";
             jsonData["content_remark"] = cost.content_remark;
-            jsonData["appear_color"] =cost.appear_color;
             jsonData["registration_area_type"] = cost.registration_area_type;
             jsonString = jsonData.ToJson();
             form.AddField("d[]", jsonString);
@@ -155,4 +154,22 @@ public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
     {
         
     }*/
+    
+   public IEnumerator PostTypePrice(cost postCost)//普通报价
+    {
+        UnityWebRequest request=new UnityWebRequest();
+        string js = JsonMapper.ToJson(postCost);
+        request.url = API.PostCarsInfo;
+        request.method = "POST";
+        request.uploadHandler=new UploadHandlerRaw(Encoding.UTF8.GetBytes(js));
+        yield return request.SendWebRequest();
+        if (request.responseCode==200)
+        {
+            tip.instance.SetMessae("报价成功");
+        }
+        else
+        {
+            tip.instance.SetMessae("报价失败："+request.responseCode);
+        }
+    }
 }

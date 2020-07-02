@@ -20,13 +20,16 @@ public class SpecialCarr : MonoBehaviour
    public Dropdown SearchResDropdown;
    public List<Dropdown.OptionData>  optionList;//精品方案
    public List<string> TJSJ=new List<string>();//特价车上架
-   public List<PriceInfo> ChangeStatus=new List<PriceInfo>();
    private NetworkManager networkManager = NetworkManager.Instance;
    private void Awake()
    {
       instance = this;
       
       optionList = new List<Dropdown.OptionData>();
+      if (NegotiatePrice.Instance!=null)
+      {
+         NegotiatePrice.Instance.OptionDatas = optionList;
+      }
       toggleCity.onValueChanged.AddListener((value)=> {
          currRegisterAreaType = "3";
       });
@@ -162,83 +165,36 @@ public class SpecialCarr : MonoBehaviour
 
    public void BtnSave()
    {
-      ChangeStatus.Clear();
       if (string.IsNullOrEmpty(InfoTexts[0].text) || string.IsNullOrEmpty(InfoTexts[1].text) )
       {
          tip.instance.SetMessae("未选择车辆");
       }
       else
       {
-         ChangeStatus.Add(needPost);//链表形式（后台要求格式）做参数传递
-         StartCoroutine(PostNeedChangeData(ChangeStatus));
-       //  postpostpost(ChangeStatus);
+        
+         cost postCost=new cost();
+         postCost.cart_id =needPost.id.ToString();
+         postCost.carNumber = needPost.carNumber;
+         postCost.net_price=  InfoTexts[2].text;
+         postCost.registration_price= InfoTexts[3].text;
+         postCost.insurance_price=InfoTexts[4].text;
+         postCost.purchase_tax=InfoTexts[5].text;
+         postCost.financial_agents_price= InfoTexts[6].text;
+         postCost.other_price= InfoTexts[7].text;
+         postCost.boutique= InfoTexts[8].text;
+         postCost.content_remark= InfoTexts[9].text;//装饰费
+         postCost.registration_area_type=currRegisterAreaType.ToString();
+         postCost.offer_price = needPost.guidancePrice;
+         postCost.vin = needPost.carNumber;
+         postCost.cart_price_type = "2";//特价车
+         StartCoroutine(coroutine.instance.PostTypePrice(postCost));
+
+      
       }
    }
 
    
-   IEnumerator  PostNeedChangeData(List<PriceInfo> ned)//post特价车
-   {
-      WWWForm form = new WWWForm();
-
-
-      for (int i = 0; i < ned.Count; i++)
-      {
-         ned[i].vehicleSystem = ned[i].vehicleSystem.Replace("库存", "");
-           
-         string jsonString = JsonMapper.ToJson(ned[i]);
-         JsonData jsonData = JsonMapper.ToObject(jsonString);
-         
-         for (int j = 0; j < jsonData.Count; j++)
-         {
-            if (jsonData[j]==null)
-            {
-               jsonData[j] = "";
-            }
-         } // Debug.Log(jsonString);
-         jsonData["net_price"] = InfoTexts[2].text;
-         jsonData["financial_agents_price"] = InfoTexts[6].text;
-         jsonData["insurance_price"] = InfoTexts[4].text;
-         jsonData["registration_price"] = InfoTexts[3].text;
-         jsonData["purchase_tax"] = InfoTexts[5].text;
-         jsonData["other_price"] = InfoTexts[7].text;
-         jsonData["cart_price_type"] ="2" ;//特价车
-         jsonData["registration_type"] = ""; 
-         jsonData["insurance_type"] = "";
-         jsonData["content_remark"] = InfoTexts[8].text;//装饰费
-         jsonData["appear_color"] = "";
-         jsonData["registration_area_type"] = currRegisterAreaType;//车的地区国 省 市
-         Debug.Log("________准备上传的 jsonData:" + jsonData.ToJson());
-         jsonString = jsonData.ToJson();
-         form.AddField("d[]", jsonString);
-      }
-      
-      PriceManager.Instance.networkManager.DoPost1(API.PostCarsInfo, form, (responseCode, content) =>
-      {
-         if (responseCode=="200")
-         {
-            for (int i = 0; i < InfoTexts.Count; i++)
-            {
-               InfoTexts[i].text = "";
-            }
-            tip.instance.SetMessae("保存成功");
-            for (int i = 0; i < ned.Count; i++)
-            {
-               TJSJ.Add(ned[i].carNumber);//存入特价上架 链表
-            }
-           
-         }
-         else
-         {
-            tip.instance.SetMessae("保存失败:"+responseCode);
-         }
-         Debug.Log("____responseCode:" + responseCode + ", content:" + System.Net.WebUtility.UrlDecode(content));
-      },  PriceManager.Instance.networkManager.token);
-
-       
-         
-         
-      yield break;
-   }
+  
 
   
    public Text EditorText;

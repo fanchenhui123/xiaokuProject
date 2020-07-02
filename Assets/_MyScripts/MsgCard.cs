@@ -22,17 +22,24 @@ public class MsgCard : MonoBehaviour
     public Text text_user_id;
     public Text text_price;
     public Text text_yajin;
-    public MsgCenterCtrl.MessageDataItem Messae;
+    public string MessaeID="??";
     public Button resBtn;
+    public GameObject MessageCenter;
+   
 
     private void Awake()
     {
+        MessageCenter=GameObject.Find("MsgPage1");
         resBtn.onClick.AddListener(trasnDat);
+      
     }
 
     private void trasnDat()
     {
-        ChatYJ.instance.msg=Messae;
-        ChatYJ.instance.HandleData();
+        MessageCenter.SetActive(false);
+        MsgCenterCtrl.Instance.YJPage2.gameObject.GetComponent<NegotiatePrice>().curOrderId = MessaeID;
+        MsgCenterCtrl.Instance.YJPage2.gameObject.SetActive(true);
+       
+        Debug.Log(MessaeID);
     }
 }
