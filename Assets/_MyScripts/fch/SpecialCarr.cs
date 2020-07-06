@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using LitJson;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
@@ -20,7 +21,7 @@ public class SpecialCarr : MonoBehaviour
    public Dropdown SearchResDropdown;
    public List<Dropdown.OptionData>  optionList;//精品方案
    public List<string> TJSJ=new List<string>();//特价车上架
-   private NetworkManager networkManager = NetworkManager.Instance;
+  // private NetworkManager networkManager = NetworkManager.Instance;
    private void Awake()
    {
       instance = this;
@@ -160,35 +161,76 @@ public class SpecialCarr : MonoBehaviour
    public void BtnBack()
    {
       SpcialPriceCar.SetActive(false);
-      
    }
 
    public void BtnSave()
    {
+      WWWForm form = new WWWForm();
+      List<PriceInfo> tempInfoList=new List<PriceInfo>();
+      tempInfoList.Add(needPost);
       if (string.IsNullOrEmpty(InfoTexts[0].text) || string.IsNullOrEmpty(InfoTexts[1].text) )
       {
          tip.instance.SetMessae("未选择车辆");
       }
       else
       {
-        
-         cost postCost=new cost();
-         postCost.cart_id =needPost.id.ToString();
-         postCost.carNumber = needPost.carNumber;
-         postCost.net_price=  InfoTexts[2].text;
-         postCost.registration_price= InfoTexts[3].text;
-         postCost.insurance_price=InfoTexts[4].text;
-         postCost.purchase_tax=InfoTexts[5].text;
-         postCost.financial_agents_price= InfoTexts[6].text;
-         postCost.other_price= InfoTexts[7].text;
-         postCost.boutique= InfoTexts[8].text;
-         postCost.content_remark= InfoTexts[9].text;//装饰费
-         postCost.registration_area_type=currRegisterAreaType.ToString();
-         postCost.offer_price = needPost.guidancePrice;
-         postCost.vin = needPost.carNumber;
-         postCost.cart_price_type = "2";//特价车
-         StartCoroutine(coroutine.instance.PostTypePrice(postCost));
+         
+         for (int i = 0; i < tempInfoList.Count; i++)
+         {
+            tempInfoList[i].vehicleSystem = tempInfoList[i].vehicleSystem.Replace("库存", "");
 
+            string jsonString = JsonMapper.ToJson(tempInfoList[i]);
+            JsonData jsonData = JsonMapper.ToObject(jsonString);
+
+            jsonData["net_price"] = InfoTexts[2].text;
+            jsonData["financial_agents_price"] = InfoTexts[6].text;
+            jsonData["insurance_price"] =InfoTexts[4].text;
+            jsonData["registration_price"] =  InfoTexts[3].text;
+            jsonData["purchase_tax"] =InfoTexts[5].text;
+            jsonData["other_price"] =InfoTexts[7].text;
+            jsonData["boutique"] =InfoTexts[8].text;
+            //  jsonData["registration_type"] = dropRegistrationType.options[dropRegistrationType.value].text;
+            // jsonData["insurance_type"] = dropInsuranceType.options[dropInsuranceType.value].text;
+            jsonData["content_remark"] =InfoTexts[9].text;//装饰费
+            jsonData["appear_color"] = tempInfoList[i].color;
+            jsonData["cart_price_type"] = "2";
+            jsonData["vin"] =tempInfoList[i].carNumber ;
+            jsonData["registration_area_type"] = currRegisterAreaType.ToString();
+
+            Debug.Log("________准备上传的 jsonData:" + jsonData.ToJson());
+            //jsonString = JsonMapper.ToJson(jsonData);
+            jsonString = jsonData.ToJson();
+
+            form.AddField("d[]", jsonString);
+         }
+         NetworkManager.Instance.DoPost1(API.PostCarsInfo, form, (responseCode, content) =>
+         {
+            Debug.Log("____responseCode:" + responseCode + ", content:" + content);
+            if (responseCode=="200")
+            {
+               tip.instance.SetMessae("保存成功");
+               for (int i = 0; i < tempInfoList.Count; i++)
+               {
+                  if (!TJSJ.Contains(tempInfoList[i].carType))
+                  {
+                     TJSJ.Add(tempInfoList[i].carType); 
+                  }
+               }
+
+               PriceManager.Instance.priceInfos.Remove(needPost);
+               SearchResults.Clear();
+               // CarNumText.text = "";
+               for (int i = 0; i < InfoTexts.Count; i++)
+               {
+                  InfoTexts[i].text = "";
+               }
+            }
+            else
+            {
+               tip.instance.SetMessae("保存失败："+responseCode);
+            }
+         }, NetworkManager.Instance.token);
+         
       
       }
    }

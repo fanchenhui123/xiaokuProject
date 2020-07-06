@@ -10,6 +10,8 @@ using System;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using LitJson;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Logical;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
 using UnityEngine.Networking;
 
 public class PriceManager : MonoBehaviour
@@ -27,6 +29,7 @@ public class PriceManager : MonoBehaviour
     public List<string> carNumberList = new List<string>();
     public List<string> carTypeList = new List<string>();
     public List<string> putSJ=new List<string>();//存入已上架的车型，普通报价后存入
+    public Button specialCarbtn;
 
     #region page2 references
     [Header("page2")]
@@ -91,8 +94,7 @@ public class PriceManager : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-        Debug.Log("awake wakake");
-       
+
     }
 
    
@@ -155,7 +157,7 @@ public class PriceManager : MonoBehaviour
             DoPostOfferPrice();//
 
            // SaveInputInfo();
-
+           
            
         });
 
@@ -571,15 +573,20 @@ public class PriceManager : MonoBehaviour
     public List<GameObject> priceItems;//存入所有的价格管理页面的Item和仓库管理的Item
 
     public List<string> vehicSys=new List<string>();
+    List<PriceInfo> newCarPrice=new List<PriceInfo>();
 
     public void UpdateUI()
     {
         
         CleanBeforeUpdataUi();
-        tip.instance.SetMessae("刷新列表  "+priceInfos.Count);
         GameObject go;
         PriceManagerItem item;
         int count = 1;
+        string curType="";
+        if (priceInfos.Count>0)
+        {
+            curType = priceInfos[0].carType;
+        }
         for (int i = 0; i < priceItems.Count; i++)
         {
             Destroy(priceItems[i]);
@@ -589,14 +596,23 @@ public class PriceManager : MonoBehaviour
         
         for (int i = 0; i < priceInfos.Count; i++)
         {
+           
             if (priceInfos[i].carType != "" && !carTypeList.Contains(priceInfos[i].carType))
             {
                 go = Instantiate(priceManagerItem, itemContainer);
                 priceItems.Add(go);
                 item = go.GetComponent<PriceManagerItem>();
-               
-                item.SetItemContent(count.ToString(), priceInfos[i].carNumber, priceInfos[i].guidancePrice,
+                if (putSJ.Contains(priceInfos[i].carType))
+                {
+                    item.SetItemContent(count.ToString(), priceInfos[i].carNumber, priceInfos[i].guidancePrice,
+                        priceInfos[i].vehicleSystem, priceInfos[i].carType, "已上架"); //订单管理显示的
+                }
+                else
+                {
+                    item.SetItemContent(count.ToString(), priceInfos[i].carNumber, priceInfos[i].guidancePrice,
                         priceInfos[i].vehicleSystem, priceInfos[i].carType, "未上架"); //订单管理显示的
+                }
+                
                 if (item.offerPriceData == null)
                     item.offerPriceData = new PostDataForOfferPrice();
 
@@ -618,15 +634,54 @@ public class PriceManager : MonoBehaviour
                 }
 
                 count++;
-            }
-            
-        }
-        Debug.Log("________priceManagerItems.count:" + priceManagerItems.Count);
-        
-    }
-    
+            }//生成表格
 
-    public void CleanBeforeUpdataUi()//初步筛选数据，去掉已销售的和已报价的
+           
+            if (priceInfos[i].carType=="")
+            {
+                priceInfos[i].carType = curType;
+            }
+            else
+            {
+                curType=priceInfos[i].carType;
+            }
+
+            if (!putedSJ.Contains(priceInfos[i]) )
+            {
+                if (putSJ.Contains(priceInfos[i].carType))
+                {
+                    newCarPrice.Add(priceInfos[i]);
+                }
+            }
+        }
+        StartCoroutine(postNewCarPrice(newCarPrice));
+    }
+
+    IEnumerator postNewCarPrice(List<PriceInfo> postList)
+    {
+        WWWForm form = new WWWForm();
+        for (int i = 0; i < postList.Count; i++)
+        {
+            string jsonstring = JsonMapper.ToJson(postList[i]);
+            form.AddField("d[]",jsonstring);
+        }
+
+        networkManager.DoPost1(API.AddPostPrice, form, (responseCode, content) =>
+        {
+            Debug.Log("responseCode  " + responseCode);
+            if (responseCode=="200")
+            {
+             tip.instance.SetMessae("数据已更新");
+             newCarPrice.Clear();
+            }
+        },
+          
+            networkManager.token);
+            yield break;
+    }
+
+
+    public void CleanBeforeUpdataUi()//初步筛选数据，去掉已销售
     {
         string cart="";
         if (priceInfos.Count!=0)
@@ -658,21 +713,16 @@ public class PriceManager : MonoBehaviour
                    continue;
                }
 
-
-               if (putSJ.Contains(priceInfos[i].carType))
-               {
-                   Debug.Log(priceInfos[i].carType);
-                   priceInfos.Remove(priceInfos[i]);
-                   continue;
-               }
+               
             
+               /*
                if (SpecialCarr.instance!=null)
                {
                    if (SpecialCarr.instance.TJSJ.Contains(priceInfos[i].carNumber))
                    {
                        priceInfos.Remove(priceInfos[i]);
                    }
-               }
+               }*/
            }
         }
        
@@ -816,9 +866,10 @@ public class PriceManager : MonoBehaviour
     /// 点击保存后，发起post传输currPriceInfo数据给后台,把所有同车型的数据信息都上传.特价车POST方法
     /// </summary>
     private List<Dictionary<string,cost>> dics=new List<Dictionary<string, cost>>();
+    private List<PriceInfo> putedSJ=new List<PriceInfo>();//已经报价的
   //  private List<string> HavaPriceInfoCarType=new List<string>();
  
-    /*public void DoPostOfferPrice1()
+    public void DoPostOfferPrice()
     {
         Debug.Log("提交表单信息 ！！！");
         WWWForm form = new WWWForm();
@@ -833,50 +884,32 @@ public class PriceManager : MonoBehaviour
                 tempInfoList.Add(priceInfos[i]);
             }
         }
-
         
+        
+       
         for (int i = 0; i < tempInfoList.Count; i++)
         {
             tempInfoList[i].vehicleSystem = tempInfoList[i].vehicleSystem.Replace("库存", "");
-            cost postCost=new cost();
-            postCost.cart_id = tempInfoList[i].id.ToString();
-            postCost.net_price= inputCarPrice.text;
-            postCost.registration_price=inputRegistrationPrice.text;
-            postCost.insurance_price=inputInsurance.text;
-            postCost.purchase_tax=inputTax.text;
-            postCost.financial_agents_price=inputFinancial.text;
-            postCost.other_price= inputOtherPrice.text;
-            postCost.boutique= inputJingPin.text;
-            postCost.content_remark=inputDecorationContent.text;
-            postCost.registration_area_type=currRegisterAreaType.ToString();
-            
+
             string jsonString = JsonMapper.ToJson(tempInfoList[i]);
             JsonData jsonData = JsonMapper.ToObject(jsonString);
-            for (int j = 0; j < jsonData.Count; j++)
-            {
-                if (jsonData[j]==null)
-                {
-                    jsonData[j] = "";
-                }
-            }
             jsonData["net_price"] = inputCarPrice.text;
             jsonData["financial_agents_price"] = inputFinancial.text;
             jsonData["insurance_price"] = inputInsurance.text;
             jsonData["registration_price"] = inputRegistrationPrice.text;
             jsonData["purchase_tax"] = inputTax.text;
             jsonData["other_price"] = inputOtherPrice.text;
-            jsonData["cart_price_type"] = "1";//原价车
-            jsonData["registration_type"] = ""; 
-            jsonData["insurance_type"] = "";
-            jsonData["boutique"] = inputJingPin.text;
             jsonData["content_remark"] = inputDecorationContent.text;
+            jsonData["appear_color"] = tempInfoList[i].color;
             jsonData["registration_area_type"] = currRegisterAreaType.ToString();
+
             Debug.Log("________准备上传的 jsonData:" + jsonData.ToJson());
+            //jsonString = JsonMapper.ToJson(jsonData);
             jsonString = jsonData.ToJson();
 
             form.AddField("d[]", jsonString);
         }
-        
+       
       
         networkManager.DoPost1(API.PostCarsInfo, form, (responseCode, content) =>
         {
@@ -895,7 +928,7 @@ public class PriceManager : MonoBehaviour
                 
                 ChangeToPage(1);
                 UpdateUI();
-                
+                putedSJ = tempInfoList;
             }
             else
             {
@@ -904,28 +937,145 @@ public class PriceManager : MonoBehaviour
         }, networkManager.token);
         
         
-    }*/
+        
+        /*
+        for (int i = 0; i < priceInfos.Count; i++)
+        {
+            if (priceInfos[i].carType == carType)
+            {
+                Debug.LogFormat("____{2}, carType: {0}, carNumber: {1}", carType, priceInfos[i].carNumber, i);
+                tempInfoList.Add(priceInfos[i]);
+            }
+        }
 
+        for (int i = 0; i < tempInfoList.Count; i++)
+        {
+            tempInfoList[i].vehicleSystem = tempInfoList[i].vehicleSystem.Replace("库存", "");
 
-    public void DoPostOfferPrice()//普通报价
+            cost postCost=new cost();
+            postCost.carNumber = tempInfoList[0].carNumber;
+            postCost.net_price= inputCarPrice.text;
+            postCost.registration_price=inputRegistrationPrice.text;
+            postCost.insurance_price=inputInsurance.text;
+            postCost.purchase_tax=inputTax.text;
+            postCost.financial_agents_price=inputFinancial.text;
+            postCost.other_price= inputOtherPrice.text;
+            postCost.offer_price = currPriceInfo.guidancePrice;
+            postCost.cart_price_type = "1";
+            postCost.vin = "";
+            postCost.boutique= inputJingPin.text;
+            postCost.content_remark=inputDecorationContent.text;
+            postCost.registration_area_type=currRegisterAreaType.ToString();
+
+         //   Debug.Log("________准备上传的 jsonData:" + jsonData.ToJson());
+            //jsonString = JsonMapper.ToJson(jsonData);
+            string jsonString = JsonMapper.ToJson(postCost);
+
+            form.AddField("d[]", jsonString);
+        }
+        networkManager.DoPost1(API._PostOfferPrice1, form, (responseCode, content) =>
+        {
+            Debug.Log("____responseCode:" + responseCode + ", content:" + content);
+        }, networkManager.token);
+        */
+
+        
+    }
+
+    private bool showAll=true;
+    public List<PriceInfo> StoreAddCar=new List<PriceInfo>();
+    List<GameObject> specialItems=new List<GameObject>();
+    public void ShowSpecialCar()
     {
-       // string carType = currPriceInfo.carType;//竟然不需要车型信息？？？
-        cost postCost=new cost();
-        postCost.cart_id ="";
-        postCost.carNumber = currPriceInfo.carNumber;
-        postCost.net_price= inputCarPrice.text;
-        postCost.registration_price=inputRegistrationPrice.text;
-        postCost.insurance_price=inputInsurance.text;
-        postCost.purchase_tax=inputTax.text;
-        postCost.financial_agents_price=inputFinancial.text;
-        postCost.other_price= inputOtherPrice.text;
-        postCost.offer_price = currPriceInfo.guidancePrice;
-        postCost.cart_price_type = "1";
-        postCost.vin = "";
-        postCost.boutique= inputJingPin.text;
-        postCost.content_remark=inputDecorationContent.text;
-        postCost.registration_area_type=currRegisterAreaType.ToString();
-        StartCoroutine(coroutine.instance.PostTypePrice(postCost));
+       
+        if (showAll)
+        {
+            if (SpecialCarr.instance!=null)
+            {
+                for (int i = 0; i < priceItems.Count; i++)
+                {
+                    priceItems[i].SetActive(false);
+                }
+
+                
+                for (int i = 0; i < SpecialCarr.instance.TJSJ.Count; i++)
+                {
+                    if ( SpecialCarr.instance.TJSJ.Count==0)
+                    {
+                         tip.instance.SetMessae("暂无特价车信息");
+                    }
+                    else
+                    {
+                        GameObject go;
+                        go = Instantiate(priceManagerItem, itemContainer);
+                        specialItems.Add(go);
+                        PriceManagerItem  item = go.GetComponent<PriceManagerItem>();
+                        item.SetItemContent(i.ToString(), priceInfos[i].carNumber, priceInfos[i].guidancePrice,
+                            priceInfos[i].vehicleSystem, priceInfos[i].carType, "已上架"); //订单管理显示的
+                            
+                           
+                        
+                    }
+                   
+                }
+            }
+            else
+            {
+                tip.instance.SetMessae("暂无特价车信息");
+            }
+        }
+        else
+        {
+            for (int i = 0; i < specialItems.Count; i++)
+            {
+                specialItems[i].SetActive(false);
+            }
+
+            specialItems.Clear();
+            for (int i = 0; i < priceItems.Count; i++)
+            {
+                priceItems[i].SetActive(true);
+            }
+        }
+
+        showAll = !showAll;
+
+    }
+
+    public void DoPostOfferPrice1()//普通报价
+    {
+       string carType = currPriceInfo.carType;//竟然不需要车型信息？？？
+       List<cost> costList=new List<cost>();
+       List<PriceInfo> needPost=new List<PriceInfo>();
+       CleanBeforeUpdataUi();
+       for (int i = 0; i < priceInfos.Count; i++)
+       {
+           if (priceInfos[i].carType==carType)
+           {
+               needPost.Add(priceInfos[i]);
+           }
+       }
+       for (int i = 0; i < needPost.Count; i++)
+       {
+           cost postCost=new cost();
+           postCost.cart_id = "NNN";
+           postCost.carNumber = needPost[i].carNumber;
+           postCost.net_price= inputCarPrice.text;
+           postCost.registration_price=inputRegistrationPrice.text;
+           postCost.insurance_price=inputInsurance.text;
+           postCost.purchase_tax=inputTax.text;
+           postCost.financial_agents_price=inputFinancial.text;
+           postCost.other_price= inputOtherPrice.text;
+           postCost.offer_price = needPost[i].guidancePrice;
+           postCost.cart_price_type = "1";
+           postCost.vin = "NA";
+           postCost.boutique= inputJingPin.text;
+           postCost.content_remark=inputDecorationContent.text;
+           postCost.registration_area_type=currRegisterAreaType.ToString();
+           costList.Add(postCost);
+       }
+       StartCoroutine(coroutine.instance.PostTypePrice(costList));
+       
 
     }
 
@@ -1057,6 +1207,8 @@ public class PriceManager : MonoBehaviour
         carTypeList.Clear();
         vehicSys.Clear();
         vehicleSystemsDic.Clear();
+        putedSJ.Clear();
+        putSJ.Clear();
         
         priceInfos.Clear();
       //  coroutine.instance.dicItem.Clear();
@@ -1094,8 +1246,22 @@ public class PriceManager : MonoBehaviour
 
 public class cost//报价
 {
+    public string brand;
+    public string vehicleSystrm;
+    public string carType;
+    public string discharge;
+    public string guidancePrice;
     public string cart_id;//多余接口
     public string carNumber;
+    public string appear_color;
+    public string interoi_color;
+    public string garageAge;
+    public string note;
+    public string qualityloss;
+    public string memo;
+    public string registration_area_type;
+    public string province_id;
+    public string city_id;
     public string net_price;
     public string registration_price;
     public string insurance_price;
@@ -1107,7 +1273,7 @@ public class cost//报价
     public string offer_price;
     public string boutique;
     public string content_remark;
-    public string registration_area_type;
+
     
 }
 

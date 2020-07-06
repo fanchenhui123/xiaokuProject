@@ -267,6 +267,9 @@ public class storeMgr : MonoBehaviour
          carNumbs.car_numbers = stringBuilder.ToString();
          String jsonData = JsonMapper.ToJson(carNumbers);
          UnityWebRequest request=new UnityWebRequest(API.PostDeleteCarinfo,"POST");
+         request.SetRequestHeader("Authorization",   NetworkManager.Instance.token);
+         request.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+         request.SetRequestHeader("Accept", "application/json");
          request.uploadHandler=new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonData));
          yield return request.SendWebRequest();
          if (request.responseCode==200)

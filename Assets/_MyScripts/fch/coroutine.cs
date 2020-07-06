@@ -9,10 +9,12 @@ using UnityEngine.Networking;
 public class coroutine : MonoBehaviour
 {
     public static coroutine instance;
+    private NetworkManager networkManager;
 public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
     private void Awake()
     {
         instance = this;
+        networkManager=  NetworkManager.Instance;
         StartCoroutine(GetServerBrand());
     }
 
@@ -125,7 +127,6 @@ public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
         if (request.responseCode==200)
         {
             JsonData jsonData= JsonMapper.ToObject(request.downloadHandler.text)["data"];
-            Debug.Log(JsonMapper.ToJson(jsonData));
             for (int i = 0; i < jsonData.Count; i++)
             {
                 DicBrand.Add(jsonData[i]["id"].ToJson(),jsonData[i]["title"].ToJson());
@@ -155,21 +156,61 @@ public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
         
     }*/
     
-   public IEnumerator PostTypePrice(cost postCost)//普通报价
-    {
-        UnityWebRequest request=new UnityWebRequest();
-        string js = JsonMapper.ToJson(postCost);
-        request.url = API.PostCarsInfo;
-        request.method = "POST";
-        request.uploadHandler=new UploadHandlerRaw(Encoding.UTF8.GetBytes(js));
-        yield return request.SendWebRequest();
-        if (request.responseCode==200)
+   public IEnumerator PostTypePrice(List<cost> postCostList)//普通报价
+   {
+       int m = 0;
+       int n = 0;
+        for (int i = 0; i < postCostList.Count; i++)
         {
-            tip.instance.SetMessae("报价成功");
+            JsonData js = JsonMapper.ToObject(JsonMapper.ToJson(postCostList[i]) );
+            for (int j = 0; j < js.Count; j++)
+            {
+                if (js[i]==null)
+                {
+                    js[i] = "NA";
+                }
+            }
+            string jstring = js.ToJson();
+            UnityWebRequest request=new UnityWebRequest();
+           // request.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+          //  request.SetRequestHeader("Accept", "application/json");
+          //  request.SetRequestHeader("Authorization", NetworkManager.Instance.token);
+            request.url = API.PostCarsInfo;
+            request.method = "POST";
+            request.uploadHandler=new UploadHandlerRaw(Encoding.UTF8.GetBytes(jstring));
+            request.downloadHandler=new DownloadHandlerBuffer();
+            yield return request.SendWebRequest();
+            if (request.responseCode==200)
+            {
+               // tip.instance.SetMessae("报价成功");
+                m++;
+                PriceManager.Instance.putSJ.Add(postCostList[i].carNumber);
+            }
+            else
+            {
+               // Debug.Log(JsonMapper.ToObject(request.downloadHandler.text)["message"] );
+               // tip.instance.SetMessae(JsonMapper.ToObject(request.downloadHandler.text)["message"].ToString());
+                n++;
+            }
+
+            jstring = "";
+            js.Clear();
+            request.Dispose();
         }
-        else
-        {
-            tip.instance.SetMessae("报价失败："+request.responseCode);
-        }
+        
+        tip.instance.SetMessae(m+"辆报价成功，"+n+"辆不存在",2f);
+       
+                
+       PriceManager.Instance.ChangeToPage(1);
+       PriceManager.Instance.UpdateUI();
+      
+        
+       
+       
     }
+}
+
+public class dataPost
+{
+    public string d;
 }

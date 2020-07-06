@@ -115,7 +115,7 @@ public class NetworkManager : MonoBehaviour
     {
         var request = UnityWebRequest.Post(url, form);
         if (accessToken != null)
-            request.SetRequestHeader(AppConst.AccessToken, accessToken);
+            request.SetRequestHeader("Authorization", accessToken);
         request.timeout = 5;
         yield return request.SendWebRequest();
         callback?.Invoke(request.responseCode.ToString(), request.downloadHandler.text);
@@ -231,15 +231,17 @@ public class NetworkManager : MonoBehaviour
         UnityAction<long, string> ufunc = null)
     {
         var request = UnityWebRequest.Get(url);
-        //request.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        request.SetRequestHeader("Accept", "application/json");
-        if (accessToken != null)
-            request.SetRequestHeader("Authorization", "Bearer " + accessToken);
+       // request.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+       // request.SetRequestHeader("Accept", "application/json");
+        request.SetRequestHeader("Authorization", accessToken);
+       // if (accessToken != null)
+           
         request.timeout = 5;
         yield return request.SendWebRequest();
+        
         //Debug.Log("____url:" + url);
         //Debug.Log("____request Accept:" + request.GetRequestHeader("Accept"));
-        //Debug.Log("____request Authorization:" + request.GetRequestHeader("Authorization"));
+        Debug.Log("____request Authorization:" + request.GetRequestHeader("Authorization"));
         callback?.Invoke(request.responseCode, request.downloadHandler.text);
         ufunc?.Invoke(request.responseCode, request.downloadHandler.text);
         //if (request.responseCode == 200)
@@ -260,7 +262,7 @@ public class NetworkManager : MonoBehaviour
         request.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded");
         request.SetRequestHeader("Accept", "application/json");
         if (accessToken != null)
-            request.SetRequestHeader("Authorization", "Bearer " + accessToken);
+            request.SetRequestHeader("Authorization",   accessToken);
 
         request.timeout = 5;
         yield return request.SendWebRequest();

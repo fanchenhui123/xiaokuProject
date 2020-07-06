@@ -44,7 +44,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
     private void Start()
     {
        // confirmAndBack.onClick.AddListener(OnClickConfirm);
-        continueAndBack.onClick.AddListener(OnClickContinue);
+      //  continueAndBack.onClick.AddListener(OnClickContinue);
 
         networkManager = NetworkManager.Instance;
         if (networkManager != null)
@@ -86,9 +86,9 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                     msgCard.GetComponent<MsgCard>().text_yajin.text = "押金已支付";
                     msgCard.GetComponent<MsgCard>().text_yajin.color = Color.green;
 
-                    msgCard.GetComponent<MsgCard>().MessaeID = repliesOrders[i].order_no;   ;//每个消息卡的数据传过去
-                   // msgCard.GetComponent<MsgCard>().resBtn.onClick.AddListener(()=>curYJInfo=repliesOrders[i]);
-                    // StartCoroutine(GetYJinfo(repliesOrders[i].order_no));
+                    msgCard.GetComponent<MsgCard>().MessaeID = repliesOrders[i].id.ToString();   ;//每个消息卡的数据传过去
+                    msgCard.GetComponent<MsgCard>().MessaeIndex = i;
+                    
                 }
             });
         }
@@ -127,8 +127,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
     {
         ChangeToPage(1);
     }
-
-    private List<ReplyContent>  chatMessage=new List<ReplyContent>();
+    
     public void DoGetMessageList(Action updateUI)
     {
         string url = API._GetMsgList1;
@@ -138,13 +137,17 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
             {
                 //Response_Msg responseMsg = JsonMapper.ToObject<Response_Msg>(data);
                 JsonData jsonData = JsonMapper.ToObject(data);
+                Debug.Log(" datacount  "+jsonData["data"].Count);
+                Debug.Log(" data  "+data);
                 //Debug.Log(jsonData["data"].Count);
                 foreach (JsonData obj in jsonData["data"])
                 {
+                  
                     try
                     {
                         MessageDataItem item = new MessageDataItem();
                         item.id = int.Parse(obj["id"].ToString());
+                        Debug.Log("item id   "+   item.id);
                         item.user_id = int.Parse(obj["user_id"].ToString());
                         item.cart_id = int.Parse(obj["cart_id"].ToString());
 
@@ -160,7 +163,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                             item.cart.carNumber = obj["cart"]["carNumber"].ToString();
 
                             if (obj["cart"]["appear_color"] != null)
-                                item.cart.appear_color = obj["cart"]["appear_color"].ToString();            //null
+                                item.cart.appear_color = obj["cart"]["appear_color"].ToString();           //null
                             else
                                 item.cart.appear_color = "NA";
                         }
@@ -181,6 +184,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
 
                         msgItemList.Add(item);
 
+                        Debug.Log("item.status  "+ item.status);
                         if (item.status == 5)
                         {
                             completedOrders.Add(item);          //交易完成
@@ -197,6 +201,12 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                     {
                         Debug.LogError(E.ToString());
                     }
+                    
+                }
+
+                if (jsonData["data"].Count==0)
+                {
+                     tip.instance.SetMessae("没有订单信息");
                 }
                 updateUI();
                 //Debug.Log("________" + msgItemList[msgItemList.Count - 1].cart_id);

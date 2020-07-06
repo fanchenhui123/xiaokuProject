@@ -141,7 +141,8 @@ public class MyLoginManager : MonoBehaviour
                 if (jdata["code"].ToString() == "200")
                 {
                     warnText.text = "登陆成功";
-                    networkManager.token = jdata["data"].ToString();
+                    networkManager.token ="Bearer"+ jdata["data"].ToString();
+                    Debug.Log("token:  "+networkManager.token);
                     LoginSuccess();
                 }
                 else
@@ -201,6 +202,10 @@ public class MyLoginManager : MonoBehaviour
                 //Debug.Log("id:" + dataObj["id"]);
                 SecondPanelCtrl.Instance.textUserID.text = dataObj["id"].ToString();
                 SecondPanelCtrl.Instance.textNickName.text = dataObj["email"].ToString();
+            }
+            else
+            {
+                Debug.Log(responseCode+"    ");
             }
         }, networkManager.token);
     }

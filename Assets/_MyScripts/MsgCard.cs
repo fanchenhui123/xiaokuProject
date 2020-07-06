@@ -22,7 +22,8 @@ public class MsgCard : MonoBehaviour
     public Text text_user_id;
     public Text text_price;
     public Text text_yajin;
-    public string MessaeID="??";
+    public string MessaeID="";//传给聊天页面的订单ID
+    public int MessaeIndex = 0;//传给聊天页面订单index作为Data数组的索引
     public Button resBtn;
     public GameObject MessageCenter;
    
@@ -32,14 +33,17 @@ public class MsgCard : MonoBehaviour
         MessageCenter=GameObject.Find("MsgPage1");
         resBtn.onClick.AddListener(trasnDat);
       
+      
     }
 
     private void trasnDat()
     {
         MessageCenter.SetActive(false);
         MsgCenterCtrl.Instance.YJPage2.gameObject.GetComponent<NegotiatePrice>().curOrderId = MessaeID;
+        Debug.Log("messageID  "+ MessaeID);
+        MsgCenterCtrl.Instance.YJPage2.gameObject.GetComponent<NegotiatePrice>().dataIndex = MessaeIndex;
         MsgCenterCtrl.Instance.YJPage2.gameObject.SetActive(true);
-       
-        Debug.Log(MessaeID);
+        
+        Debug.Log("orderID "+  MessaeID);
     }
 }

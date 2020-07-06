@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 public class API
 {
     public static string LoginUrl = "https://www.xiaokucc.cn/merchant/login/login";
-    public static string LoginUrl1 = "http://test.cheyuw.cn/api/merchant/auth/login";
+    public static string LoginUrl1 = "http://test.cheyuw.cn/api/merchant/auth/login";// "http://test.cheyuw.cn/api/merchant/auth/login";
 
-    public static string RegisterUrl = "https://www.xiaokucc.cn/merchant/merchant/register";
+    public static string RegisterUrl = "http://test.cheyuw.cn/api/merchant/auth/register";//注册
     public static string GetMerchants = "https://www.xiaokucc.cn/merchant/merchant/getMerchants?pageSize=100&pageNumber=1";
     public static string ApplyLink = "https://www.xiaokucc.cn/merchant/merchant/linkMerchantApply";
     public static string GetApplyLink = "https://www.xiaokucc.cn/merchant/merchant/linkMerchantApplyList?pageSize=100&pageNumber=1";
@@ -34,17 +34,19 @@ public class API
     public static string _GetUserInfo1 = "http://test.cheyuw.cn/api/merchant/user";
 
     public static string _GetMsgList = "https://service.xiaokucc.cn/api/merchant/order";
-    public static string _GetMsgList1 = "http://test.cheyuw.cn/api/merchant/order";
+    public static string _GetMsgList1 = "http://test.cheyuw.cn/api/merchant/order";//获取订单消息和议价消息
     
     //2020.6.25新增
-    public static string _GetMsgList23 = "http://op.cunguangmed.com:3000/mock/46/api/merchant/order";//获取订单详情包括议价的记录
-    public static string PostYiJia = "http://op.cunguangmed.com:3000/mock/46/api/merchant/reply";//议价
-    public static string GetCarInfo = "http://op.cunguangmed.com:3000/mock/54/api/client/cart/show";
-    public static string PostConfirmYiJia = "http://op.cunguangmed.com:3000/mock/54/api/client/approve";//确认议价
-    public static string PostCarsInfo = "http://op.cunguangmed.com:3000/mock/46/api/merchant/cart/offer";//车辆报价
-    public static string GetServerVehcle = "http://op.cunguangmed.com:3000/mock/54/api/client/line";//获取服务器车系列表
-    public static string PostDeleteCarinfo = "http://test.cheyuw.cn//api/merchant/data/delete";//删除车辆信息
-    public static string GetServerBrand = "http://op.cunguangmed.com:3000/mock/54/api/client/brand";//获取服务器品牌列表
+    public static string _GetMsgList23 = "http://test.cheyuw.cn/api/merchant/order";//获取订单详情包括议价的记录
+    public static string AddPostPrice = "http://test.cheyuw.cn/api/merchant/data/add";//已报价的车型增加车辆
+    public static string PostYiJia = "http://test.cheyuw.cn/api/merchant/reply";//议价
+    public static string GetCarInfo = "http://test.cheyuw.cn/api/client/cart/show";
+    public static string UpdataUserInfo = "http://test.cheyuw.cn/api/merchant/auth/edit";//更改商家信息
+    public static string PostConfirmYiJia = "http://test.cheyuw.cn/api/merchant/approve";//确认议价
+    public static string PostCarsInfo = "http://test.cheyuw.cn/api/merchant/data/batch";//车辆报价
+    public static string GetServerVehcle = "http://test.cheyuw.cn/api/client/line";//获取服务器车系列表
+    public static string PostDeleteCarinfo = "http://test.cheyuw.cn/api/merchant/data/delete";//删除车辆信息
+    public static string GetServerBrand = "http://test.cheyuw.cn/api/client/brand";//获取服务器品牌列表
     public static string _PostCarType = "http://test.cheyuw.cn/api/merchant/data/up_lines_models";//更新车型车系
     //2020.6.25新增
 

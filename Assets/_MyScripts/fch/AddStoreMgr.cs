@@ -116,11 +116,12 @@ public class AddStoreMgr : MonoBehaviour
             texts[i].text = "";
         }
         PriceManager.Instance.priceInfos.Add(_item);
+       PriceManager.Instance.StoreAddCar.Add(_item);
         tip.instance.SetMessae("添加成功");
         CloseAddCar();
     }
 
-    
+    public List<PriceInfo> StoreAddCar=new List<PriceInfo>();
    
 
    
