@@ -7,7 +7,6 @@ using LitJson;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
-
 public class NegotiatePrice : MonoBehaviour
 {
     public static NegotiatePrice Instance;
@@ -23,7 +22,8 @@ public class NegotiatePrice : MonoBehaviour
     //加数字的方法，小箭头的方法
     private InputField DK,SF,FQ,YG,LX,NM,ZJ;
     public GameObject  dialogItem;
-    public Button btnConfirm;
+    private Button btnConfirm;
+    [HideInInspector]
     public List<Dropdown.OptionData> OptionDatas=new List<Dropdown.OptionData>();
     public string curOrderId="???";
     private MsgCenterCtrl.ReplyContent _replyContent;
@@ -167,8 +167,6 @@ public class NegotiatePrice : MonoBehaviour
             mehodTextList[i].transform.Find("Button").gameObject.SetActive(true);
             mehodTextList[i].transform.Find("index").GetComponent<Text>().text = (i+1).ToString();
         }
-
-        Debug.Log(   methodList.Count);
     }
     public void DeleteMeth(GameObject o)//删除方案
     {
@@ -324,13 +322,17 @@ public class NegotiatePrice : MonoBehaviour
     private void updateChatInfo()
     {
         StringBuilder stringBuilder = new StringBuilder();
-
+        JsonData jsonData = JsonMapper.ToObject(resOrderInfo);
+      //  if (dialogContainer.childCount!= jsonData["data"][dataIndex]["repies"].Count)
+     //   {
+            FlashWinTool.FlashWindow(FlashWinTool.GetProcessWnd());
+       // }
         for (int i = 0; i < dialogContainer.childCount; i++)
         {
             Destroy(dialogContainer.GetChild(i).gameObject);
         }
 
-        JsonData jsonData = JsonMapper.ToObject(resOrderInfo);
+        
         GameObject go;
         for (int i = 0; i < jsonData["data"][dataIndex]["repies"].Count; i++)
         {
@@ -338,18 +340,18 @@ public class NegotiatePrice : MonoBehaviour
             go = Instantiate(dialogItem, dialogContainer);
             if (jsonData["data"][dataIndex]["repies"][i]["type"].ToJson()=="1")
             {
-             stringBuilder.Append(jsonData["data"][dataIndex]["name"]).Append(":  价格：").Append(jsonData["data"][dataIndex]["repies"][i]["price"]).Append("万元，备注：")
+             stringBuilder.Append("价格：").Append(jsonData["data"][dataIndex]["repies"][i]["price"]).Append("万元，备注：")
                     .Append(jsonData["data"][dataIndex]["repies"][i]["content"]);
+             go.GetComponent<Image>().color = new Color(155/255f,108/255f,72/255f,255/255f);
             }
             if (jsonData["data"][dataIndex]["repies"][i]["type"].ToJson()=="2")
             {
-                stringBuilder.Append("我").Append(":  价格：").Append(jsonData["data"][dataIndex]["repies"][i]["price"]).Append("万元，备注：")
+                stringBuilder.Append("价格：").Append(jsonData["data"][dataIndex]["repies"][i]["price"]).Append("万元，备注：")
                     .Append(jsonData["data"][dataIndex]["repies"][i]["content"]); 
+                go.GetComponent<Image>().color = new Color(72/255f,138/255f,155/255f,255/255f);
             }
             
-            
-           
-            go.GetComponent<Text>().text = stringBuilder.ToString();
+            go.transform.Find("dialogtext").GetComponent<Text>().text = stringBuilder.ToString();
             stringBuilder.Clear();
         }
 
@@ -365,15 +367,13 @@ public class NegotiatePrice : MonoBehaviour
         {
             if (responseCode == 200) //获取到数据后更新msg刷新聊天内容
             {
-
                 resOrderInfo = data;
                 updateChatInfo();
                 ShowData();
-
             }
             else
             {
-                Debug.Log("2222211112   " + responseCode);
+                Debug.Log("responsecode  " + responseCode);
             }
         }, _networkManager.token);
         /*UnityWebRequest request=new UnityWebRequest();
@@ -451,7 +451,29 @@ public class NegotiatePrice : MonoBehaviour
 
     public void ConfirmYJInfo()
     {
-        
+        if (string.IsNullOrEmpty(curOrderId) )
+        {
+            tip.instance.SetMessae("没有订单号");
+            return;
+        }
+       
+        WWWForm form=new WWWForm();
+        form.AddField("order_id",curOrderId);
+        _networkManager.DoPost1(API.PostConfirmYiJia,form, (responsecode, data) =>
+        {
+            if (responsecode=="200")
+            {
+                tip.instance.SetMessae("议价成功");
+            }
+            else if (responsecode=="400")
+            {
+                tip.instance.SetMessae(JsonMapper.ToObject(data)["message"].ToString());
+            }
+            else
+            {
+                tip.instance.SetMessae("议价失败："+responsecode);
+            }
+        },_networkManager.token);
     }
     
     

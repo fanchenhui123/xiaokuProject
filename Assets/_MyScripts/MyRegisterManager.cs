@@ -117,12 +117,18 @@ public class MyRegisterManager : MonoBehaviour
             return;
         }
 
+        if (brand_id=="")
+        {
+            warnText.text = "请输入正确的汽车品牌";
+        }
+
+        
         WWWForm form = new WWWForm();
         form.AddField("email", email);
         form.AddField("password", password);
         form.AddField("address", address);
         Debug.Log("________________address:" + address);
-        form.AddField("merchant", "NA");
+        form.AddField("merchant", "NANA");
        // form.AddField("linkman", "王五");
        // form.AddField("linkphone", "00000000000");
         form.AddField("ip", ip);
@@ -139,6 +145,7 @@ public class MyRegisterManager : MonoBehaviour
         if (responseCode == "200")
         {
             JsonData jdata = JsonMapper.ToObject(data);
+            Debug.Log(" resdata "+jdata.ToString());
             if (jdata["code"].ToString() == "0")
             {
                 warnText.text = jdata["message"].ToString();
@@ -146,7 +153,7 @@ public class MyRegisterManager : MonoBehaviour
             }
             else
             {
-                warnText.text = jdata["message"].ToString();
+                warnText.text = jdata["data"].ToString();
             }
         }
         else if (responseCode=="400")
@@ -193,7 +200,8 @@ public class MyRegisterManager : MonoBehaviour
         brandList.Add("克莱斯勒");
         brandList.Add("兰博基尼");
         brandList.Add("劳斯莱斯");
-        brandList.Add("雷克萨斯"); brandList.Add("雷洛");
+        brandList.Add("雷克萨斯");
+        brandList.Add("雷洛");
         brandList.Add("陆风");
         brandList.Add("路虎");
         brandList.Add("马自达");

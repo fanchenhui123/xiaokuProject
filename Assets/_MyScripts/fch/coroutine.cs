@@ -24,6 +24,7 @@ public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
     
     public List<string> priceInfosRemove=new List<string>();
     public  Dictionary<string,cost> dicItem=new Dictionary<string, cost>();//记录已经上传报价信息的车辆
+    
     public void StartCompare()
     {
         StartCoroutine(CompareData());
@@ -34,7 +35,6 @@ public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
        
             for (int i = 0; i < priceInfos.Count; i++)
             {
-               
                 if (!priceInfosLast.Contains(priceInfos[i]))//老Excel表中包含了没有新Excel表数据，说明是新增数据
                 {
                     if (dicItem.ContainsKey(priceInfos[i].carType))//且 上传的车型中有此新增的车型
@@ -203,14 +203,8 @@ public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
                 
        PriceManager.Instance.ChangeToPage(1);
        PriceManager.Instance.UpdateUI();
-      
-        
        
        
     }
 }
 
-public class dataPost
-{
-    public string d;
-}

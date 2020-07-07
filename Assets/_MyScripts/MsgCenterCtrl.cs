@@ -91,16 +91,16 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                     
                 }
             });
+            
+           
         }
 
     }
 
   //  public Transform dialog;
 
-    
 
-
-    /// <summary>
+  /// <summary>
     /// 消息中心一二级页面切换
     /// </summary>
     /// <param name="pageIndex">1 or 2</param>

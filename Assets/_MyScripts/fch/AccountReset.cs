@@ -13,7 +13,7 @@ public class AccountReset : MonoBehaviour
    public void SendResetInfo()
    {
       AccountResInfo accountResInfo=new AccountResInfo();
-      accountResInfo.email = PlayerPrefs.GetString("username").Trim('"');
+      accountResInfo.email = "wfw2113@qq.com";// PlayerPrefs.GetString("username").Trim('"');
       accountResInfo.merchant = infoTexts[0].text;
       accountResInfo.password= infoTexts[1].text;
       accountResInfo.ConfirmPassword= infoTexts[2].text;
@@ -26,7 +26,6 @@ public class AccountReset : MonoBehaviour
       accountResInfo.BankInfo= infoTexts[9].text;
       accountResInfo.brand_id = infoTexts[10].text;
       accountResInfo.ip=IPManager.GetIP(ADDRESSFAM.IPv4);
-      Debug.Log(accountResInfo.email);
       StartCoroutine(CommitInfo(accountResInfo));
    }
 
@@ -40,7 +39,7 @@ public class AccountReset : MonoBehaviour
       transform.gameObject.SetActive(true);
    }
 
-   IEnumerator  CommitInfo(AccountResInfo info)
+   IEnumerator  CommitInfo(AccountResInfo info)//post修改的信息
    {
      
       string js = JsonMapper.ToJson(info);
