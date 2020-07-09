@@ -85,7 +85,7 @@ public class MyRegisterManager : MonoBehaviour
     }
 
     //提交
-    public void Commit()
+    public void Commit()//注册
     {
         //公司邮箱	公司名称	登录密码	公司地址	联系人	联系电话	IP	营业执照	昵称	品牌
         //email	merchant	password	address	linkman	linkphone	ip	license_pic	nickname	brand_id
@@ -100,6 +100,7 @@ public class MyRegisterManager : MonoBehaviour
         //string linkphone = inputFields[6].text;
         string ip = IPManager.GetIP(ADDRESSFAM.IPv4);
         string license_pic = "null";
+        string merchant = inputFields[5].text;
         //string nickname = inputFields[7].text;
         string brand_id = "";
 
@@ -107,7 +108,7 @@ public class MyRegisterManager : MonoBehaviour
         {
             if (brandList[i]==inputFields[4].text)
             {
-                brand_id = i.ToString();
+                brand_id = (i+1).ToString();
             }
         }
         
@@ -128,7 +129,7 @@ public class MyRegisterManager : MonoBehaviour
         form.AddField("password", password);
         form.AddField("address", address);
         Debug.Log("________________address:" + address);
-        form.AddField("merchant", "NANA");
+        form.AddField("merchant", merchant);//公司名字
        // form.AddField("linkman", "王五");
        // form.AddField("linkphone", "00000000000");
         form.AddField("ip", ip);
@@ -141,7 +142,7 @@ public class MyRegisterManager : MonoBehaviour
 
     void PostCallBack(string responseCode, string data)
     {
-        Debug.Log("responseCode:" + responseCode + "|" + data);
+        
         if (responseCode == "200")
         {
             JsonData jdata = JsonMapper.ToObject(data);
@@ -163,6 +164,7 @@ public class MyRegisterManager : MonoBehaviour
         {
             warnText.text = "网络故障";
         }
+        Debug.Log("responseCode:" + responseCode + "|" + JsonMapper.ToObject(data)["meaasge"].ToString());
     }
 
 

@@ -44,9 +44,9 @@ public class AddStoreMgr : MonoBehaviour
     {
         CreatCarCode();
         
-        if (string.IsNullOrEmpty(_carCode))
+        if (string.IsNullOrEmpty(texts[0].text)|| string.IsNullOrEmpty(texts[1].text))
         {
-            tip.instance.SetMessae("无车架号");
+            tip.instance.SetMessae("缺少信息");
         }
         else
         {
@@ -68,6 +68,7 @@ public class AddStoreMgr : MonoBehaviour
                 List<string> carTypes=new  List<string>();
                 carTypes.Add(texts[1].text);
                 PriceManager.Instance.vehicleSystemsDic.Add(texts[0].text,carTypes);
+                PriceManager.Instance.DoPostCarType();
             }
         }
     }
@@ -85,7 +86,7 @@ public class AddStoreMgr : MonoBehaviour
         _item.carNumber = _carCode;
         _item.vehicleSystem = texts[0].text;
        _item.carType = texts[1].text.ToUpper();
-       _item.brand = "奥迪";
+       _item.brand =PlayerPrefs.GetString("brand_id") ;
         if (string.IsNullOrEmpty(texts[4].text))
         {
             _item.memo = "目前无现车，订车时间因颜色而定，需备注颜色";

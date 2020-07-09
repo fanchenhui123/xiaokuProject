@@ -8,6 +8,7 @@ using UnityEngine.Networking;
 
 public class coroutine : MonoBehaviour
 {
+    //每次读表后请求数据库获取已经报价的车辆的信息，对比新旧两个表，更改、删除、新增车辆。
     public static coroutine instance;
     private NetworkManager networkManager;
 public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
@@ -16,6 +17,7 @@ public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
         instance = this;
         networkManager=  NetworkManager.Instance;
         StartCoroutine(GetServerBrand());
+       // StartCoroutine(GetServerVeh());
     }
 
     public List<PriceInfo> priceInfosLast=new List<PriceInfo>(); 
@@ -23,98 +25,60 @@ public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
     public List<PriceInfo> priceInfosAdd=new List<PriceInfo>();
     
     public List<string> priceInfosRemove=new List<string>();
-    public  Dictionary<string,cost> dicItem=new Dictionary<string, cost>();//记录已经上传报价信息的车辆
+   
     
-    public void StartCompare()
+    public List<PriceInfo> StartCompare(List<PriceInfo> newList,List<PriceInfo> oldList)
     {
-        StartCoroutine(CompareData());
+        Debug.Log("compara");
+        tip.instance.SetMessae("compara");
+        List<PriceInfo> hadPrice=new List<PriceInfo>(); //todo 请求，获取已报价的信息
+        networkManager.DoGet1(API.GetHadPriceCars, (responsecode, data) =>
+        {
+            if (responsecode==200)
+            {
+                Debug.Log("111");
+            }
+            Debug.Log(data);
+        });
+        StartCoroutine(CompareData( newList, oldList, hadPrice));
+        return oldList;
     }
-
-    private IEnumerator CompareData()//对比数据
+/// <summary>
+/// 对比两次读表数据
+/// </summary>
+/// <param name="newList">此次读表获取的数据  </param>
+/// <param name="oldList">上次读表获取的数据  </param>
+/// <param name="hadPrice">服务器获取到的已经报价的数据 </param>
+/// <returns></returns>
+    private IEnumerator CompareData(List<PriceInfo> newList,List<PriceInfo> oldList,List<PriceInfo> hadPrice)//对比数据
     {
-       
-            for (int i = 0; i < priceInfos.Count; i++)
+        for (int i = 0; i < newList.Count; i++)
+        {
+            if (!oldList.Contains(newList[i]))
             {
-                if (!priceInfosLast.Contains(priceInfos[i]))//老Excel表中包含了没有新Excel表数据，说明是新增数据
+                if (hadPrice.Contains(newList[i])|| PriceManager.Instance.putSJ.Contains(newList[i].carType))//新增的车辆且已经报价
                 {
-                    if (dicItem.ContainsKey(priceInfos[i].carType))//且 上传的车型中有此新增的车型
-                    {
-                        priceInfosAdd.Add(priceInfos[i]);
-                    }
+                    priceInfosAdd.Add(newList[i]);//需要报价的链表
                 }
             }
-            //新增的或有改动的数据
-            
-            
-            for (int i = 0; i < priceInfosLast.Count; i++)
-            {
-                if (!priceInfos.Contains(priceInfosLast[i]))
-                {
-                    priceInfosRemove.Add(priceInfosLast[i].carNumber);
-                }
-            }
-            //删除的数据
-            
+        }
 
-        StartCoroutine(PostNeedChangeData(priceInfosAdd));//新增数据发给服务器
-        StartCoroutine(PostNeedRemoveCar(priceInfosRemove));//删除数据
+        for (int i = 0; i < oldList.Count; i++)
+        {
+            if (!newList.Contains(oldList[i]))
+            {
+                priceInfosRemove.Add(oldList[i].carNumber);
+                newList.Remove(oldList[i]);
+            }
+        }
+        
+        
+        /*StartCoroutine(PostNeedChangeData(priceInfosAdd));//新增数据发给服务器
+        StartCoroutine(PostNeedRemoveCar(priceInfosRemove));//删除数据*/
         yield break;
     }
 
-    public IEnumerator PostNeedChangeData(List<PriceInfo> needPost)
-    {
-        NetworkManager networkManager=NetworkManager.Instance;
-        WWWForm form = new WWWForm();
-        for (int i = 0; i < needPost.Count; i++)
-        {
-            needPost[i].vehicleSystem = needPost[i].vehicleSystem.Replace("库存", "");
-            cost cost = dicItem[needPost[i].carType];
-            string jsonString = JsonMapper.ToJson(needPost[i]);
-            JsonData jsonData = JsonMapper.ToObject(jsonString);
-            jsonData["net_price"] = cost.net_price;
-            jsonData["financial_agents_price"] = cost.financial_agents_price;
-            jsonData["insurance_price"] = cost.insurance_price;
-            jsonData["registration_price"] =cost.registration_price;
-            jsonData["purchase_tax"] =cost.purchase_tax;
-            jsonData["other_price"] = cost.other_price;
-            
-            jsonData["cart_price_type"] = cost.cart_price_type;
-            jsonData["registration_type"] = "";
-            jsonData["insurance_type"] = "";
-            jsonData["content_remark"] = cost.content_remark;
-            jsonData["registration_area_type"] = cost.registration_area_type;
-            jsonString = jsonData.ToJson();
-            form.AddField("d[]", jsonString);
-        }
-        networkManager.DoPost1(API._PostOfferPrice1, form, (responseCode, content) =>
-        {
-            Debug.Log("____responseCode:" + responseCode + ", content:" + content);
-        }, networkManager.token);
-        yield break;
-    }
 
-    public IEnumerator PostNeedRemoveCar(List<string> carNumbers)
-    {
-        carNumbs carNumbs=new carNumbs();
-        StringBuilder stringBuilder=new StringBuilder();
-        for (int i = 0; i < carNumbers.Count; i++)
-        {
-            stringBuilder =stringBuilder.Append(',').Append(carNumbers[i]);
-        }
-        carNumbs.car_numbers = stringBuilder.ToString();
-        String jsonData = JsonMapper.ToJson(carNumbers);
-        UnityWebRequest request=new UnityWebRequest(API.PostDeleteCarinfo,"POST");
-        request.uploadHandler=new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonData));
-        yield return request.SendWebRequest();
-        if (request.responseCode==200)
-        {
-            tip.instance.SetMessae("删除成功");
-        }
-        else
-        {
-            tip.instance.SetMessae("删除失败");
-        }
-    }
 
     
     //一开始获取品牌列表--获取车系列表--获取车型列表。
@@ -126,6 +90,7 @@ public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
         yield return request.SendWebRequest();
         if (request.responseCode==200)
         {
+            Debug.Log("serverBrand "+request.downloadHandler.text);
             JsonData jsonData= JsonMapper.ToObject(request.downloadHandler.text)["data"];
             for (int i = 0; i < jsonData.Count; i++)
             {
@@ -136,19 +101,35 @@ public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
 
     public IEnumerator GetServerVeh()
     {
-        UnityWebRequest request=new UnityWebRequest();
-        request.url = API.GetServerVehcle+"brand_id="+1263;
+        networkManager.DoGet1(API.GetServerVehcle+"?brand_id="+PlayerPrefs.GetString("brand_id"),
+            (code, content) =>
+            {
+                if (code==200)
+                {
+                    JsonData jsonData= JsonMapper.ToObject(content)["data"];
+                    Debug.Log("server vehic "+JsonMapper.ToJson(jsonData));
+                    for (int i = 0; i < jsonData.Count; i++)
+                    {
+                        DicBrand.Add(jsonData[i]["id"].ToJson(),jsonData[i]["title"].ToJson());
+                    }
+                }
+            },networkManager.token);
+        
+        /*UnityWebRequest request=new UnityWebRequest();
+        request.url = API.GetServerVehcle+"?brand_id="+12;
+        //request.SetRequestHeader("");
         request.downloadHandler=new DownloadHandlerBuffer();
         yield return request.SendWebRequest();
         if (request.responseCode==200)
         {
             JsonData jsonData= JsonMapper.ToObject(request.downloadHandler.text)["data"];
-            Debug.Log(JsonMapper.ToJson(jsonData));
+            Debug.Log("server vehic "+JsonMapper.ToJson(jsonData));
             for (int i = 0; i < jsonData.Count; i++)
             {
                 DicBrand.Add(jsonData[i]["id"].ToJson(),jsonData[i]["title"].ToJson());
             }
-        }
+        }*/
+        yield break;
     }
 
     /*public IEnumerator CreatCarTypeVehic(ChangeCarTypeVehic changeData )
@@ -156,7 +137,7 @@ public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
         
     }*/
     
-   public IEnumerator PostTypePrice(List<cost> postCostList)//普通报价
+   /*public IEnumerator PostTypePrice(List<cost> postCostList)//普通报价
    {
        int m = 0;
        int n = 0;
@@ -205,6 +186,6 @@ public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
        PriceManager.Instance.UpdateUI();
        
        
-    }
+    }*/
 }
 

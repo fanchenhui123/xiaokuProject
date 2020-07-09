@@ -13,6 +13,9 @@ public class NegotiatePrice : MonoBehaviour
     public List<Text> Texts=new List<Text>();
     private List<string> methodList=new List<string>();//金融方案
     private float num = 1f;
+    private bool continueChat;
+    public Button sendChatYJ;//发送议价消息
+    public Text chatPrice, chatMemo;//价格，备注输入
     private string carid;//当前议价车辆ID ，确认议价时需要
     public List<Toggle>  toggles;
     public GameObject SkipWindowPanel;//弹窗
@@ -23,8 +26,10 @@ public class NegotiatePrice : MonoBehaviour
     private InputField DK,SF,FQ,YG,LX,NM,ZJ;
     public GameObject  dialogItem;
     private Button btnConfirm;
+    public Button btnConfOrder;
     [HideInInspector]
     public List<Dropdown.OptionData> OptionDatas=new List<Dropdown.OptionData>();
+    [HideInInspector]
     public string curOrderId="???";
     private MsgCenterCtrl.ReplyContent _replyContent;
     public int dataIndex;
@@ -33,35 +38,26 @@ public class NegotiatePrice : MonoBehaviour
     {
         Instance = this;
         SkipWindowPanel=MyLoginManager.instance.skipWindow;
-        /*SF = GameObject.Find("SF").GetComponent<InputField>();
-        FQ = GameObject.Find("FQ").GetComponent<InputField>();
-        YG = GameObject.Find("YG").GetComponent<InputField>();
-        LX = GameObject.Find("LX").GetComponent<InputField>();
-        NM = GameObject.Find("name").GetComponent<InputField>();
-        DK = GameObject.Find("DK").GetComponent<InputField>();
-        ZJ = GameObject.Find("ZJ").GetComponent<InputField>();*/
-        /*mehodTextList.Add(GameObject.Find("FAO").GetComponent<Text>());
-        mehodTextList.Add(GameObject.Find("FAS").GetComponent<Text>());
-        mehodTextList.Add(GameObject.Find("FAT").GetComponent<Text>());*/
         btnConfirm = SkipWindowPanel.transform.Find("Confirm").GetComponent<Button>();
         btnConfirm.onClick.AddListener(ShowWindow);
-        //btnConfirm = GameObject.Find("keepLast").GetComponent<Button>();
-       // btnConfirm.onClick.AddListener(ShowWindow);
-       sendChatYJ.onClick.AddListener(SendChatYJ);//发送键添加监听
-       // GameObject JPdrop = GameObject.FindGameObjectWithTag("JPDD");
-       // JPdropDown = JPdrop.transform.GetComponent<Dropdown>();
-      // JPdropDown.options = OptionDatas;
-      _networkManager=NetworkManager.Instance;
-       Debug.Log("curID  "+   curOrderId);
-
+        sendChatYJ.onClick.AddListener(SendChatYJ);//发送键添加监听
+        _networkManager=NetworkManager.Instance;
+        Debug.Log("curID  "+   curOrderId);
+        btnConfOrder.onClick.AddListener(ShowWindow);
     }
 
     
     private void OnEnable()
     {
-        StartCoroutine(GetYJinfo()); 
-        InvokeRepeating("repeatRequest",60f,10000000000f);
-      
+        StartCoroutine(GetYJinfo());
+    }
+
+    private void Update()
+    {
+        if (continueChat==true)
+        {
+            repeatRequest();
+        }
     }
 
 
@@ -81,7 +77,6 @@ public class NegotiatePrice : MonoBehaviour
             }
         }
         
-        Debug.Log("id  "+ jsonData["data"].Count);
         for (int i = 0; i < jsonData["data"].Count; i++)
         {
             Debug.Log(curOrderId+"   id  "+ jsonData["data"][i]["id"]);
@@ -100,11 +95,32 @@ public class NegotiatePrice : MonoBehaviour
                 Texts[2].text =utf3.ToString() ;
                 Texts[3].text = utf4.ToString() ;
                 Texts[4].text =utf5.ToString() + "    "+utf6.ToString() ;//配置
-        
-       
-        
+                Texts[5].text = "";//按揭资质
+                Texts[6].text = jsonData["data"][i]["name"].ToString();
+                Texts[7].text = jsonData["data"][i]["phone"].ToString();
+                Texts[8].text = jsonData["data"][i]["id_card"].ToString();
+                Texts[9].text = jsonData["data"][i]["final_total"].ToString();
+                Texts[10].text = jsonData["data"][i]["pay_time"].ToString();
+
+                if (jsonData["data"][i]["status"].ToString()=="6")
+                {
+                    btnConfOrder.onClick.RemoveAllListeners();
+                    sendChatYJ.onClick.RemoveAllListeners();
+                    continueChat = false;
+                }
+                else if (jsonData["data"][i]["status"].ToString()=="5")
+                {
+                    btnConfOrder.onClick.RemoveAllListeners();
+                    sendChatYJ.onClick.RemoveAllListeners();
+                    continueChat = false;
+                        //todo 发送状态6
+                }
+                else
+                {
+                    continueChat = true;
+                }
+
                 Debug.Log("12312312312  "+utf1.ToString());
-                Texts[5].text ="" ;//显示接收的数据议价方案按揭资质等。
 
             }
             /*if (jsonData["data"][0]["cart"][i]==null)
@@ -151,7 +167,6 @@ public class NegotiatePrice : MonoBehaviour
         ZJ.GetComponent<InputField>().text = total.ToString();
         RefreshPriceMeth();
     }
-
     private void RefreshPriceMeth()//刷新金融方案列表
     {
         for (int i = 0; i < mehodTextList.Count; i++)
@@ -176,7 +191,6 @@ public class NegotiatePrice : MonoBehaviour
         methodList.Remove(methodList[index-1]);
         RefreshPriceMeth();
     }
-
     public void AddCount(InputField tt)
     {
         if (float.TryParse(tt.GetComponent<InputField>().text,out num))
@@ -231,27 +245,20 @@ public class NegotiatePrice : MonoBehaviour
         string jsonData = JsonMapper.ToJson(firstYiJia);
         StartCoroutine(postYJ(jsonData));
     }
-    
-   
-
     ////////////////////////////////////////////////////////////////以上是没用的方法了删除用户编辑方案的功能////////////////////////////////////////////
    
 
    
 
-    public void ShowWindow()
+    public void ShowWindow()//确认议价方案弹窗
     {
         Window.Skipwindow("确认方案并发送？",ConfirmYJMethod,SkipWindowPanel);
     }
-
-    
-
     private void ConfirmYJMethod()
     {
         StartCoroutine(ConfirmMethod());
     }
-
-    public IEnumerator ConfirmMethod()//发送议价消息
+    public IEnumerator ConfirmMethod()//发送确认订单消息
     {
         MsgCenterCtrl.ConfirmYJ confirmYj=new MsgCenterCtrl.ConfirmYJ();
         confirmYj.order_id = curOrderId;
@@ -262,19 +269,20 @@ public class NegotiatePrice : MonoBehaviour
         webRequest.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded");
         webRequest.SetRequestHeader("Accept", "application/json");
         webRequest.uploadHandler=new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonstring));
-        Debug.Log("confirmYJ  "+jsonstring);
         webRequest.downloadHandler=new DownloadHandlerBuffer();
         webRequest.SetRequestHeader(AppConst.AccessToken, NetworkManager.Instance.token);
         yield return  webRequest.SendWebRequest();
-        Debug.Log(webRequest.GetRequestHeader("Authorization"));
+      
         if (webRequest.responseCode==200)
         {
             tip.instance.SetMessae("发送成功");
             SkipWindowPanel.SetActive(false);
+            
         }
         else
         {
-            if (webRequest.responseCode==400)
+            tip.instance.SetMessae("发送失败:"+webRequest.responseCode);
+            /*if (webRequest.responseCode==400)
             {
                   tip.instance.SetMessae("请等待用户回复");
                   SkipWindowPanel.SetActive(false);
@@ -282,7 +290,7 @@ public class NegotiatePrice : MonoBehaviour
             else
             {
                 tip.instance.SetMessae("发送失败:"+webRequest.responseCode);
-            }
+            }*/
 
            
             Debug.Log("发送失败:"+webRequest.responseCode);
@@ -295,9 +303,7 @@ public class NegotiatePrice : MonoBehaviour
     
 
     
-     public Button sendChatYJ,backToCard,ConfirmYJ;
-   // private bool startUpdataMess;//是否开始频繁请求
-    public Text chatPrice, chatMemo;
+     
     private string ChatYJString;
     
 

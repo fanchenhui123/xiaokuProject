@@ -27,12 +27,13 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
     public List<MessageDataItem> msgItemList = new List<MessageDataItem>();
 
     public List<MessageDataItem> completedOrders = new List<MessageDataItem>();
+    public List<MessageDataItem> needFinalConfirm = new List<MessageDataItem>();
     public List<MessageDataItem> repliesOrders = new List<MessageDataItem>();
     public CarTypeInfo carInfo=new CarTypeInfo();
     
     [Header("page1")]
     public GameObject messageCardPrefab;
-    public Transform contentParentJYWC;
+    public Transform contentParentJYWC,contentParentDCL;
     public Transform contentParentYJ;
 
     public Transform YJPage2;
@@ -52,7 +53,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
             //networkManager = mainManager.GetComponent<NetworkManager>();
             DoGetMessageList(() =>
             {
-                for (int i = 0; i < completedOrders.Count; i++)
+                for (int i = 0; i < completedOrders.Count; i++)//已经完成（可查看）
                 {
                     GameObject msgCard = Instantiate(messageCardPrefab, contentParentJYWC);
                     msgCard.GetComponent<MsgCard>().text_appear_color.text = "颜色：" + completedOrders[i].cart.appear_color;
@@ -67,9 +68,32 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                     msgCard.GetComponent<MsgCard>().text_vehicleSystem.text = "车系：" + completedOrders[i].cart.vehicleSystem;
                     msgCard.GetComponent<MsgCard>().text_yajin.text = "押金已支付";
                     msgCard.GetComponent<MsgCard>().text_yajin.color = Color.green;
+                    msgCard.transform.Find("resText").GetComponent<Text>().text = "查看";
                 }
               
-                for (int i = 0; i < repliesOrders.Count; i++)
+                
+                for (int i = 0; i < needFinalConfirm.Count; i++)//最终确认（待处理）
+                {
+                    GameObject msgCard = Instantiate(messageCardPrefab, contentParentDCL);
+                    msgCard.GetComponent<MsgCard>().text_appear_color.text = "颜色：" + needFinalConfirm[i].cart.appear_color;
+                    msgCard.GetComponent<MsgCard>().text_carNumber.text = "车架号：" + needFinalConfirm[i].cart.carNumber;
+                    msgCard.GetComponent<MsgCard>().text_cart_type.text = "车型：" + needFinalConfirm[i].cart.carType;
+                    msgCard.GetComponent<MsgCard>().text_order_no.text = "订单号：" + needFinalConfirm[i].order_no;
+                    if (needFinalConfirm[i].repies.Length > 0)
+                    {
+                        msgCard.GetComponent<MsgCard>().text_price.text = "报价：" + needFinalConfirm[i].repies[needFinalConfirm[i].repies.Length - 1].price;
+                        msgCard.GetComponent<MsgCard>().text_user_id.text = "用户ID：" + needFinalConfirm[i].repies[needFinalConfirm[i].repies.Length - 1].user_id.ToString();
+                    }
+                    msgCard.GetComponent<MsgCard>().text_vehicleSystem.text = "车系：" + needFinalConfirm[i].cart.vehicleSystem;
+                    msgCard.GetComponent<MsgCard>().text_yajin.text = "";
+                    msgCard.GetComponent<MsgCard>().text_yajin.color = Color.green;
+                    msgCard.transform.Find("resText").GetComponent<Text>().text = "待处理";
+                }
+                
+                
+                
+                
+                for (int i = 0; i < repliesOrders.Count; i++)//待回复
                 {
                     GameObject msgCard = Instantiate(messageCardPrefab, contentParentYJ);
                     msgCard.GetComponent<MsgCard>().text_appear_color.text = "颜色：" + repliesOrders[i].cart.appear_color;
@@ -185,7 +209,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                         msgItemList.Add(item);
 
                         Debug.Log("item.status  "+ item.status);
-                        if (item.status == 5)
+                        if (item.status == 6)
                         {
                             completedOrders.Add(item);          //交易完成
                         }
@@ -195,6 +219,9 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                             {
                                 repliesOrders.Add(item);        //议价列表
                             }
+                        }else if (item.status == 5)//需要商家查看确认
+                        {
+                            needFinalConfirm.Add(item);
                         }
                     }
                     catch (System.Exception E)

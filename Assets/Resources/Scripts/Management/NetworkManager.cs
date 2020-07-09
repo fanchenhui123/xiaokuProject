@@ -241,7 +241,6 @@ public class NetworkManager : MonoBehaviour
         
         //Debug.Log("____url:" + url);
         //Debug.Log("____request Accept:" + request.GetRequestHeader("Accept"));
-        Debug.Log("____request Authorization:" + request.GetRequestHeader("Authorization"));
         callback?.Invoke(request.responseCode, request.downloadHandler.text);
         ufunc?.Invoke(request.responseCode, request.downloadHandler.text);
         //if (request.responseCode == 200)

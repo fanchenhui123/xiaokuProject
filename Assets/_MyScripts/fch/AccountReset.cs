@@ -13,7 +13,7 @@ public class AccountReset : MonoBehaviour
    public void SendResetInfo()
    {
       AccountResInfo accountResInfo=new AccountResInfo();
-      accountResInfo.email = "wfw2113@qq.com";// PlayerPrefs.GetString("username").Trim('"');
+      accountResInfo.email =  PlayerPrefs.GetString("username").Trim('"');
       accountResInfo.merchant = infoTexts[0].text;
       accountResInfo.password= infoTexts[1].text;
       accountResInfo.ConfirmPassword= infoTexts[2].text;

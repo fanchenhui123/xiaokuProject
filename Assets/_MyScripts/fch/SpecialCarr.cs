@@ -205,7 +205,7 @@ public class SpecialCarr : MonoBehaviour
          }
          NetworkManager.Instance.DoPost1(API.PostCarsInfo, form, (responseCode, content) =>
          {
-            Debug.Log("____responseCode:" + responseCode + ", content:" + content);
+            Debug.Log("____responseCode:" + responseCode + ", content:" +JsonMapper.ToObject(content)["message"].ToString() );
             if (responseCode=="200")
             {
                tip.instance.SetMessae("保存成功");

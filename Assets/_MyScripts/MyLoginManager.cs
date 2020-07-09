@@ -20,7 +20,7 @@ public class MyLoginManager : MonoBehaviour
 
     public GameObject LoginPanel;
     public GameObject RegisterPanel;
-
+    [HideInInspector]
     public GameObject homePage;
 
     private MessagePanelManager messagePanelManager;
@@ -152,12 +152,14 @@ public class MyLoginManager : MonoBehaviour
             }
             else
             {
-                warnText.text = "网络故障";
+                Debug.Log(responseCode+JsonMapper.ToObject(data)["message"]);
+                //warnText.text = jdata["msg"].ToString();
                 LoginFail();
             }
         });
     }
 
+    public bool isLoginSuccess;
     private void LoginSuccess()
     {
         messagePanelManager.Show("登录成功");
@@ -176,6 +178,8 @@ public class MyLoginManager : MonoBehaviour
         #region  2.0  登录成功后，加载价格管理数据、消息数目等
 
         DoGetUserInfo();
+        isLoginSuccess = true;
+        //请求获取数据库里已经报价的车辆信息
 
         #endregion
     }
@@ -202,6 +206,8 @@ public class MyLoginManager : MonoBehaviour
                 //Debug.Log("id:" + dataObj["id"]);
                 SecondPanelCtrl.Instance.textUserID.text = dataObj["id"].ToString();
                 SecondPanelCtrl.Instance.textNickName.text = dataObj["email"].ToString();
+                Debug.Log("barandid  "+dataObj["brand_id"].ToString());
+                PlayerPrefs.SetString("brand_id",dataObj["brand_id"].ToString());
             }
             else
             {

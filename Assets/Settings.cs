@@ -54,13 +54,20 @@ public class Settings : MonoBehaviour
 
             PathText.text = ExcelPath;
 
-            if (true)//路径相同文件名不同也是！=,如果文件不同就删除数据重新读ExcelPath != PlayerPrefs.GetString(keyName)
-            {
-               
+            if (ExcelPath!=PlayerPrefs.GetString(keyName))//路径相同文件名不同也是！=,如果文件不同就删除数据重新读ExcelPath != PlayerPrefs.GetString(keyName)
+            { 
                 PriceManager.Instance.ClearAllData();
-               PriceManager.Instance. loadExcelsTest(ExcelPath);
-                tip.instance.SetMessae("删除数据，重新读取表格");
+                PriceManager.Instance.isNeedCompare = false;
+                PriceManager.Instance. loadExcelsTest(ExcelPath);
+                tip.instance.SetMessae("清除掉所有数据,读取表格文件");
             }
+            else
+            {
+                PriceManager.Instance.isNeedCompare = true;
+                PriceManager.Instance. loadExcelsTest(ExcelPath);
+                return;
+            }
+            
            
             PlayerPrefs.SetString(keyName, ExcelPath);
         }
@@ -78,6 +85,10 @@ public class Settings : MonoBehaviour
             //考虑什么时候开始自动加载，决定了自动加载的路径是否是离线数据
            // PriceManager.Instance.ReadCarPrice(ExcelPath);
            PriceManager.Instance. loadExcelsTest(ExcelPath);
+           PriceManager.Instance.isNeedCompare = true;
+           
+
+           
         }
     }
 
