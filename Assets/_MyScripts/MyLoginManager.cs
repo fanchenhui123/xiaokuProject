@@ -208,6 +208,7 @@ public class MyLoginManager : MonoBehaviour
                 SecondPanelCtrl.Instance.textNickName.text = dataObj["email"].ToString();
                 Debug.Log("barandid  "+dataObj["brand_id"].ToString());
                 PlayerPrefs.SetString("brand_id",dataObj["brand_id"].ToString());
+               // PriceManager.Instance.
             }
             else
             {

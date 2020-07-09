@@ -28,6 +28,7 @@ public class PriceManager : MonoBehaviour
     public List<PriceInfo> priceInfosLast = new List<PriceInfo>();//为了方便新旧表对比，存入上一次读表数据
     public List<string> carNumberList = new List<string>();
     public List<string> carTypeList = new List<string>();
+    public string curBrand;
     public List<string> putSJ=new List<string>();//存入已上架的车型，普通报价后存入
     public Button specialCarbtn;
 
@@ -102,7 +103,7 @@ public class PriceManager : MonoBehaviour
     private void OnEnable()
     {
        // ChangeToPage(1);
-       // UpdateUI();
+        UpdateUI();
       //  DoPostCarType();
 
     }
@@ -122,7 +123,7 @@ public class PriceManager : MonoBehaviour
         }
 
         objlock = new object();
-       // loadExcelsTest(PlayerPrefs.GetString("XiaoKuExcelPath"));
+        loadExcelsTest(PlayerPrefs.GetString("XiaoKuExcelPath"));
         Debug.Log("start");
         this.gameObject.SetActive(false);
     }
@@ -134,9 +135,11 @@ public class PriceManager : MonoBehaviour
 
         dBManager.CreateTable(typeof(PriceInfo));
         priceInfos = dBManager.QueryTable<PriceInfo>();
-        priceInfos = LoadPlayerJson();
+       //  SavePlayerJson(priceInfos);
+      //  priceInfos = LoadPlayerJson();
+       
       // Invoke(() => { tip.instance.SetMessae("读取数据库" + priceInfos.Count);},10f);
-        Debug.Log("priceinfos count"+ priceInfos.Count);
+      
        // priceInfosLast = dBManager.QueryTable<PriceInfo>();
 
         toggleCity.onValueChanged.AddListener((value)=> {
@@ -154,6 +157,7 @@ public class PriceManager : MonoBehaviour
         if (priceInfos.Count > 0)
         {
             UpdateUI();
+            Debug.Log("????updateui");
         }
 
         btnSave.onClick.AddListener(() =>
@@ -264,11 +268,11 @@ public class PriceManager : MonoBehaviour
                 }
             }
 
-            if (isNeedCompare)
+            /*if (isNeedCompare)
             {
                 priceInfosLast = priceInfos;
                 priceInfos.Clear();
-            }
+            }*/
             
             foreach(string str in list)
             { 
@@ -301,17 +305,23 @@ public class PriceManager : MonoBehaviour
                 }
             }
             
-            /*for (int i = 0; i < priceInfosLast.Count; i++)
+            for (int i = 0; i < priceInfosLast.Count; i++)
             {
                 //加入数据库，替换当前数据(未销售的存入数据库)
                 dBManager.CheckReplace<PriceInfo>("carNumber", priceInfosLast[i].carNumber, priceInfosLast[i]);
-            } */
-            SavePlayerJson(priceInfosLast);
+            } 
+            priceInfos=dBManager.QueryTable<PriceInfo>();
+            Debug.Log("对比后存入数据库"+priceInfosLast.Count);
+           //SavePlayerJson(priceInfosLast);
             tip.instance.SetMessae("对比后存入数据库"+priceInfosLast.Count);
         }else
         {
-           
-            SavePlayerJson(priceInfos);
+            for (int i = 0; i < priceInfos.Count; i++)
+            {
+                //加入数据库，替换当前数据(未销售的存入数据库)
+                dBManager.CheckReplace<PriceInfo>("carNumber", priceInfos[i].carNumber, priceInfos[i]);
+            } 
+            // SavePlayerJson(priceInfos);
             tip.instance.SetMessae("存入数据库"+priceInfos.Count,5f);
             Debug.Log("存入数据库"+priceInfos.Count);
         }
@@ -626,7 +636,7 @@ public class PriceManager : MonoBehaviour
                             }
                             item.note = note;//批注
                             item.vehicleSystem = w.Name;//车系
-                            item.brand = PlayerPrefs.GetString("brand_id");                
+                            item.brand = PlayerPrefs.GetString("brand_id");    //todo brandid未登录就使用，但是无法获取到，获取是在登录之后            
                             if (!carNumberList.Contains(item.carNumber))
                             {
                                 if (string.IsNullOrEmpty(item.adviser)&& string.IsNullOrEmpty(item.userName))
@@ -949,23 +959,39 @@ public class PriceManager : MonoBehaviour
         List<PriceInfo> tempInfoList = new List<PriceInfo>();
         string carType = currPriceInfo.carType;
 
+        tip.instance.SetMessae("提交表"+priceInfos.Count);
         for (int i = 0; i < priceInfos.Count; i++)
         {
             if (priceInfos[i].carType == carType)
             {
-                Debug.LogFormat("____{2}, carType: {0}, carNumber: {1}", carType, priceInfos[i].carNumber, i);
+                JsonData jsonData = JsonMapper.ToObject(JsonMapper.ToJson(priceInfos[i]));
+                for (int j = 0; j < jsonData.Count; j++)
+                {
+                    if (jsonData[j]==null)
+                    {
+                        jsonData[j] = "NA";
+                    }
+                }
+             //   Debug.LogFormat("____{2}, carType: {0}, carNumber: {1}", carType, priceInfos[i].carNumber, i);
                 tempInfoList.Add(priceInfos[i]);
             }
         }
         
-      
+        tip.instance.SetMessae("开始整合表单数据");
        
         for (int i = 0; i < tempInfoList.Count; i++)
         {
+           
             tempInfoList[i].vehicleSystem = tempInfoList[i].vehicleSystem.Replace("库存", "");
-
             string jsonString = JsonMapper.ToJson(tempInfoList[i]);
             JsonData jsonData = JsonMapper.ToObject(jsonString);
+            for (int j = 0; j < jsonData.Count; j++)
+            {
+                if (jsonData[j]==null)
+                {
+                    jsonData = "NA";
+                }
+            }
             jsonData["net_price"] = inputCarPrice.text;
             jsonData["financial_agents_price"] = inputFinancial.text;
             jsonData["insurance_price"] = inputInsurance.text;
@@ -976,11 +1002,12 @@ public class PriceManager : MonoBehaviour
             jsonData["appear_color"] = tempInfoList[i].color;
             jsonData["registration_area_type"] = currRegisterAreaType.ToString();
 
-            Debug.Log("________准备上传的 jsonData:" + jsonData.ToJson());
+           // Debug.Log("________准备上传的 jsonData:" + jsonData.ToJson());
             //jsonString = JsonMapper.ToJson(jsonData);
             jsonString = jsonData.ToJson();
 
             form.AddField("d[]", jsonString);
+            tip.instance.SetMessae(tempInfoList.Count+"*****"+ i.ToString());
         }
        
         tip.instance.SetMessae("表单数据整合完成");
