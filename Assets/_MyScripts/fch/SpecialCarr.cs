@@ -22,6 +22,11 @@ public class SpecialCarr : MonoBehaviour
    public List<Dropdown.OptionData>  optionList;//精品方案
    public List<string> TJSJ=new List<string>();//特价车上架
   // private NetworkManager networkManager = NetworkManager.Instance;
+  
+   
+
+   List<PriceInfo> SearchResults=new List<PriceInfo>();
+   List<Dropdown.OptionData> carNumList=new List<Dropdown.OptionData>();
    private void Awake()
    {
       instance = this;
@@ -43,36 +48,11 @@ public class SpecialCarr : MonoBehaviour
          currRegisterAreaType = "1";
       });
    }
-
-   private void OnEnable()
-   {
-     
-   }
-
-   List<PriceInfo> SearchResults=new List<PriceInfo>();
-   List<Dropdown.OptionData> carNumList=new List<Dropdown.OptionData>();
    public void  BtnSearch()
    {
       SearchResults.Clear();
       carNumList.Clear();
-      /*for (int i = 0; i < PriceManager.Instance.priceInfos.Count; i++)
-      {
-         if (string.IsNullOrEmpty(PriceManager.Instance.priceInfos[i].adviser) && string.IsNullOrEmpty(PriceManager.Instance.priceInfos[i].userName))
-         {
-            if (PriceManager.Instance.priceInfos[i].carNumber.Contains(CarNumText.text))
-            {
-               if (!PriceManager.Instance.putSJ.Contains(PriceManager.Instance.priceInfos[i].carType))
-               {
-                  if (!TJSJ.Contains(PriceManager.Instance.priceInfos[i].carNumber))
-                  {
-                     SearchResults.Add(PriceManager.Instance.priceInfos[i]);
-                     Debug.Log(PriceManager.Instance.priceInfos[i].carType);
-                  }
-               }
-            }
-         }
-        
-      }*/
+     
       for (int i = 0; i < storeMgr.StoreCarItems.Count; i++)
       {
          if (storeMgr.StoreCarItems[i].GetComponent<RegistorItem>().carNumber.Contains(CarNumText.text))
@@ -130,32 +110,7 @@ public class SpecialCarr : MonoBehaviour
       InfoTexts[1].text = SearchResults[index].vehicleSystem;
       needPost=SearchResults[index];
    }
-
- 
-   /*IEnumerator getCarinfo()
-   {
-      UnityWebRequest request=new UnityWebRequest();
-      request.url = API.GetCarInfo + "?cart_id=" + CarNumText.text;
-      request.downloadHandler=new DownloadHandlerBuffer();
-      yield return request.SendWebRequest();
-      if (request.responseCode==200)
-      {
-         JsonData jsonData = JsonMapper.ToObject(request.downloadHandler.text);
-         InfoTexts[0].text = jsonData["data"]["carType"].ToString();
-         InfoTexts[1].text = jsonData["data"]["vehicleSystem"].ToString();
-         if (jsonData["data"]["status"].ToString()=="1")
-         {
-            InfoTexts[2].text = jsonData["data"][""].ToString();
-            InfoTexts[3].text = jsonData["data"]["vehicleSystem"].ToString();
-            InfoTexts[4].text = jsonData["data"]["vehicleSystem"].ToString();
-            InfoTexts[5].text = jsonData["data"]["vehicleSystem"].ToString();
-            InfoTexts[6].text = jsonData["data"]["vehicleSystem"].ToString();
-            InfoTexts[7].text = jsonData["data"]["vehicleSystem"].ToString();
-            InfoTexts[8].text = jsonData["data"]["vehicleSystem"].ToString();
-         }
-      }
-
-   }*/
+   
 
    public GameObject SpcialPriceCar;
    public void BtnBack()
@@ -197,6 +152,14 @@ public class SpecialCarr : MonoBehaviour
             jsonData["vin"] =tempInfoList[i].carNumber ;
             jsonData["registration_area_type"] = currRegisterAreaType.ToString();
 
+            for (int j = 0; j < jsonData.Count; j++)
+            {
+               if (jsonData[i]==null)
+               {
+                  jsonData[i] = "NA";
+               }
+            }
+            
             Debug.Log("________准备上传的 jsonData:" + jsonData.ToJson());
             //jsonString = JsonMapper.ToJson(jsonData);
             jsonString = jsonData.ToJson();

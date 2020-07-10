@@ -63,7 +63,7 @@ public class MyHomePage : MonoBehaviour
         {
             UpdateUI();
         }
-        PriceManager.LoadExcelEndEvent += PriceManager_LoadExcelEndEvent;
+       // PriceManager.LoadExcelEndEvent += PriceManager_LoadExcelEndEvent;
     }
     
 

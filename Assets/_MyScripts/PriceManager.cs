@@ -12,6 +12,7 @@ using System.Text;
 using LitJson;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Logical;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
+using Unity.DocZh.Utility.Json;
 using UnityEngine.Networking;
 
 public class PriceManager : MonoBehaviour
@@ -27,7 +28,9 @@ public class PriceManager : MonoBehaviour
     public List<PriceInfo> priceInfos = new List<PriceInfo>();//读表得到的所有数据
     public List<PriceInfo> priceInfosLast = new List<PriceInfo>();//为了方便新旧表对比，存入上一次读表数据
     public List<string> carNumberList = new List<string>();
+    public List<string> carNumberListLast = new List<string>();
     public List<string> carTypeList = new List<string>();
+    public List<string> carTypeListLast = new List<string>();
     public string curBrand;
     public List<string> putSJ=new List<string>();//存入已上架的车型，普通报价后存入
     public Button specialCarbtn;
@@ -71,6 +74,8 @@ public class PriceManager : MonoBehaviour
     #endregion
 
     private object objlock;
+
+    private int filsCount;
     //private string filePath = Application.streamingAssetsPath + "/深圳锦奥库存CKD_200614.xlsx"; 
     public string filePath;
     private Thread loadThread;
@@ -82,12 +87,15 @@ public class PriceManager : MonoBehaviour
 
     public List<PriceManagerItem> priceManagerItems = new List<PriceManagerItem>();     //全局（主页与价格管理）共享报价列表数据
   //  public List<PriceInfo> CanLoadedCars=new List<PriceInfo>();
-    public static event Action LoadExcelEndEvent;
+   // public static event Action LoadExcelEndEvent;
 
     private DBManager dBManager;
 
     public Dictionary<string, List<string>> vehicleSystemsDic = new Dictionary<string, List<string>>();    //保存车系与车型之间关系，用于Post上传到后台
-
+    public List<PriceInfo> priceInfosAdd=new List<PriceInfo>();//新增的车且已经报价
+    
+    public List<string> priceInfosRemove=new List<string>();//删除的车但已经报价
+    public bool isNeedCompare;//是否需要进行数据对比
     
 
     private int currRegisterAreaType = 0;
@@ -103,7 +111,7 @@ public class PriceManager : MonoBehaviour
     private void OnEnable()
     {
        // ChangeToPage(1);
-        UpdateUI();
+       // UpdateUI();
       //  DoPostCarType();
 
     }
@@ -123,8 +131,7 @@ public class PriceManager : MonoBehaviour
         }
 
         objlock = new object();
-        loadExcelsTest(PlayerPrefs.GetString("XiaoKuExcelPath"));
-        Debug.Log("start");
+
         this.gameObject.SetActive(false);
     }
 
@@ -132,9 +139,8 @@ public class PriceManager : MonoBehaviour
     {
         networkManager = NetworkManager.Instance;
         dBManager = DBManager._DBInstance();
-
         dBManager.CreateTable(typeof(PriceInfo));
-        priceInfos = dBManager.QueryTable<PriceInfo>();
+        priceInfos = LoadPlayerJson();
        //  SavePlayerJson(priceInfos);
       //  priceInfos = LoadPlayerJson();
        
@@ -159,6 +165,10 @@ public class PriceManager : MonoBehaviour
             UpdateUI();
             Debug.Log("????updateui");
         }
+        else
+        {
+            loadExcelsTest(PlayerPrefs.GetString("XiaoKuExcelPath"));
+        }
 
         btnSave.onClick.AddListener(() =>
         {
@@ -172,14 +182,97 @@ public class PriceManager : MonoBehaviour
         btnAddJingPin.onClick.AddListener(OnClickAddJingPin);
     }
 
+    private bool comparaComplete;//判断是否对比完
     private void Update()
     {
         if (loadEnd)
         {
+            Debug.Log("开始对比");
             loadEnd = false;
+            if (isNeedCompare)
+            {
+                //todo 比较数据,获取需要删除的车（如果已报价需要上传），需要新增的车（如果已报价需上传）,让请求来的数据=ptsj，update里有筛选上架车型
+
+                Debug.Log("开始对比数据");
+                tip.instance.SetMessae("开始对比数据");
+                for (int i = 0; i < priceInfos.Count; i++)
+                {
+                    int same=0;
+                    for (int j = 0; j < priceInfosLast.Count; j++)
+                    {
+                        if (priceInfos[i].carNumber==priceInfosLast[j].carNumber)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            same++;
+                        }
+                    }
+
+                    if (same==priceInfosLast.Count)
+                    {
+                        if (putSJ.Contains(priceInfos[i].carType))
+                        {
+                            priceInfosAdd.Add(priceInfos[i]);//新读表的第I个车架号跟旧表的所有的车架号都不一样，就说明是增加的车，再判断是否已经上架
+                        }
+                        
+                    }
+                    /*if (!priceInfosLast.Contains(priceInfos[i]))
+                    {
+                        priceInfosLast.Add(priceInfos[i]);
+                       
+                        {
+                            priceInfosAdd.Add(priceInfos[i]); //新增的需要上传报价信息数据
+                        }
+                    }*/
+                }
+
+                for (int i = 0; i < priceInfosLast.Count; i++)
+                {
+                    int same=0;
+                    for (int j = 0; j < priceInfos.Count; j++)
+                    {
+                        if (priceInfosLast[i].carNumber==priceInfos[j].carNumber)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            same++;
+                        }
+                    }
+                    if (same==priceInfos.Count)//旧表的第I个数据车架号跟新表的任何一个都不一样，就是需要移除的
+                    {
+                        priceInfosRemove.Add(priceInfosLast[i].carNumber);
+                    }
+                    
+                    /*if (!priceInfos.Contains(priceInfosLast[i]))
+                    {
+                        priceInfosLast.Remove(priceInfos[i]);
+                        priceInfosRemove.Add(priceInfos[i].carNumber);//
+                    }*/
+                }
+
+                StartCoroutine(PostNeedRemoveCar(priceInfosRemove));
+                //priceInfos = priceInfosLast;
+                comparaComplete = true;
+            }
+            else
+            {
+                Debug.Log("无需对比");
+                comparaComplete = true;
+            }
+
+        }
+
+        if (comparaComplete)
+        {
+            Debug.Log("      comparaComlete");
+            comparaComplete = false;
             UpdateUI();
             DoPostCarType();
-            LoadExcelEndEvent();
+            SavePlayerJson(priceInfos);
         }
         
     }
@@ -214,27 +307,8 @@ public class PriceManager : MonoBehaviour
         // throw;
     }*/
     
-    private void OnDestroy()
-    {
-        loadThread.Abort();
-    }
-
-
-    private void OnClickAddJingPin()
-    {
-        string temp = inputJingPin.text;
-        if (temp != "")
-        {
-            currPriceManagerItem.offerPriceData.jingpin.Add(temp);
-            dropJingPingList.ClearOptions();
-            dropJingPingList.AddOptions(currPriceManagerItem.offerPriceData.jingpin);
-        }
-    }
-
-    public List<PriceInfo> priceInfosAdd=new List<PriceInfo>();
-    
-    public List<string> priceInfosRemove=new List<string>();
-    public bool isNeedCompare;
+   
+   
     public void loadExcelsTest(string ExcelPath)
     {
         string  SourceExcelPath = @ExcelPath.Replace(@"\",@"/");         // @"E:\C# Projects\ConsoleApplication1\";
@@ -243,6 +317,7 @@ public class PriceManager : MonoBehaviour
         if (SourceExcelPath.EndsWith(".xlsx"))
         {
             PriceManager.Instance.DoLoadThread(SourceExcelPath);//读文件
+            filsCount = 1;//多选的文件数
         }
         else
         {
@@ -266,8 +341,10 @@ public class PriceManager : MonoBehaviour
                         list.Add(fi.Name);
                     }
                 }
+                filsCount = list.Count;//多选的文件数
             }
 
+           
             /*if (isNeedCompare)
             {
                 priceInfosLast = priceInfos;
@@ -278,87 +355,16 @@ public class PriceManager : MonoBehaviour
             { 
                 Instance.DoLoadThread(SourceExcelPath+@"/"+ str);//读文件夹里的文件
             }
-           
         }
         
-        if (isNeedCompare)
-        {
-           // coroutine.instance.StartCompare(priceInfos,priceInfosLast);//读完表格对比数据,增加删除改。
-            for (int i = 0; i < priceInfos.Count; i++)
-            {
-                if (!priceInfosLast.Contains(priceInfos[i]))
-                {
-                    priceInfosLast.Add(priceInfos[i]);
-                   //todo if (expr)//如果已上架车型包含此车型，上传报价信息
-                   {
-                       priceInfosAdd.Add(priceInfos[i]); //新增的需要上传报价信息数据
-                   }
-
-                }
-            }
-
-            for (int i = 0; i < priceInfosLast.Count; i++)
-            {
-                if (!priceInfos.Contains(priceInfosLast[i]))
-                {
-                    priceInfosLast.Remove(priceInfos[i]);
-                }
-            }
-            
-            for (int i = 0; i < priceInfosLast.Count; i++)
-            {
-                //加入数据库，替换当前数据(未销售的存入数据库)
-                dBManager.CheckReplace<PriceInfo>("carNumber", priceInfosLast[i].carNumber, priceInfosLast[i]);
-            } 
-            priceInfos=dBManager.QueryTable<PriceInfo>();
-            Debug.Log("对比后存入数据库"+priceInfosLast.Count);
-           //SavePlayerJson(priceInfosLast);
-            tip.instance.SetMessae("对比后存入数据库"+priceInfosLast.Count);
-        }else
-        {
-            for (int i = 0; i < priceInfos.Count; i++)
-            {
-                //加入数据库，替换当前数据(未销售的存入数据库)
-                dBManager.CheckReplace<PriceInfo>("carNumber", priceInfos[i].carNumber, priceInfos[i]);
-            } 
-            // SavePlayerJson(priceInfos);
-            tip.instance.SetMessae("存入数据库"+priceInfos.Count,5f);
-            Debug.Log("存入数据库"+priceInfos.Count);
-        }
-
         
-
-        loadEnd = true;
+        
+        
        
     }
     
     
-    //保存数据
-    public  void SavePlayerJson(List<PriceInfo> player)
-    {
-        string path = Application.persistentDataPath+"/priceinfos.json";
-        var content = JsonUtility.ToJson(player,true);
-        File.WriteAllText(path,content);
-    }
-
-//读取数据
-    public  List<PriceInfo> LoadPlayerJson()
-    {
-        string path = Application.persistentDataPath+"/priceinfos.json";
-        if(File.Exists(path)){
-            var content = File.ReadAllText(path);
-            var playerData = JsonUtility.FromJson<List<PriceInfo>>(content);
-            return playerData;
-        }else{
-            Debug.LogError("Save file not found in  "+path);
-            return null;
-        }
-    }
-
-    
-    
-    
-    
+ 
     
     public void DoLoadThread(string path = "")
     {
@@ -392,278 +398,310 @@ public class PriceManager : MonoBehaviour
         loadThread.Start();
     }
     
+    int Hadloadfiles;
     public void ReadCarPrice(string path = "")
     {
-       // tip.instance.SetMessae("读表前 "+priceInfos.Count);
+       Debug.Log("读表前 "+priceInfos.Count);
+       if (Hadloadfiles==0 && isNeedCompare)
+       {
+           priceInfosLast = priceInfos;
+           carNumberListLast = carNumberList;
+           carTypeListLast = carNumberList;
+           priceInfos.Clear();
+           carNumberList.Clear();
+           carTypeList.Clear();
+           Debug.Log("清除infos后  infosLastCount= "+priceInfosLast.Count);
+       }
 
-        if (path != "") { 
-            filePath = path;
-        }
-        if (!File.Exists(filePath))
+
+
+       if (path != "")
+       {
+           filePath = path;
+       }
+
+       if (!File.Exists(filePath))
             return;
-        FileInfo newFile = new FileInfo(filePath);
-        Debug.Log("读表path     "+filePath);
-        using (ExcelPackage package = new ExcelPackage(newFile))
-        {
-            var worksheets = package.Workbook.Worksheets;
-            Debug.Log("worksheet:" + worksheets.Count);
-            int wIndex = 1;
+       FileInfo newFile = new FileInfo(filePath);
+       Debug.Log("读表path     "+filePath);
+       using (ExcelPackage package = new ExcelPackage(newFile))
+       {
+           var worksheets = package.Workbook.Worksheets;
+          // Debug.Log("worksheet:" + worksheets.Count);
+           int wIndex = 1;
+           foreach (var w in worksheets)
+           {
+               if (!w.Name.Contains("库存")) continue; //只读工作表名中带  库存  俩字的
+               Debug.Log(w + " " + w.Index);
+               int minColumnNum = w.Dimension.Start.Column; //工作区开始列
+               int maxColumnNum = w.Dimension.End.Column; //工作区结束列
+               int minRowNum = w.Dimension.Start.Row; //工作区开始行号
+               int maxRowNum = w.Dimension.End.Row; //工作区结束行号
 
-            foreach (var w in worksheets)
-            {
-                if (!w.Name.Contains("库存")) continue;//只读工作表名中带  库存  俩字的
-                Debug.Log(w + " " + w.Index);
-                int minColumnNum = w.Dimension.Start.Column;//工作区开始列
-                int maxColumnNum = w.Dimension.End.Column; //工作区结束列
-                int minRowNum = w.Dimension.Start.Row; //工作区开始行号
-                int maxRowNum = w.Dimension.End.Row; //工作区结束行号
+               int[] tableTitle = new int[18];
+               string tmpKey = "";
 
-                int[] tableTitle = new int[18];
-                string tmpKey = "";
+               Debug.Log(minColumnNum + "|" + maxColumnNum + "|" + minRowNum + "|" + maxRowNum);
 
-                Debug.Log(minColumnNum + "|" + maxColumnNum + "|" + minRowNum + "|" + maxRowNum);
+               string tmpCarType = "";
+               string prevCarType = ""; //用于解决上次值为空的问题    
+               for (int i = minRowNum; i < maxRowNum; i++)
+               {
+                   string note = "";
+                   PriceInfo item = new PriceInfo();
+                   for (int j = minColumnNum; j < maxColumnNum; j++)
+                   {
+                       var cell = w.Cells[i, j];
+                       //获取表头
+                       /*
+                        * 排放、车型、指导价、车架号、发车日期、到店日期、库龄、AAK日期、质sun、合格证、客户姓名、销售顾问、otc
+                        */
+                       if (cell.RichText.Text.Contains("排放"))
+                       {
+                           tableTitle[0] = cell.Start.Column;
+                       }
+                       else if (cell.RichText.Text.Contains("车型") && cell.RichText.Text.Length < 10)
+                       {
+                           //当再次遇到车型标签表示重新计算表头
+                           for (int ii = 0; ii < tableTitle.Length; ii++)
+                           {
+                               tableTitle[ii] = -1;
+                           }
 
-                string tmpCarType = "";
-                string prevCarType = "";//用于解决上次值为空的问题    
-                for (int i = minRowNum; i < maxRowNum; i++)
-                {
-                    string note = "";
-                    PriceInfo item = new PriceInfo();
-                    for (int j = minColumnNum; j < maxColumnNum; j++)
-                    {
-                        var cell = w.Cells[i, j];
-                        //获取表头
-                        /*
-                         * 排放、车型、指导价、车架号、发车日期、到店日期、库龄、AAK日期、质sun、合格证、客户姓名、销售顾问、otc
-                         */
-                        if (cell.RichText.Text.Contains("排放"))
-                        {
-                            tableTitle[0] = cell.Start.Column;
-                        }
-                        else if (cell.RichText.Text.Contains("车型") && cell.RichText.Text.Length < 10)
-                        {
-                            //当再次遇到车型标签表示重新计算表头
-                            for (int ii = 0; ii < tableTitle.Length; ii++)
-                            {
-                                tableTitle[ii] = -1;
-                            }
-                            tableTitle[1] = cell.Start.Column;
-                        }
-                        else if (cell.RichText.Text.Contains("指导价") && cell.RichText.Text.Length < 10)
-                        {
-                            tableTitle[2] = cell.Start.Column;
-                        }
-                        else if (cell.RichText.Text.Contains("车架") && cell.RichText.Text.Length < 10)
-                        {
-                            tableTitle[3] = cell.Start.Column;
-                        }
-                        else if (cell.RichText.Text.Contains("发车日期") && cell.RichText.Text.Length < 10)
-                        {
-                            tableTitle[4] = cell.Start.Column;
-                        }
-                        else if (cell.RichText.Text.Contains("到店日期") && cell.RichText.Text.Length < 10)
-                        {
-                            tableTitle[5] = cell.Start.Column;
-                        }
-                        else if (cell.RichText.Text.Contains("库龄") && cell.RichText.Text.Length < 10)
-                        {
-                            tableTitle[6] = cell.Start.Column;
-                        }
-                        else if (cell.RichText.Text.Contains("AAK日期") && cell.RichText.Text.Length < 10)
-                        {
-                            tableTitle[7] = cell.Start.Column;
-                        }
-                        else if (cell.RichText.Text.Contains("质损") && cell.RichText.Text.Length < 10)
-                        {
-                            tableTitle[8] = cell.Start.Column;
-                        }
-                        else if (cell.RichText.Text.Contains("合格证") && cell.RichText.Text.Length < 10)
-                        {
-                            tableTitle[9] = cell.Start.Column;
-                        }
-                        else if (cell.RichText.Text.Contains("客户姓名") && cell.RichText.Text.Length<10)
-                        {
-                            tableTitle[10] = cell.Start.Column;
-                        }
-                        else if (cell.RichText.Text.Contains("销售顾问") && cell.RichText.Text.Length < 10)
-                        {
-                            tableTitle[11] = cell.Start.Column;
-                        }
-                        else if (cell.RichText.Text.Contains("组别") && cell.RichText.Text.Length < 10)
-                        {
-                            tableTitle[12] = cell.Start.Column;
-                        }
-                        else if (cell.RichText.Text.Contains("签订日期") && cell.RichText.Text.Length < 10)
-                        {
-                            tableTitle[13] = cell.Start.Column;
-                        }
-                        else if (cell.RichText.Text.Contains("配车天数") && cell.RichText.Text.Length < 10)
-                        {
-                            tableTitle[14] = cell.Start.Column;
-                        }
-                        else if (cell.RichText.Text.Contains("付款方式") && cell.RichText.Text.Length < 10)
-                        {
-                            tableTitle[15] = cell.Start.Column;
-                        }
-                        else if (cell.RichText.Text.Contains("备注") && cell.RichText.Text.Length < 10)
-                        {
-                            tableTitle[16] = cell.Start.Column;
-                        }
-                        else if (cell.RichText.Text.Contains("外/内") && cell.RichText.Text.Length < 10)
-                        {
-                            tableTitle[17] = cell.Start.Column;
-                        }
-                        else
-                        {
-                            for (int k = 0; k < tableTitle.Length; k++)
-                            {
-                                if (cell.Start.Column == tableTitle[k])
-                                {
-                                    switch (k)
-                                    {
-                                        case 0:
-                                            item.discharge = cell.RichText.Text;//排放                                            
-                                            break;
-                                        case 1:
-                                            //item.carType = a.RichText.Text;//车型
-                                            tmpCarType = cell.RichText.Text;//车型
-                                            break;
-                                        case 2:
-                                            item.guidancePrice = cell.RichText.Text;//指导价
-                                            break;
-                                        case 3:
+                           tableTitle[1] = cell.Start.Column;
+                       }
+                       else if (cell.RichText.Text.Contains("指导价") && cell.RichText.Text.Length < 10)
+                       {
+                           tableTitle[2] = cell.Start.Column;
+                       }
+                       else if (cell.RichText.Text.Contains("车架") && cell.RichText.Text.Length < 10)
+                       {
+                           tableTitle[3] = cell.Start.Column;
+                       }
+                       else if (cell.RichText.Text.Contains("发车日期") && cell.RichText.Text.Length < 10)
+                       {
+                           tableTitle[4] = cell.Start.Column;
+                       }
+                       else if (cell.RichText.Text.Contains("到店日期") && cell.RichText.Text.Length < 10)
+                       {
+                           tableTitle[5] = cell.Start.Column;
+                       }
+                       else if (cell.RichText.Text.Contains("库龄") && cell.RichText.Text.Length < 10)
+                       {
+                           tableTitle[6] = cell.Start.Column;
+                       }
+                       else if (cell.RichText.Text.Contains("AAK日期") && cell.RichText.Text.Length < 10)
+                       {
+                           tableTitle[7] = cell.Start.Column;
+                       }
+                       else if (cell.RichText.Text.Contains("质损") && cell.RichText.Text.Length < 10)
+                       {
+                           tableTitle[8] = cell.Start.Column;
+                       }
+                       else if (cell.RichText.Text.Contains("合格证") && cell.RichText.Text.Length < 10)
+                       {
+                           tableTitle[9] = cell.Start.Column;
+                       }
+                       else if (cell.RichText.Text.Contains("客户姓名") && cell.RichText.Text.Length < 10)
+                       {
+                           tableTitle[10] = cell.Start.Column;
+                       }
+                       else if (cell.RichText.Text.Contains("销售顾问") && cell.RichText.Text.Length < 10)
+                       {
+                           tableTitle[11] = cell.Start.Column;
+                       }
+                       else if (cell.RichText.Text.Contains("组别") && cell.RichText.Text.Length < 10)
+                       {
+                           tableTitle[12] = cell.Start.Column;
+                       }
+                       else if (cell.RichText.Text.Contains("签订日期") && cell.RichText.Text.Length < 10)
+                       {
+                           tableTitle[13] = cell.Start.Column;
+                       }
+                       else if (cell.RichText.Text.Contains("配车天数") && cell.RichText.Text.Length < 10)
+                       {
+                           tableTitle[14] = cell.Start.Column;
+                       }
+                       else if (cell.RichText.Text.Contains("付款方式") && cell.RichText.Text.Length < 10)
+                       {
+                           tableTitle[15] = cell.Start.Column;
+                       }
+                       else if (cell.RichText.Text.Contains("备注") && cell.RichText.Text.Length < 10)
+                       {
+                           tableTitle[16] = cell.Start.Column;
+                       }
+                       else if (cell.RichText.Text.Contains("外/内") && cell.RichText.Text.Length < 10)
+                       {
+                           tableTitle[17] = cell.Start.Column;
+                       }
+                       else
+                       {
+                           for (int k = 0; k < tableTitle.Length; k++)
+                           {
+                               if (cell.Start.Column == tableTitle[k])
+                               {
+                                   switch (k)
+                                   {
+                                       case 0:
+                                           item.discharge =
+                                               cell.RichText.Text; //排放                                            
+                                           break;
+                                       case 1:
+                                           //item.carType = a.RichText.Text;//车型
+                                           tmpCarType = cell.RichText.Text; //车型
+                                           break;
+                                       case 2:
+                                           item.guidancePrice = cell.RichText.Text; //指导价
+                                           break;
+                                       case 3:
                                            // item.carNumber = cell.RichText.Text;//车架号
-                                            tmpKey = cell.RichText.Text;//车架号作为关键字
-                                                                        //to do 改成id自增
-                                            break;
-                                        case 4:
-                                            {
-                                                string dateStr = cell.RichText.Text;
-                                                Match mInfo = Regex.Match(dateStr, @"(?i)^[0-9]+$");
-                                                if (dateStr.Trim() != string.Empty && dateStr.Length == 5 && mInfo.Success)
-                                                {
-                                                    dateStr = DateTime.FromOADate(double.Parse(dateStr)).ToString("yyyy/MM/dd");
-                                                }
-                                                item.releaseDate = dateStr;//发车日期
-                                            }
-                                            break;
-                                        case 5:
-                                            {
-                                                string dateStr = cell.RichText.Text;
-                                                Match mInfo = Regex.Match(dateStr, @"(?i)^[0-9]+$");
-                                                if (dateStr.Trim() != string.Empty && dateStr.Length == 5 && mInfo.Success)
-                                                {
-                                                    dateStr = DateTime.FromOADate(double.Parse(dateStr)).ToString("yyyy/MM/dd");
-                                                }
-                                                item.arriveDate = dateStr;//到店日期
-                                            }
-                                            break;
-                                        case 6:
-                                            item.garageAge = cell.RichText.Text;//库龄
-                                            break;
-                                        case 7:
-                                            {
-                                                string dateStr = cell.RichText.Text;
-                                                Match mInfo = Regex.Match(dateStr, @"(?i)^[0-9]+$");
-                                                if (dateStr.Trim() != string.Empty && dateStr.Length == 5 && mInfo.Success)
-                                                {
-                                                    dateStr = DateTime.FromOADate(double.Parse(dateStr)).ToString("yyyy/MM/dd");
-                                                }
-                                                item.akkDate = dateStr;//AAK日期
-                                            }
-                                            break;
-                                        case 8:
-                                            item.qualityloss = cell.RichText.Text;//质损
-                                            break;
-                                        case 9:
-                                            item.certificate = cell.RichText.Text;//合格证
-                                            break;
-                                        case 10:
-                                            item.userName = cell.RichText.Text;//客户姓名
-                                            break;
-                                        case 11:
-                                            item.adviser = cell.RichText.Text;//销售顾问
-                                            break;
-                                        case 12:
-                                            item.carGroup = cell.RichText.Text;//组别
-                                            break;
-                                        case 13:
-                                            {
-                                                string dateStr = cell.RichText.Text;
-                                                Match mInfo = Regex.Match(dateStr, @"(?i)^[0-9]+$");
-                                                if (dateStr.Trim() != string.Empty && dateStr.Length == 5 && mInfo.Success)
-                                                {
-                                                    dateStr = DateTime.FromOADate(double.Parse(dateStr)).ToString("yyyy/MM/dd");
-                                                }
-                                                item.signDate = dateStr;//签订日期
-                                            }
-                                            break;
-                                        case 14:
-                                            item.useTime = cell.RichText.Text;//配车天数
-                                            break;
-                                        case 15:
-                                            item.payType = cell.RichText.Text;//付款方式
-                                            break;
-                                        case 16:
-                                            item.memo = cell.RichText.Text;//备注
-                                            break;
-                                        case 17:
-                                            item.color = cell.RichText.Text;//外/内 颜色
-                                            break;
-                                    }
-                                }
-                            }
-                            if (cell.Comment != null && cell.Comment.RichText.Text.Trim() != string.Empty)
-                            {
-                                note += "\n" + cell.Comment.RichText.Text;//获取备注
-                            }
-                        }
-                    }
-                    if (tmpKey.Trim() != string.Empty)
-                    {
-                        Match mInfo = Regex.Match(tmpKey, @"(?i)^[0-9a-z]+$");
-                        if (mInfo.Success) //如果是英文和数字
-                        {
-                            //item.id = id;
-                            item.carNumber = tmpKey;
-                            if (tmpCarType.Trim() != string.Empty)
-                            {
-                                item.carType = tmpCarType;
-                            }
-                            else
-                            {
-                                item.carType = prevCarType;
-                            }
-                            item.note = note;//批注
-                            item.vehicleSystem = w.Name;//车系
-                            item.brand = PlayerPrefs.GetString("brand_id");    //todo brandid未登录就使用，但是无法获取到，获取是在登录之后            
-                            if (!carNumberList.Contains(item.carNumber))
-                            {
-                                if (string.IsNullOrEmpty(item.adviser)&& string.IsNullOrEmpty(item.userName))
-                                {
-                                    carNumberList.Add(item.carNumber);
-                                    priceInfos.Add(item);
-                                    
-                                }
-                                
-                            }
-                            prevCarType = tmpCarType;
-                        }
-                    }
-                    Thread.CurrentThread.Join(1);
-                }
-                wIndex = wIndex + 1;
-                //Debug.Log("__________current product infos count: " + priceInfos.Count);
-            }
-            
-            
-            
-            Debug.Log("infos.count    "+priceInfos.Count  );
-           // tip.instance.SetMessae("读表后"+priceInfos.Count);
-            Thread.CurrentThread.Join(1000);//阻止设定时间
+                                           tmpKey = cell.RichText.Text; //车架号作为关键字
+                                           //to do 改成id自增
+                                           break;
+                                       case 4:
+                                       {
+                                           string dateStr = cell.RichText.Text;
+                                           Match mInfo = Regex.Match(dateStr, @"(?i)^[0-9]+$");
+                                           if (dateStr.Trim() != string.Empty && dateStr.Length == 5 && mInfo.Success)
+                                           {
+                                               dateStr = DateTime.FromOADate(double.Parse(dateStr))
+                                                   .ToString("yyyy/MM/dd");
+                                           }
 
-        }
-        
+                                           item.releaseDate = dateStr; //发车日期
+                                       }
+                                           break;
+                                       case 5:
+                                       {
+                                           string dateStr = cell.RichText.Text;
+                                           Match mInfo = Regex.Match(dateStr, @"(?i)^[0-9]+$");
+                                           if (dateStr.Trim() != string.Empty && dateStr.Length == 5 && mInfo.Success)
+                                           {
+                                               dateStr = DateTime.FromOADate(double.Parse(dateStr))
+                                                   .ToString("yyyy/MM/dd");
+                                           }
+
+                                           item.arriveDate = dateStr; //到店日期
+                                       }
+                                           break;
+                                       case 6:
+                                           item.garageAge = cell.RichText.Text; //库龄
+                                           break;
+                                       case 7:
+                                       {
+                                           string dateStr = cell.RichText.Text;
+                                           Match mInfo = Regex.Match(dateStr, @"(?i)^[0-9]+$");
+                                           if (dateStr.Trim() != string.Empty && dateStr.Length == 5 && mInfo.Success)
+                                           {
+                                               dateStr = DateTime.FromOADate(double.Parse(dateStr))
+                                                   .ToString("yyyy/MM/dd");
+                                           }
+
+                                           item.akkDate = dateStr; //AAK日期
+                                       }
+                                           break;
+                                       case 8:
+                                           item.qualityloss = cell.RichText.Text; //质损
+                                           break;
+                                       case 9:
+                                           item.certificate = cell.RichText.Text; //合格证
+                                           break;
+                                       case 10:
+                                           item.userName = cell.RichText.Text; //客户姓名
+                                           break;
+                                       case 11:
+                                           item.adviser = cell.RichText.Text; //销售顾问
+                                           break;
+                                       case 12:
+                                           item.carGroup = cell.RichText.Text; //组别
+                                           break;
+                                       case 13:
+                                       {
+                                           string dateStr = cell.RichText.Text;
+                                           Match mInfo = Regex.Match(dateStr, @"(?i)^[0-9]+$");
+                                           if (dateStr.Trim() != string.Empty && dateStr.Length == 5 && mInfo.Success)
+                                           {
+                                               dateStr = DateTime.FromOADate(double.Parse(dateStr))
+                                                   .ToString("yyyy/MM/dd");
+                                           }
+
+                                           item.signDate = dateStr; //签订日期
+                                       }
+                                           break;
+                                       case 14:
+                                           item.useTime = cell.RichText.Text; //配车天数
+                                           break;
+                                       case 15:
+                                           item.payType = cell.RichText.Text; //付款方式
+                                           break;
+                                       case 16:
+                                           item.memo = cell.RichText.Text; //备注
+                                           break;
+                                       case 17:
+                                           item.color = cell.RichText.Text; //外/内 颜色
+                                           break;
+                                   }
+                               }
+                           }
+
+                           if (cell.Comment != null && cell.Comment.RichText.Text.Trim() != string.Empty)
+                           {
+                               note += "\n" + cell.Comment.RichText.Text; //获取备注
+                           }
+                       }
+                   }
+
+                   if (tmpKey.Trim() != string.Empty)
+                   {
+                       Match mInfo = Regex.Match(tmpKey, @"(?i)^[0-9a-z]+$");
+                       if (mInfo.Success) //如果是英文和数字
+                       {
+                           //item.id = id;
+                           item.carNumber = tmpKey;
+                           if (tmpCarType.Trim() != string.Empty)
+                           {
+                               item.carType = tmpCarType;
+                           }
+                           else
+                           {
+                               item.carType = prevCarType;
+                           }
+
+                           item.note = note; //批注
+                           item.vehicleSystem = w.Name; //车系
+                           item.brand =
+                               "奥迪"; // PlayerPrefs.GetString("brand_id");    //todo brandid未登录就使用，但是无法获取到，获取是在登录之后            
+                           if (!carNumberList.Contains(item.carNumber))
+                           {
+                               if (string.IsNullOrEmpty(item.adviser) && string.IsNullOrEmpty(item.userName))
+                               {
+                                   carNumberList.Add(item.carNumber);
+                                   priceInfos.Add(item);
+                               }
+
+                           }
+
+                           prevCarType = tmpCarType;
+                       }
+                   }
+
+                   Thread.CurrentThread.Join(1);
+               }
+
+               wIndex = wIndex + 1;
+               //Debug.Log("__________current product infos count: " + priceInfos.Count);
+           }
+           Debug.Log("infos.count    " + priceInfos.Count);
+           Thread.CurrentThread.Join(1000); //阻止设定时间
+       }
+       Debug.Log("读表后 "+priceInfos.Count);
+       Hadloadfiles++;
+       if (Hadloadfiles==filsCount)
+       {
+           Debug.Log("全部表加载完");
+            loadEnd = true;
+            Hadloadfiles = 0;
+       }
     }
 
     
@@ -813,102 +851,6 @@ public class PriceManager : MonoBehaviour
 
     }
 
-    /// <summary>
-    /// PriceItem回调，设置Page2的UI
-    /// </summary>
-    /// <param name="item"></param>
-    public void SetItemForPage2(PriceManagerItem item)
-    {
-        currPriceInfo = item.priceInfo;
-
-        currPriceManagerItem = item;
-
-        var offerPriceMsg = item.offerPriceData;     //for post
-
-        textCarType.text = item.priceInfo.carType;
-
-        textCarSeries.text = item.priceInfo.vehicleSystem;
-
-        switch (item.offerPriceData.registration_area_type)
-        {
-            case 0:
-                toggleGroupRegArea.NotifyToggleOn(toggleCity);
-                break;
-            case 1:
-                toggleGroupRegArea.NotifyToggleOn(toggleProvince);
-                break;
-            case 2:
-                toggleGroupRegArea.NotifyToggleOn(toggleCountry);
-                break;
-            default:
-                toggleGroupRegArea.NotifyToggleOn(toggleCity);
-                break;
-        }
-
-        if (item.text_status.text == "已上架")
-        {
-            inputCarPrice.text = offerPriceMsg.net_price;
-            inputRegistrationPrice.text = offerPriceMsg.registration_price;
-            inputFinancial.text = offerPriceMsg.financial_agents_price;
-            inputInsurance.text = offerPriceMsg.insurance_price;
-            inputOtherPrice.text = offerPriceMsg.other_price;
-            inputTax.text = offerPriceMsg.purchase_tax;
-
-           // dropInsuranceType.value = offerPriceMsg.insuranceType;
-           // dropRegistrationType.value = offerPriceMsg.registerType;
-
-            inputOfferPrice.text = offerPriceMsg.officialPrice;
-            inputBargainPrice.text = offerPriceMsg.bargainPrice;
-
-            Toggle toggle;
-            switch (offerPriceMsg.registration_area_type)
-            {
-                case 1:
-                    toggle = toggleCountry;
-                    break;
-                case 2:
-                    toggle = toggleProvince;
-                    break;
-                case 3:
-                    toggle = toggleCity;
-                    break;
-                default:
-                    toggle = toggleCity;
-                    break;
-            }
-            toggleGroupRegArea.NotifyToggleOn(toggle);
-            inputDecorationContent.text = offerPriceMsg.remarkOfDecoration;
-
-            dropJingPingList.ClearOptions();
-            dropJingPingList.AddOptions(offerPriceMsg.jingpin);
-            if (offerPriceMsg.jingpin.Count > 0)
-            {
-                inputJingPin.text = offerPriceMsg.jingpin[0];
-            }
-        }
-        else
-        {
-            inputCarPrice.text = "";
-            inputRegistrationPrice.text = "";
-            inputFinancial.text = "";
-            inputInsurance.text = "";
-            inputOtherPrice.text = "";
-            inputTax.text = "";
-
-            inputOfferPrice.text = "";
-            inputBargainPrice.text = "";
-
-          //  dropInsuranceType.value = 0;
-          //  dropRegistrationType.value = 0;
-
-            toggleGroupRegArea.NotifyToggleOn(toggleCity);
-            inputDecorationContent.text = "";
-            inputJingPin.text = "";
-
-            dropJingPingList.ClearOptions();
-        }
-
-    }
 
 
     public void ChangeToPage(int page)
@@ -972,10 +914,11 @@ public class PriceManager : MonoBehaviour
                         jsonData[j] = "NA";
                     }
                 }
-             //   Debug.LogFormat("____{2}, carType: {0}, carNumber: {1}", carType, priceInfos[i].carNumber, i);
                 tempInfoList.Add(priceInfos[i]);
             }
+           
         }
+        
         
         tip.instance.SetMessae("开始整合表单数据");
        
@@ -985,13 +928,6 @@ public class PriceManager : MonoBehaviour
             tempInfoList[i].vehicleSystem = tempInfoList[i].vehicleSystem.Replace("库存", "");
             string jsonString = JsonMapper.ToJson(tempInfoList[i]);
             JsonData jsonData = JsonMapper.ToObject(jsonString);
-            for (int j = 0; j < jsonData.Count; j++)
-            {
-                if (jsonData[j]==null)
-                {
-                    jsonData = "NA";
-                }
-            }
             jsonData["net_price"] = inputCarPrice.text;
             jsonData["financial_agents_price"] = inputFinancial.text;
             jsonData["insurance_price"] = inputInsurance.text;
@@ -1002,11 +938,18 @@ public class PriceManager : MonoBehaviour
             jsonData["appear_color"] = tempInfoList[i].color;
             jsonData["registration_area_type"] = currRegisterAreaType.ToString();
 
+            for (int j = 0; j < jsonData.Count; j++)
+            {
+                if (jsonData[j]==null)
+                {
+                    jsonData[j] = "NA";
+                }
+            }
            // Debug.Log("________准备上传的 jsonData:" + jsonData.ToJson());
             //jsonString = JsonMapper.ToJson(jsonData);
-            jsonString = jsonData.ToJson();
+             string json = jsonData.ToJson();
 
-            form.AddField("d[]", jsonString);
+            form.AddField("d[]", json);
             tip.instance.SetMessae(tempInfoList.Count+"*****"+ i.ToString());
         }
        
@@ -1139,42 +1082,7 @@ public class PriceManager : MonoBehaviour
 
     }
 
-    /*public void DoPostOfferPrice1()//普通报价
-    {
-       string carType = currPriceInfo.carType;//竟然不需要车型信息？？？
-       List<cost> costList=new List<cost>();
-       List<PriceInfo> needPost=new List<PriceInfo>();
-       CleanBeforeUpdataUi();
-       for (int i = 0; i < priceInfos.Count; i++)
-       {
-           if (priceInfos[i].carType==carType)
-           {
-               needPost.Add(priceInfos[i]);
-           }
-       }
-       for (int i = 0; i < needPost.Count; i++)
-       {
-           cost postCost=new cost();
-           postCost.cart_id = "NNN";
-           postCost.carNumber = needPost[i].carNumber;
-           postCost.net_price= inputCarPrice.text;
-           postCost.registration_price=inputRegistrationPrice.text;
-           postCost.insurance_price=inputInsurance.text;
-           postCost.purchase_tax=inputTax.text;
-           postCost.financial_agents_price=inputFinancial.text;
-           postCost.other_price= inputOtherPrice.text;
-           postCost.offer_price = needPost[i].guidancePrice;
-           postCost.cart_price_type = "1";
-           postCost.vin = "NA";
-           postCost.boutique= inputJingPin.text;
-           postCost.content_remark=inputDecorationContent.text;
-           postCost.registration_area_type=currRegisterAreaType.ToString();
-           costList.Add(postCost);
-       }
-       StartCoroutine(coroutine.instance.PostTypePrice(costList));
-       
-
-    }*/
+   
 
   
 
@@ -1346,6 +1254,156 @@ public class PriceManager : MonoBehaviour
         }
     }
 
+    private void OnDestroy()
+    {
+        loadThread.Abort();
+    }
+
+
+    private void OnClickAddJingPin()
+    {
+        string temp = inputJingPin.text;
+        if (temp != "")
+        {
+            currPriceManagerItem.offerPriceData.jingpin.Add(temp);
+            dropJingPingList.ClearOptions();
+            dropJingPingList.AddOptions(currPriceManagerItem.offerPriceData.jingpin);
+        }
+    }
+
+    /// <summary>
+    /// PriceItem回调，设置Page2的UI
+    /// </summary>
+    /// <param name="item"></param>
+    public void SetItemForPage2(PriceManagerItem item)
+    {
+        currPriceInfo = item.priceInfo;
+
+        currPriceManagerItem = item;
+
+        var offerPriceMsg = item.offerPriceData;     //for post
+
+        textCarType.text = item.priceInfo.carType;
+
+        textCarSeries.text = item.priceInfo.vehicleSystem;
+
+        switch (item.offerPriceData.registration_area_type)
+        {
+            case 0:
+                toggleGroupRegArea.NotifyToggleOn(toggleCity);
+                break;
+            case 1:
+                toggleGroupRegArea.NotifyToggleOn(toggleProvince);
+                break;
+            case 2:
+                toggleGroupRegArea.NotifyToggleOn(toggleCountry);
+                break;
+            default:
+                toggleGroupRegArea.NotifyToggleOn(toggleCity);
+                break;
+        }
+
+        if (item.text_status.text == "已上架")
+        {
+            inputCarPrice.text = offerPriceMsg.net_price;
+            inputRegistrationPrice.text = offerPriceMsg.registration_price;
+            inputFinancial.text = offerPriceMsg.financial_agents_price;
+            inputInsurance.text = offerPriceMsg.insurance_price;
+            inputOtherPrice.text = offerPriceMsg.other_price;
+            inputTax.text = offerPriceMsg.purchase_tax;
+
+           // dropInsuranceType.value = offerPriceMsg.insuranceType;
+           // dropRegistrationType.value = offerPriceMsg.registerType;
+
+            inputOfferPrice.text = offerPriceMsg.officialPrice;
+            inputBargainPrice.text = offerPriceMsg.bargainPrice;
+
+            Toggle toggle;
+            switch (offerPriceMsg.registration_area_type)
+            {
+                case 1:
+                    toggle = toggleCountry;
+                    break;
+                case 2:
+                    toggle = toggleProvince;
+                    break;
+                case 3:
+                    toggle = toggleCity;
+                    break;
+                default:
+                    toggle = toggleCity;
+                    break;
+            }
+            toggleGroupRegArea.NotifyToggleOn(toggle);
+            inputDecorationContent.text = offerPriceMsg.remarkOfDecoration;
+
+            dropJingPingList.ClearOptions();
+            dropJingPingList.AddOptions(offerPriceMsg.jingpin);
+            if (offerPriceMsg.jingpin.Count > 0)
+            {
+                inputJingPin.text = offerPriceMsg.jingpin[0];
+            }
+        }
+        else
+        {
+            inputCarPrice.text = "";
+            inputRegistrationPrice.text = "";
+            inputFinancial.text = "";
+            inputInsurance.text = "";
+            inputOtherPrice.text = "";
+            inputTax.text = "";
+
+            inputOfferPrice.text = "";
+            inputBargainPrice.text = "";
+
+          //  dropInsuranceType.value = 0;
+          //  dropRegistrationType.value = 0;
+
+            toggleGroupRegArea.NotifyToggleOn(toggleCity);
+            inputDecorationContent.text = "";
+            inputJingPin.text = "";
+
+            dropJingPingList.ClearOptions();
+        }
+
+    }
+    //保存数据
+    public  void SavePlayerJson(List<PriceInfo> player)
+    {
+        Debug.Log("保存数据，长度"+player.Count);
+        string path = Application.persistentDataPath+"/priceinfos.json";
+        SaveFile saveFile=new SaveFile();
+        saveFile.data = player;
+        var content = JsonMapper.ToJson(saveFile);
+        File.WriteAllText(path,content);
+    }
+
+    //读取数据
+    public  List<PriceInfo> LoadPlayerJson()
+    {
+        string path = Application.persistentDataPath+"/priceinfos.json";
+        if(File.Exists(path)){
+            var content = File.ReadAllText(path);
+            if (!string.IsNullOrEmpty(content))
+            {
+                Debug.Log(" content "+content);
+
+                var playerData =JsonMapper.ToObject<SaveFile>(content) ;//JsonUtility.FromJson<SaveFile>(content);
+                Debug.Log(playerData.data.Count .ToString());
+                return playerData.data;
+               
+            }
+            else
+            {
+                loadExcelsTest(PlayerPrefs.GetString("XiaoKuExcelPath"));
+                return null;
+            }
+           
+        }else{
+            Debug.LogError("Save file not found in  "+path);
+            return null;
+        }
+    }
 
     class BrandCarTypeInfo
     {
@@ -1438,5 +1496,10 @@ public class ChangeCarTypeVehic
     public string model_name;
     public string cart_lines;
     public string cart_models;
+}
+
+public class SaveFile
+{
+    public List<PriceInfo> data;
 }
 

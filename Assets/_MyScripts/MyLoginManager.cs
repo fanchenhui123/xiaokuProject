@@ -162,7 +162,7 @@ public class MyLoginManager : MonoBehaviour
     public bool isLoginSuccess;
     private void LoginSuccess()
     {
-        messagePanelManager.Show("登录成功");
+      //  messagePanelManager.Show("登录成功");
         isFirst = false;//第二次不退出
 
         if (homePage)
@@ -178,8 +178,11 @@ public class MyLoginManager : MonoBehaviour
         #region  2.0  登录成功后，加载价格管理数据、消息数目等
 
         DoGetUserInfo();
+        GetHadPrice();
         isLoginSuccess = true;
         //请求获取数据库里已经报价的车辆信息
+
+      //  coroutine.instance.StartCompare();
 
         #endregion
     }
@@ -189,8 +192,28 @@ public class MyLoginManager : MonoBehaviour
         messagePanelManager.Show("登录失败");
     }
 
-
-   
+    List<string> hadPriceType=new List<string>(); 
+    List<string> hadPriceNumber=new List<string>(); 
+    public void GetHadPrice()//List<PriceInfo> newList,List<PriceInfo> oldList)获取已经报价车辆
+    {
+        
+        NetworkManager.Instance.DoGet1(API.GetHadPriceCars, (responsecode, data) =>
+        {
+            if (responsecode==200)
+            {
+                JsonData jsonData= JsonMapper.ToObject(data)["data"]["data"];
+                Debug.Log(jsonData.ToJson());
+                for (int i = 0; i < jsonData.Count; i++)
+                {
+                     hadPriceType.Add(jsonData[i]["cart"]["car_Type"].ToJson());//todo 请求，获取已报价的信息，竟然没有车型，后端得加上给我返回
+                     hadPriceNumber.Add(jsonData[i]["cart"]["carNumber"].ToJson());
+                }
+                Debug.Log("123  "+jsonData.ToJson());
+            }
+        },NetworkManager.Instance.token);
+        // StartCoroutine(CompareData( newList, oldList, hadPrice));
+        // return oldList;
+    }
     public void DoGetUserInfo()
     {
         string url = API._GetUserInfo1;

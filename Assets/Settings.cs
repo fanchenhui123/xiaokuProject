@@ -50,7 +50,7 @@ public class Settings : MonoBehaviour
         if (OpenFileDialog.GetOpenFileName(pth))
         {
             ExcelPath = pth.file; //选择的文件路径;  
-           
+           Debug.Log("excelpath"+ ExcelPath);
 
             PathText.text = ExcelPath;
 
@@ -83,9 +83,8 @@ public class Settings : MonoBehaviour
             yield return new WaitForSeconds(Interval*60 );
             tip.instance.SetMessae("自动重新读取表格");
             //考虑什么时候开始自动加载，决定了自动加载的路径是否是离线数据
-           // PriceManager.Instance.ReadCarPrice(ExcelPath);
-           PriceManager.Instance. loadExcelsTest(ExcelPath);
-           PriceManager.Instance.isNeedCompare = true;
+            PriceManager.Instance. loadExcelsTest(ExcelPath);
+            PriceManager.Instance.isNeedCompare = true;
            
 
            

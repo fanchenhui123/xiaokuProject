@@ -27,22 +27,7 @@ public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
     public List<string> priceInfosRemove=new List<string>();
    
     
-    public List<PriceInfo> StartCompare(List<PriceInfo> newList,List<PriceInfo> oldList)
-    {
-        Debug.Log("compara");
-        tip.instance.SetMessae("compara");
-        List<PriceInfo> hadPrice=new List<PriceInfo>(); //todo 请求，获取已报价的信息
-        networkManager.DoGet1(API.GetHadPriceCars, (responsecode, data) =>
-        {
-            if (responsecode==200)
-            {
-                Debug.Log("111");
-            }
-            Debug.Log(data);
-        });
-        StartCoroutine(CompareData( newList, oldList, hadPrice));
-        return oldList;
-    }
+  
 /// <summary>
 /// 对比两次读表数据
 /// </summary>

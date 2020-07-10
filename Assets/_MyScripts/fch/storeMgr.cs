@@ -212,7 +212,7 @@ public class storeMgr : MonoBehaviour
         
     }
      private List<string> needRemoveCarNum=new List<string>();
-     
+     private List<PriceInfo> needRemoveCarInfo=new List<PriceInfo>();
      public void RemoveCar()
      {
         
@@ -233,7 +233,7 @@ public class storeMgr : MonoBehaviour
                      if (priceInfos[k].carNumber==j && PriceManager.Instance!=null)
                      {
                          needRemoveCarNum.Add(priceInfos[k].carNumber);
-                         priceInfos.Remove(priceInfos[k]);
+                         needRemoveCarInfo.Add(priceInfos[k]);
                      }
                  }
              }
@@ -278,9 +278,17 @@ public class storeMgr : MonoBehaviour
              {
                  Destroy(StoreCarItems[i]);
              }
+
+             for (int i = 0; i < needRemoveCarInfo.Count; i++)
+             {
+                 PriceManager.Instance.priceInfos.Remove(needRemoveCarInfo[i]);
+             }
              StoreCarItems.Clear();
              RefreshUi();
+             PriceManager.Instance.SavePlayerJson(PriceManager.Instance.priceInfos);
              tip.instance.SetMessae("删除成功");
+             
+             
          }
          else
          {
