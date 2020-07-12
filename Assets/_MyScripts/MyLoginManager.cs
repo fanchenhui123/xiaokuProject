@@ -64,7 +64,6 @@ public class MyLoginManager : MonoBehaviour
 
         remember.onValueChanged.AddListener(RememberValChange);
         InitLoginPanel();
-       
     }
 
     // Start is called before the first frame update
@@ -73,6 +72,7 @@ public class MyLoginManager : MonoBehaviour
         networkManager = FindObjectOfType<NetworkManager>();
         clickEvent = FindObjectOfType<ClickEvent>();
         messagePanelManager = FindObjectOfType<MessagePanelManager>();
+      
     }
 
     // Update is called once per frame
@@ -153,7 +153,7 @@ public class MyLoginManager : MonoBehaviour
             else
             {
                 Debug.Log(responseCode+JsonMapper.ToObject(data)["message"]);
-                //warnText.text = jdata["msg"].ToString();
+                warnText.text = JsonMapper.ToObject(data)["message"].ToString();
                 LoginFail();
             }
         });
@@ -202,13 +202,23 @@ public class MyLoginManager : MonoBehaviour
             if (responsecode==200)
             {
                 JsonData jsonData= JsonMapper.ToObject(data)["data"]["data"];
-                Debug.Log(jsonData.ToJson());
+                Debug.Log("jsodnata   "+jsonData.Count+"   "+jsonData[0]["cart"]);
                 for (int i = 0; i < jsonData.Count; i++)
                 {
-                     hadPriceType.Add(jsonData[i]["cart"]["car_Type"].ToJson());//todo 请求，获取已报价的信息，竟然没有车型，后端得加上给我返回
-                     hadPriceNumber.Add(jsonData[i]["cart"]["carNumber"].ToJson());
+                    if (jsonData[i]["cart"]!=null)
+                    {
+                        if (jsonData[i]["cart"]["carType"]!=null)
+                        {
+                            hadPriceType.Add(jsonData[i]["cart"]["carType"].ToJson());//todo 请求，获取已报价的信息，竟然没有车型，后端得加上给我返回
+                            hadPriceNumber.Add(jsonData[i]["cart"]["carNumber"].ToJson());
+                        }
+                    }
+                     
                 }
-                Debug.Log("123  "+jsonData.ToJson());
+
+                PriceManager.Instance.putSJ=hadPriceType;
+                PriceManager.Instance.SavePlayerJson(PriceManager.Instance.putSJ);
+                Debug.Log("pusj count"+PriceManager.Instance.putSJ.Count);
             }
         },NetworkManager.Instance.token);
         // StartCoroutine(CompareData( newList, oldList, hadPrice));
@@ -226,11 +236,12 @@ public class MyLoginManager : MonoBehaviour
                 JsonData dataObj = jsonData["data"];
                 //Debug.Log("nickname:" + dataObj["nickname"]);
                 //Debug.Log("email:" + dataObj["email"]);
-                //Debug.Log("id:" + dataObj["id"]);
+                Debug.Log("id:" + dataObj.ToJson());
                 SecondPanelCtrl.Instance.textUserID.text = dataObj["id"].ToString();
                 SecondPanelCtrl.Instance.textNickName.text = dataObj["email"].ToString();
-                Debug.Log("barandid  "+dataObj["brand_id"].ToString());
+                Debug.Log("barandid  "+dataObj["brand_id"].ToString()+ "   ");
                 PlayerPrefs.SetString("brand_id",dataObj["brand_id"].ToString());
+                PlayerPrefs.SetString("Userbrand",coroutine.instance.DicBrand[(dataObj["brand_id"].ToString())]);
                // PriceManager.Instance.
             }
             else

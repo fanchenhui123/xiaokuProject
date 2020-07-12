@@ -42,11 +42,32 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
     
     
     
-    private void Start()
+    private void OnEnable()
     {
        // confirmAndBack.onClick.AddListener(OnClickConfirm);
       //  continueAndBack.onClick.AddListener(OnClickContinue);
-
+        Debug.Log("获取所有订单消息");
+        completedOrders.Clear();
+        needFinalConfirm.Clear();
+        repliesOrders.Clear();
+        for (int i = 0; i < contentParentYJ.childCount; i++)
+        {
+           
+             contentParentYJ.GetChild(i).gameObject.SetActive(false);
+        }
+        
+        for (int i = 0; i < contentParentJYWC.childCount; i++)
+        {
+           
+            Destroy( contentParentJYWC.GetChild(i).gameObject);
+        }
+        for (int i = 0; i < contentParentDCL.childCount; i++)
+        {
+           
+            Destroy( contentParentDCL.GetChild(i).gameObject);
+        }
+        
+        
         networkManager = NetworkManager.Instance;
         if (networkManager != null)
         {
@@ -68,7 +89,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                     msgCard.GetComponent<MsgCard>().text_vehicleSystem.text = "车系：" + completedOrders[i].cart.vehicleSystem;
                     msgCard.GetComponent<MsgCard>().text_yajin.text = "押金已支付";
                     msgCard.GetComponent<MsgCard>().text_yajin.color = Color.green;
-                    msgCard.transform.Find("resText").GetComponent<Text>().text = "查看";
+                    msgCard.GetComponent<MsgCard>().text_status.text = "查看";
                 }
               
                 
@@ -87,7 +108,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                     msgCard.GetComponent<MsgCard>().text_vehicleSystem.text = "车系：" + needFinalConfirm[i].cart.vehicleSystem;
                     msgCard.GetComponent<MsgCard>().text_yajin.text = "";
                     msgCard.GetComponent<MsgCard>().text_yajin.color = Color.green;
-                    msgCard.transform.Find("resText").GetComponent<Text>().text = "待处理";
+                    msgCard.GetComponent<MsgCard>().text_status.text = "待处理";
                 }
                 
                 
@@ -162,20 +183,23 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                 //Response_Msg responseMsg = JsonMapper.ToObject<Response_Msg>(data);
                 JsonData jsonData = JsonMapper.ToObject(data);
                 Debug.Log(" datacount  "+jsonData["data"].Count);
-                Debug.Log(" data  "+data);
+               // Debug.Log(" data  "+data);
                 //Debug.Log(jsonData["data"].Count);
                 foreach (JsonData obj in jsonData["data"])
                 {
                   
+                    
                     try
                     {
                         MessageDataItem item = new MessageDataItem();
                         item.id = int.Parse(obj["id"].ToString());
-                        Debug.Log("item id   "+   item.id);
+                      //  Debug.Log("item id   "+   item.id);
                         item.user_id = int.Parse(obj["user_id"].ToString());
                         item.cart_id = int.Parse(obj["cart_id"].ToString());
 
                         item.order_no = obj["order_no"].ToString();
+                        
+                        //Debug.Log("data "+obj["id"].ToString()+"  "+ item.status);
                         
                         item.cart = new CarInfo();
                         JsonData jsonData_cart = obj["cart"];
@@ -208,7 +232,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
 
                         msgItemList.Add(item);
 
-                        Debug.Log("item.status  "+ item.status);
+                       // Debug.Log("item.status  "+ item.status);
                         if (item.status == 6)
                         {
                             completedOrders.Add(item);          //交易完成

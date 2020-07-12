@@ -22,6 +22,7 @@ public class MsgCard : MonoBehaviour
     public Text text_user_id;
     public Text text_price;
     public Text text_yajin;
+    public Text text_status;
     public string MessaeID="";//传给聊天页面的订单ID
     public int MessaeIndex = 0;//传给聊天页面订单index作为Data数组的索引
     public Button resBtn;

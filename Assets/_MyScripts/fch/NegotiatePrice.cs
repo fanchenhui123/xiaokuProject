@@ -54,9 +54,11 @@ public class NegotiatePrice : MonoBehaviour
 
     private void Update()
     {
-        if (continueChat==true)
+        if (continueChat==true && Time.time-requestEndTime>=60)
         {
-            repeatRequest();
+            Debug.Log("再次请求");
+            StartCoroutine(GetYJinfo());//每隔一定时间请求获得数据
+
         }
     }
 
@@ -65,7 +67,7 @@ public class NegotiatePrice : MonoBehaviour
     /// 显示议价方案的基本信息，根据请求得到的数据获取
     /// </summary>
     /// <param name="message"></param>
-    public void ShowData()
+    public void ShowData()//显示聊天记录
     {
        
         JsonData jsonData =JsonMapper.ToObject(resOrderInfo);
@@ -82,8 +84,18 @@ public class NegotiatePrice : MonoBehaviour
             Debug.Log(curOrderId+"   id  "+ jsonData["data"][i]["id"]);
             if (jsonData["data"][i]["id"].ToJson()==curOrderId)
             {
-                Debug.Log("相等");
-               // curOrderId=(jsonData["data"][i]["id"]).ToJson() ;
+
+                for (int j = 0; j < (jsonData["data"][i].Count); j++)
+                {
+                    if (jsonData["data"][i][j]==null)
+                    {
+                        jsonData["data"][i][j] = "NA";
+                    }
+                }
+
+                
+              
+                // curOrderId=(jsonData["data"][i]["id"]).ToJson() ;
                 UTF8String utf1=new UTF8String((jsonData["data"][i]["cart"]["carType"]).ToJson().Trim('"'));
                 UTF8String utf2=new UTF8String((jsonData["data"][i]["cart"]["vehicleSystem"]).ToJson().Trim('"'));
                 UTF8String utf3=new UTF8String((jsonData["data"][i]["cart"]["carNumber"]).ToJson().Trim('"') );
@@ -118,21 +130,19 @@ public class NegotiatePrice : MonoBehaviour
                 else
                 {
                     continueChat = true;
+                    requestEndTime = Time.time;
                 }
 
                 Debug.Log("12312312312  "+utf1.ToString());
 
             }
-            /*if (jsonData["data"][0]["cart"][i]==null)
-            {
-                jsonData["data"][0]["cart"][i] = "NA";
-            }*/
+            
         }
       
        
     }
 
-    
+    private float requestEndTime;
     ////////////////////////////////////////////////////////////////以下是没用的方法了删除用户编辑方案的功能////////////////////////////////////////////
     
     /// <summary>
@@ -277,11 +287,10 @@ public class NegotiatePrice : MonoBehaviour
         {
             tip.instance.SetMessae("发送成功");
             SkipWindowPanel.SetActive(false);
-            
         }
         else
         {
-            tip.instance.SetMessae("发送失败:"+webRequest.responseCode);
+            tip.instance.SetMessae("发送失败:"+JsonMapper.ToObject(webRequest.downloadHandler.text)["message"].ToJson());
             /*if (webRequest.responseCode==400)
             {
                   tip.instance.SetMessae("请等待用户回复");
@@ -293,7 +302,7 @@ public class NegotiatePrice : MonoBehaviour
             }*/
 
            
-            Debug.Log("发送失败:"+webRequest.responseCode);
+            Debug.Log("发送失败:"+webRequest.downloadHandler.text);
         }
     }
 
@@ -312,27 +321,21 @@ public class NegotiatePrice : MonoBehaviour
   
 
 
-    private void repeatRequest()
-    {
-        Debug.Log("再次请求");
-        StartCoroutine(GetYJinfo());//每隔一定时间请求获得数据
-
-    }
-
+ 
     // Start is called before the first frame update
   
     
     public Transform dialogContainer;
    
 
-    private void updateChatInfo()
+    private void updateChatInfo()//显示聊天信息
     {
         StringBuilder stringBuilder = new StringBuilder();
         JsonData jsonData = JsonMapper.ToObject(resOrderInfo);
-      //  if (dialogContainer.childCount!= jsonData["data"][dataIndex]["repies"].Count)
-     //   {
+       if (dialogContainer.childCount!= jsonData["data"][dataIndex]["repies"].Count)
+        {
             FlashWinTool.FlashWindow(FlashWinTool.GetProcessWnd());
-       // }
+        }
         for (int i = 0; i < dialogContainer.childCount; i++)
         {
             Destroy(dialogContainer.GetChild(i).gameObject);
@@ -385,7 +388,7 @@ public class NegotiatePrice : MonoBehaviour
         /*UnityWebRequest request=new UnityWebRequest();
         request.downloadHandler=new DownloadHandlerBuffer();
         request.url = API._GetMsgList1;//+"?order_id="+id;*/
-        
+        requestEndTime = Time.time;
         yield  break;// return request.SendWebRequest();
        
     }
@@ -438,7 +441,8 @@ public class NegotiatePrice : MonoBehaviour
             tip.instance.SetMessae("议价发送成功");
             GameObject go = Instantiate(dialogItem,dialogContainer);
             stringBuilder.Append("价格：") .Append(chatPrice.text).Append("万元, 备注：").Append(chatMemo.text);
-            go.GetComponent<Text>().text = stringBuilder.ToString();
+            go.transform.GetChild(0).GetComponent<Text>().text = stringBuilder.ToString();
+            go.GetComponent<Image>().color = new Color(72/255f,138/255f,155/255f,255/255f);
             chatPrice.transform.parent.GetComponent<InputField>().text = "";
             chatMemo.transform.parent.GetComponent<InputField>().text = "";
         }

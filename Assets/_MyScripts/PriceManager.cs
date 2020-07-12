@@ -10,9 +10,7 @@ using System;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using LitJson;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Logical;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
-using Unity.DocZh.Utility.Json;
+
 using UnityEngine.Networking;
 
 public class PriceManager : MonoBehaviour
@@ -34,7 +32,8 @@ public class PriceManager : MonoBehaviour
     public string curBrand;
     public List<string> putSJ=new List<string>();//存入已上架的车型，普通报价后存入
     public Button specialCarbtn;
-
+    public int curUserBrandId=1;
+    public string curUserBrand = "奥迪";
     #region page2 references
     [Header("page2")]
     public Text textCarType;
@@ -73,7 +72,7 @@ public class PriceManager : MonoBehaviour
 
     #endregion
 
-    private object objlock;
+    private object   objlock = new object();
 
     private int filsCount;
     //private string filePath = Application.streamingAssetsPath + "/深圳锦奥库存CKD_200614.xlsx"; 
@@ -130,17 +129,20 @@ public class PriceManager : MonoBehaviour
             }
         }
 
-        objlock = new object();
+      
 
         this.gameObject.SetActive(false);
     }
 
     private void Init()
     {
+        curUserBrandId =int.Parse(PlayerPrefs.GetString("brand_id")) ;
+        curUserBrand = PlayerPrefs.GetString("Userbrand");
         networkManager = NetworkManager.Instance;
         dBManager = DBManager._DBInstance();
         dBManager.CreateTable(typeof(PriceInfo));
-        priceInfos = LoadPlayerJson();
+        LoadPlayerJson();
+        LoadPlayerJsonHadPrice();
        //  SavePlayerJson(priceInfos);
       //  priceInfos = LoadPlayerJson();
        
@@ -160,23 +162,30 @@ public class PriceManager : MonoBehaviour
             currRegisterAreaType = 1;
         });
 
-        if (priceInfos.Count > 0)
+        if (priceInfos!=null)
         {
-            UpdateUI();
-            Debug.Log("????updateui");
+            if (priceInfos.Count > 0)
+            {
+                Debug.Log("????updateui");
+                UpdateUI();
+               // DoPostCarType();
+            }
+            else
+            {
+                loadExcelsTest(PlayerPrefs.GetString("XiaoKuExcelPath"));
+            }
         }
         else
         {
             loadExcelsTest(PlayerPrefs.GetString("XiaoKuExcelPath"));
         }
+       
 
         btnSave.onClick.AddListener(() =>
         {
             DoPostOfferPrice();//
 
            // SaveInputInfo();
-           
-           
         });
 
         btnAddJingPin.onClick.AddListener(OnClickAddJingPin);
@@ -218,14 +227,6 @@ public class PriceManager : MonoBehaviour
                         }
                         
                     }
-                    /*if (!priceInfosLast.Contains(priceInfos[i]))
-                    {
-                        priceInfosLast.Add(priceInfos[i]);
-                       
-                        {
-                            priceInfosAdd.Add(priceInfos[i]); //新增的需要上传报价信息数据
-                        }
-                    }*/
                 }
 
                 for (int i = 0; i < priceInfosLast.Count; i++)
@@ -276,38 +277,7 @@ public class PriceManager : MonoBehaviour
         }
         
     }
-
-    /*try
-    {
-        for (int i = 0; i < SpecialCarr.instance.ChangeStatus.Count; i++)
-        {
-            for (int j = 0; j < registorItems.Count; j++)
-            {
-                if ( registorItems[j].GetComponent<RegistorItem>().carNumber==SpecialCarr.instance.ChangeStatus[i].carNumber)
-                {
-                    registorItems[j].GetComponent<RegistorItem>().text_statu.text = "已上架";
-                }
-            }
-        }
-
-        for (int i = 0; i < putSJ.Count; i++)
-        {
-            for (int j = 0; j < priceItems.Count; j++)
-            {
-                if (putSJ[i]==priceItems[j].GetComponent<PriceManagerItem>().carNumber)
-                {
-                        
-                }
-            }
-        }
-    }
-    catch (Exception e)
-    {
-        Debug.Log(" 添加已上架");
-        // throw;
-    }*/
     
-   
    
     public void loadExcelsTest(string ExcelPath)
     {
@@ -401,7 +371,7 @@ public class PriceManager : MonoBehaviour
     int Hadloadfiles;
     public void ReadCarPrice(string path = "")
     {
-       Debug.Log("读表前 "+priceInfos.Count);
+      // Debug.Log("读表前 "+priceInfos.Count);
        if (Hadloadfiles==0 && isNeedCompare)
        {
            priceInfosLast = priceInfos;
@@ -412,8 +382,8 @@ public class PriceManager : MonoBehaviour
            carTypeList.Clear();
            Debug.Log("清除infos后  infosLastCount= "+priceInfosLast.Count);
        }
-
-
+       
+        Debug.Log("priceonfos?"+priceInfos);
 
        if (path != "")
        {
@@ -669,8 +639,7 @@ public class PriceManager : MonoBehaviour
 
                            item.note = note; //批注
                            item.vehicleSystem = w.Name; //车系
-                           item.brand =
-                               "奥迪"; // PlayerPrefs.GetString("brand_id");    //todo brandid未登录就使用，但是无法获取到，获取是在登录之后            
+                           item.brand = curUserBrand; // PlayerPrefs.GetString("brand_id");    //todo brandid未登录就使用，但是无法获取到，获取是在登录之后            
                            if (!carNumberList.Contains(item.carNumber))
                            {
                                if (string.IsNullOrEmpty(item.adviser) && string.IsNullOrEmpty(item.userName))
@@ -698,7 +667,7 @@ public class PriceManager : MonoBehaviour
        Hadloadfiles++;
        if (Hadloadfiles==filsCount)
        {
-           Debug.Log("全部表加载完");
+            Debug.Log("全部表加载完");
             loadEnd = true;
             Hadloadfiles = 0;
        }
@@ -832,22 +801,12 @@ public class PriceManager : MonoBehaviour
                    priceInfos.Remove(priceInfos[i]);
                    continue;
                }
-
                
-            
-               /*
-               if (SpecialCarr.instance!=null)
-               {
-                   if (SpecialCarr.instance.TJSJ.Contains(priceInfos[i].carNumber))
-                   {
-                       priceInfos.Remove(priceInfos[i]);
-                   }
-               }*/
            }
         }
        
        
-        //carTypeList.Clear();
+      
 
     }
 
@@ -945,9 +904,7 @@ public class PriceManager : MonoBehaviour
                     jsonData[j] = "NA";
                 }
             }
-           // Debug.Log("________准备上传的 jsonData:" + jsonData.ToJson());
-            //jsonString = JsonMapper.ToJson(jsonData);
-             string json = jsonData.ToJson();
+            string json = jsonData.ToJson();
 
             form.AddField("d[]", json);
             tip.instance.SetMessae(tempInfoList.Count+"*****"+ i.ToString());
@@ -965,62 +922,18 @@ public class PriceManager : MonoBehaviour
                 {
                     if (!putSJ.Contains(tempInfoList[i].carType))
                     {
-                        putSJ.Add(tempInfoList[i].carType); 
+                        putSJ.Add(tempInfoList[i].carType);
                     }
                 }
-                
+                SavePlayerJson(putSJ);
                 ChangeToPage(1);
                 UpdateUI();
             }
             else
             {
-                tip.instance.SetMessae("保存失败："+responseCode);
+                tip.instance.SetMessae(JsonMapper.ToObject(content)["message"].ToString());
             }
         }, networkManager.token);
-        
-        
-        
-        /*
-        for (int i = 0; i < priceInfos.Count; i++)
-        {
-            if (priceInfos[i].carType == carType)
-            {
-                Debug.LogFormat("____{2}, carType: {0}, carNumber: {1}", carType, priceInfos[i].carNumber, i);
-                tempInfoList.Add(priceInfos[i]);
-            }
-        }
-
-        for (int i = 0; i < tempInfoList.Count; i++)
-        {
-            tempInfoList[i].vehicleSystem = tempInfoList[i].vehicleSystem.Replace("库存", "");
-
-            cost postCost=new cost();
-            postCost.carNumber = tempInfoList[0].carNumber;
-            postCost.net_price= inputCarPrice.text;
-            postCost.registration_price=inputRegistrationPrice.text;
-            postCost.insurance_price=inputInsurance.text;
-            postCost.purchase_tax=inputTax.text;
-            postCost.financial_agents_price=inputFinancial.text;
-            postCost.other_price= inputOtherPrice.text;
-            postCost.offer_price = currPriceInfo.guidancePrice;
-            postCost.cart_price_type = "1";
-            postCost.vin = "";
-            postCost.boutique= inputJingPin.text;
-            postCost.content_remark=inputDecorationContent.text;
-            postCost.registration_area_type=currRegisterAreaType.ToString();
-
-         //   Debug.Log("________准备上传的 jsonData:" + jsonData.ToJson());
-            //jsonString = JsonMapper.ToJson(jsonData);
-            string jsonString = JsonMapper.ToJson(postCost);
-
-            form.AddField("d[]", jsonString);
-        }
-        networkManager.DoPost1(API._PostOfferPrice1, form, (responseCode, content) =>
-        {
-            Debug.Log("____responseCode:" + responseCode + ", content:" + content);
-        }, networkManager.token);
-        */
-
         
     }
 
@@ -1177,6 +1090,7 @@ public class PriceManager : MonoBehaviour
         String jsonData = JsonMapper.ToJson(carNumbers);
         UnityWebRequest request=new UnityWebRequest(API.PostDeleteCarinfo,"POST");
         request.uploadHandler=new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonData));
+        request.downloadHandler=new DownloadHandlerBuffer();
         yield return request.SendWebRequest();
         if (request.responseCode==200)
         {
@@ -1185,8 +1099,9 @@ public class PriceManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("新旧对比后删除失败");
-            //tip.instance.SetMessae("删除失败");
+            Debug.Log("新旧对比后删除失败" + request.responseCode+(request.downloadHandler.text));
+                   //   JsonMapper.ToObject(request.downloadHandler.text)["data"]);
+            tip.instance.SetMessae("删除失败"+request.responseCode);
         }
     }
     
@@ -1200,7 +1115,7 @@ public class PriceManager : MonoBehaviour
         WWWForm form = new WWWForm();
 
         BrandCarTypeInfo bcti = new BrandCarTypeInfo();
-        bcti.brand_name = "奥迪"; //todo  PlayerPrefs.GetString("brand_id");
+        bcti.brand_name = curUserBrand; //todo  PlayerPrefs.GetString("brand_id");
         bcti.cart_lines = new List<CarLine>();
         foreach (var keyValuePair in vehicleSystemsDic)
         {
@@ -1222,7 +1137,16 @@ public class PriceManager : MonoBehaviour
         form.AddField("d[]", jsonData);
         networkManager.DoPost1(url, form, (responseCode, data) =>
         {
-            //Debug.Log("responseCode:" + responseCode + "|" + data);
+            if (responseCode=="200")
+            {
+            
+                Debug.Log("responseCode:" + responseCode + "|" + data);
+            }
+            else
+            {
+                
+                tip.instance.SetMessae(JsonMapper.ToObject(data)["message"].ToJson());
+            }
 
         }, networkManager.token);
     }
@@ -1368,40 +1292,110 @@ public class PriceManager : MonoBehaviour
 
     }
     //保存数据
-    public  void SavePlayerJson(List<PriceInfo> player)
+    public  void SavePlayerJson(List<PriceInfo> player)//保存车辆信息
     {
         Debug.Log("保存数据，长度"+player.Count);
         string path = Application.persistentDataPath+"/priceinfos.json";
+        if (!File.Exists(path))
+        {
+            File.Create(path).Dispose();
+        }
         SaveFile saveFile=new SaveFile();
         saveFile.data = player;
+        saveFile.brandid = PlayerPrefs.GetString("brand_id");
+        saveFile.userbrand = PlayerPrefs.GetString("Userbrand");
         var content = JsonMapper.ToJson(saveFile);
         File.WriteAllText(path,content);
     }
 
+    public  void SavePlayerJson(List<string> player)//保存议价信息
+    {
+        Debug.Log("保存数据，长度"+player.Count);
+        string path = Application.persistentDataPath+"/hadPrice.json";
+        if (!File.Exists(path))
+        {
+            File.Create(path).Dispose();
+        }
+        SaveFileHadPrice saveFileHadPrice=new SaveFileHadPrice();
+        saveFileHadPrice.data = player;
+        var content = JsonMapper.ToJson(saveFileHadPrice);
+        File.WriteAllText(path,content);
+    }
+    public  void LoadPlayerJsonHadPrice()
+    {
+        string path = Application.persistentDataPath+"/hadPrice.json";
+        if(File.Exists(path)){
+            var content = File.ReadAllText(path);
+            Debug.Log(" content "+content);
+            if (content.Length==0)
+            {
+                return;
+            }
+            var playerData =JsonMapper.ToObject<SaveFileHadPrice>(content) ;//JsonUtility.FromJson<SaveFile>(content);
+          //  Debug.Log( JsonMapper.ToJson(playerData));
+            if (playerData.data!=null  )
+            {
+                if (playerData.data.Count!=0)
+                {
+                    Debug.Log(playerData.data.Count .ToString());
+                    putSJ= playerData.data;
+                    
+                }
+                else
+                {
+                    // loadExcelsTest(PlayerPrefs.GetString("XiaoKuExcelPath"));
+                    return ;
+                }
+                
+            }
+            else
+            {
+                //  loadExcelsTest(PlayerPrefs.GetString("XiaoKuExcelPath"));
+                return ;
+            }
+           
+        }else{
+            //Debug.LogError("Save file not found in  "+path);
+            return ;
+        }
+    }
+    
     //读取数据
-    public  List<PriceInfo> LoadPlayerJson()
+    public  void LoadPlayerJson()
     {
         string path = Application.persistentDataPath+"/priceinfos.json";
         if(File.Exists(path)){
             var content = File.ReadAllText(path);
-            if (!string.IsNullOrEmpty(content))
+            Debug.Log(" content "+content);
+            if (content.Length==0)
             {
-                Debug.Log(" content "+content);
-
-                var playerData =JsonMapper.ToObject<SaveFile>(content) ;//JsonUtility.FromJson<SaveFile>(content);
-                Debug.Log(playerData.data.Count .ToString());
-                return playerData.data;
-               
+                return;
+            }
+            var playerData =JsonMapper.ToObject<SaveFile>(content) ;//JsonUtility.FromJson<SaveFile>(content);
+            Debug.Log( JsonMapper.ToJson(playerData));
+            if (playerData.data!=null  )
+            {
+                if (playerData.data.Count!=0)
+                {
+                    Debug.Log(playerData.data.Count .ToString());
+                    priceInfos= playerData.data;
+                }
+                else
+                {
+                   // loadExcelsTest(PlayerPrefs.GetString("XiaoKuExcelPath"));
+                    return ;
+                }
+                
             }
             else
             {
-                loadExcelsTest(PlayerPrefs.GetString("XiaoKuExcelPath"));
-                return null;
+              //  loadExcelsTest(PlayerPrefs.GetString("XiaoKuExcelPath"));
+                return ;
             }
            
         }else{
-            Debug.LogError("Save file not found in  "+path);
-            return null;
+           // Debug.LogError("Save file not found in  "+path);
+            return ;
         }
     }
 
@@ -1501,5 +1495,12 @@ public class ChangeCarTypeVehic
 public class SaveFile
 {
     public List<PriceInfo> data;
+    public string brandid;
+    public string userbrand;
+}
+
+public class SaveFileHadPrice
+{
+    public List<string> data;
 }
 

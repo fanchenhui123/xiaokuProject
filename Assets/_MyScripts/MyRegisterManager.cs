@@ -45,7 +45,6 @@ public class MyRegisterManager : MonoBehaviour
         ProDropdown.onValueChanged.AddListener(ChooseCity);
         
         
-        addBrand();
     }
 
     public void ChooseCity(int index)
@@ -104,14 +103,16 @@ public class MyRegisterManager : MonoBehaviour
         //string nickname = inputFields[7].text;
         string brand_id = "";
 
-        for (int i = 0; i < brandList.Count; i++)
+        foreach (var brand in coroutine.instance.DicBrand)
         {
-            if (brandList[i]==inputFields[4].text)
+            if ( brand.Value== inputFields[4].text)
             {
-                brand_id = (i+1).ToString();
+                brand_id = brand.Key;
             }
+
+           
         }
-        
+      //  brand_id=int.Parse(coroutine.instance.DicBrand[""])
         if (password != password2)
         {
             warnText.text = "两次密码不一致";
@@ -156,24 +157,29 @@ public class MyRegisterManager : MonoBehaviour
             {
                 warnText.text = jdata["data"].ToString();
             }
+            
+            MyLoginManager.instance.LoginPanel.SetActive(true);
+            MyLoginManager.instance.RegisterPanel.SetActive(false);
         }
         else if (responseCode=="400")
         {
              warnText.text =JsonMapper.ToObject(data)["message"].ToString();
         }else
         {
-            warnText.text = "网络故障";
+            warnText.text = "注册失败"+responseCode;
         }
-        Debug.Log("responseCode:" + responseCode + "|" + JsonMapper.ToObject(data)["meaasge"].ToString());
+       // Debug.Log("responseCode:" + responseCode + "|" + JsonMapper.ToObject(data).ToString());
     }
 
 
-    public List<string> brandList=new List<string>();
+ //   public static List<string> brandList=new List<string>();
 
-    private void addBrand()
+    /*public  static void addBrand()
     {
+        brandList.Add("无");
         brandList.Add("奥迪");
         brandList.Add("宝骏");
+        brandList.Add("宝马");
         brandList.Add("宝沃");
         brandList.Add("保时捷");
         brandList.Add("奔驰");
@@ -228,6 +234,6 @@ public class MyRegisterManager : MonoBehaviour
         brandList.Add("长城");
         brandList.Add("众泰");
         brandList.Add("DS");
-    }
+    }*/
 }
 

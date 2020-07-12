@@ -11,6 +11,8 @@ public class coroutine : MonoBehaviour
     //每次读表后请求数据库获取已经报价的车辆的信息，对比新旧两个表，更改、删除、新增车辆。
     public static coroutine instance;
     private NetworkManager networkManager;
+    public int Interval = 20;
+    private float time;
 public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
     private void Awake()
     {
@@ -18,6 +20,7 @@ public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
         networkManager=  NetworkManager.Instance;
         StartCoroutine(GetServerBrand());
        // StartCoroutine(GetServerVeh());
+      time =Time.time;
     }
 
     public List<PriceInfo> priceInfosLast=new List<PriceInfo>(); 
@@ -64,6 +67,26 @@ public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
     }
 
 
+private float mins=1200f;
+private void Update()
+{
+    
+    if (Time.time-time>1200f)
+    {
+        Debug.Log(Time.time.ToString()+"   "+(Time.time-time)+"   " );
+        AutoLoadExcel();
+    }
+}
+
+private void AutoLoadExcel()
+{
+        Debug.Log("zidong重新读取");
+        tip.instance.SetMessae("自动重新读取表格");
+        //考虑什么时候开始自动加载，决定了自动加载的路径是否是离线数据
+        PriceManager.Instance. loadExcelsTest(PlayerPrefs.GetString("XiaoKuExcelPath"));
+        PriceManager.Instance.isNeedCompare = true;
+        time = Time.time;
+}
 
     
     //一开始获取品牌列表--获取车系列表--获取车型列表。

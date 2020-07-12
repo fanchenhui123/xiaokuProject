@@ -446,7 +446,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "30\u5206\u949F"
+  m_Text: "20\u5206\u949F"
 --- !u!1 &5763279191119141139
 GameObject:
   m_ObjectHideFlags: 0
@@ -815,7 +815,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   OpenPathBtn: {fileID: 3662190527544379092}
   PathText: {fileID: 7874903615596094754}
-  Interval: 30
 --- !u!1 &7018645011367516468
 GameObject:
   m_ObjectHideFlags: 0

@@ -14,7 +14,7 @@ public class Settings : MonoBehaviour
 
     public Text PathText;
 
-    public int Interval = 30;
+ 
     
 
     // Start is called before the first frame update
@@ -27,7 +27,7 @@ public class Settings : MonoBehaviour
             PathText.text = PlayerPrefs.GetString(keyName);
         }
 
-        StartCoroutine(AutoLoadExcel());
+      
     }
 
     public void LoadExcel()
@@ -57,6 +57,7 @@ public class Settings : MonoBehaviour
             if (ExcelPath!=PlayerPrefs.GetString(keyName))//路径相同文件名不同也是！=,如果文件不同就删除数据重新读ExcelPath != PlayerPrefs.GetString(keyName)
             { 
                 PriceManager.Instance.ClearAllData();
+                MyLoginManager.instance.GetHadPrice();
                 PriceManager.Instance.isNeedCompare = false;
                 PriceManager.Instance. loadExcelsTest(ExcelPath);
                 tip.instance.SetMessae("清除掉所有数据,读取表格文件");
@@ -76,19 +77,6 @@ public class Settings : MonoBehaviour
     private string SourceExcelPath;
    
 
-    public IEnumerator AutoLoadExcel()
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(Interval*60 );
-            tip.instance.SetMessae("自动重新读取表格");
-            //考虑什么时候开始自动加载，决定了自动加载的路径是否是离线数据
-            PriceManager.Instance. loadExcelsTest(ExcelPath);
-            PriceManager.Instance.isNeedCompare = true;
-           
-
-           
-        }
-    }
+   
 
 }

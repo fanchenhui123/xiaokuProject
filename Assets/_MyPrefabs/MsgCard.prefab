@@ -295,6 +295,7 @@ MonoBehaviour:
   text_user_id: {fileID: 6257878182496816801}
   text_price: {fileID: 6257878183402293981}
   text_yajin: {fileID: 1887453932392026732}
+  text_status: {fileID: 6257878183997642093}
   MessaeID: 
   MessaeIndex: 0
   resBtn: {fileID: 6257878182011001157}

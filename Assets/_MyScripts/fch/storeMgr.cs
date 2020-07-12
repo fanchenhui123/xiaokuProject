@@ -28,8 +28,12 @@ public class storeMgr : MonoBehaviour
         }
        
         DataForTwoDrop();//顶部两个DropDown的数据
-      
-        RefreshUi();//刷新UI
+
+        if (PriceManager.Instance.priceInfos!=null)
+        {
+            RefreshUi();//刷新UI
+        }
+       
     }
 
     public void DataForTwoDrop()
@@ -92,7 +96,7 @@ public class storeMgr : MonoBehaviour
 
     public void RefreshUi()
     {
-        PriceManager.Instance.CleanBeforeUpdataUi();
+       // PriceManager.Instance.CleanBeforeUpdataUi();
        
        
         GameObject gos;

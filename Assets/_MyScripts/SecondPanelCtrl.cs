@@ -155,7 +155,7 @@ public class SecondPanelCtrl : View
         PageHome.SetActive(false);
         PagePriceManager.SetActive(false);
         PageMsgCenter.SetActive(false);
-        PageOrderManager.SetActive(false);
+       // PageOrderManager.SetActive(false);
         PageSettings.SetActive(false);
         //pageCarSourceMgr.SetActive(false);
         pageRegistorMgr.SetActive(false);

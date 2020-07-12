@@ -136,7 +136,6 @@ public class SpecialCarr : MonoBehaviour
 
             string jsonString = JsonMapper.ToJson(tempInfoList[i]);
             JsonData jsonData = JsonMapper.ToObject(jsonString);
-
             jsonData["net_price"] = InfoTexts[2].text;
             jsonData["financial_agents_price"] = InfoTexts[6].text;
             jsonData["insurance_price"] =InfoTexts[4].text;
@@ -154,21 +153,20 @@ public class SpecialCarr : MonoBehaviour
 
             for (int j = 0; j < jsonData.Count; j++)
             {
-               if (jsonData[i]==null)
+               if (jsonData[j]==null )
                {
-                  jsonData[i] = "NA";
+                  jsonData[j] = "NA";
                }
             }
-            
-            Debug.Log("________准备上传的 jsonData:" + jsonData.ToJson());
+            //  Debug.Log("________准备上传的 jsonData:" + jsonData.ToJson());
             //jsonString = JsonMapper.ToJson(jsonData);
-            jsonString = jsonData.ToJson();
+            string json = jsonData.ToJson();
 
-            form.AddField("d[]", jsonString);
+            form.AddField("d[]", json);
          }
          NetworkManager.Instance.DoPost1(API.PostCarsInfo, form, (responseCode, content) =>
          {
-            Debug.Log("____responseCode:" + responseCode + ", content:" +JsonMapper.ToObject(content)["message"].ToString() );
+            Debug.Log("____responseCode:" + responseCode + ", content:" +content );
             if (responseCode=="200")
             {
                tip.instance.SetMessae("保存成功");
@@ -190,7 +188,7 @@ public class SpecialCarr : MonoBehaviour
             }
             else
             {
-               tip.instance.SetMessae("保存失败："+responseCode);
+               tip.instance.SetMessae("保存失败："+JsonMapper.ToObject(content)["message"]);
             }
          }, NetworkManager.Instance.token);
          
