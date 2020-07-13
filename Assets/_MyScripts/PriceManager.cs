@@ -769,46 +769,7 @@ public class PriceManager : MonoBehaviour
             yield break;
     }
 
-
-    public void CleanBeforeUpdataUi()//初步筛选数据，去掉已销售
-    {
-        string cart="";
-        if (priceInfos.Count!=0)
-        {
-           cart = priceInfos[0].carType; 
-           for (int i = 0; i < priceInfos.Count; i++)
-           {
-               if (string.IsNullOrEmpty(priceInfos[i].carType) )
-               {
-                   priceInfos[i].carType = cart;
-               }
-               else
-               {
-                   cart = priceInfos[i].carType;
-               }
-           }
-        
-           for (int i = priceInfos.Count-1; i >= 0; i--)
-           {
-               if (!string.IsNullOrEmpty(priceInfos[i].adviser) )
-               {
-                   priceInfos.Remove(priceInfos[i]);
-                   continue;
-               }
-            
-               if (!string.IsNullOrEmpty(priceInfos[i].userName) )
-               {
-                   priceInfos.Remove(priceInfos[i]);
-                   continue;
-               }
-               
-           }
-        }
-       
-       
-      
-
-    }
+    
 
 
 
@@ -826,8 +787,7 @@ public class PriceManager : MonoBehaviour
             page1.gameObject.SetActive(false);
             page2.gameObject.SetActive(true);
         }
-
-        //TODO: 页面切换后的(数据传递) 页面重置刷新
+        
     }
 
 
@@ -940,64 +900,10 @@ public class PriceManager : MonoBehaviour
     private bool showAll=true;
     public List<PriceInfo> StoreAddCar=new List<PriceInfo>();
     List<GameObject> specialItems=new List<GameObject>();
-    public void ShowSpecialCar()
-    {
-       
-        if (showAll)
-        {
-            if (SpecialCarr.instance!=null)
-            {
-                for (int i = 0; i < priceItems.Count; i++)
-                {
-                    priceItems[i].SetActive(false);
-                }
 
-                
-                for (int i = 0; i < SpecialCarr.instance.TJSJ.Count; i++)
-                {
-                    if ( SpecialCarr.instance.TJSJ.Count==0)
-                    {
-                         tip.instance.SetMessae("暂无特价车信息");
-                    }
-                    else
-                    {
-                        GameObject go;
-                        go = Instantiate(priceManagerItem, itemContainer);
-                        specialItems.Add(go);
-                        PriceManagerItem  item = go.GetComponent<PriceManagerItem>();
-                        item.SetItemContent(i.ToString(), priceInfos[i].carNumber, priceInfos[i].guidancePrice,
-                            priceInfos[i].vehicleSystem, priceInfos[i].carType, "已上架"); //订单管理显示的
-                        
-                    }
-                   
-                }
-            }
-            else
-            {
-                tip.instance.SetMessae("暂无特价车信息");
-            }
-        }
-        else
-        {
-            for (int i = 0; i < specialItems.Count; i++)
-            {
-                specialItems[i].SetActive(false);
-            }
 
-            specialItems.Clear();
-            for (int i = 0; i < priceItems.Count; i++)
-            {
-                priceItems[i].SetActive(true);
-            }
-        }
 
-        showAll = !showAll;
 
-    }
-
-   
-
-  
 
     /// <summary>
 /// 组装报价车型对应的数据
@@ -1292,9 +1198,8 @@ public class PriceManager : MonoBehaviour
 
     }
     //保存数据
-    public  void SavePlayerJson(List<PriceInfo> player)//保存车辆信息
+    public  void SavePlayerJson(List<PriceInfo> player)                        //保存车辆信息
     {
-        Debug.Log("保存数据，长度"+player.Count);
         string path = Application.persistentDataPath+"/priceinfos.json";
         if (!File.Exists(path))
         {
@@ -1380,22 +1285,7 @@ public class PriceManager : MonoBehaviour
                     Debug.Log(playerData.data.Count .ToString());
                     priceInfos= playerData.data;
                 }
-                else
-                {
-                   // loadExcelsTest(PlayerPrefs.GetString("XiaoKuExcelPath"));
-                    return ;
-                }
-                
             }
-            else
-            {
-              //  loadExcelsTest(PlayerPrefs.GetString("XiaoKuExcelPath"));
-                return ;
-            }
-           
-        }else{
-           // Debug.LogError("Save file not found in  "+path);
-            return ;
         }
     }
 
