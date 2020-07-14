@@ -209,7 +209,7 @@ public class MyLoginManager : MonoBehaviour
                     {
                         if (jsonData[i]["cart"]["carType"]!=null)
                         {
-                            hadPriceType.Add(jsonData[i]["cart"]["carType"].ToJson());//todo 请求，获取已报价的信息，竟然没有车型，后端得加上给我返回
+                            hadPriceType.Add(jsonData[i]["cart"]["carType"].ToJson());
                             hadPriceNumber.Add(jsonData[i]["cart"]["carNumber"].ToJson());
                         }
                     }
@@ -236,10 +236,10 @@ public class MyLoginManager : MonoBehaviour
                 JsonData dataObj = jsonData["data"];
                 //Debug.Log("nickname:" + dataObj["nickname"]);
                 //Debug.Log("email:" + dataObj["email"]);
-                Debug.Log("id:" + dataObj.ToJson());
+                //Debug.Log("id:" + dataObj.ToJson());
                 SecondPanelCtrl.Instance.textUserID.text = dataObj["id"].ToString();
                 SecondPanelCtrl.Instance.textNickName.text = dataObj["email"].ToString();
-                Debug.Log("barandid  "+dataObj["brand_id"].ToString()+ "   ");
+                Debug.Log("barandid  "+dataObj["brand_id"].ToString()+ "   "+coroutine.instance.DicBrand[dataObj["brand_id"].ToJson()]);
                 PlayerPrefs.SetString("brand_id",dataObj["brand_id"].ToString());
                 PlayerPrefs.SetString("Userbrand",coroutine.instance.DicBrand[(dataObj["brand_id"].ToString())]);
                // PriceManager.Instance.

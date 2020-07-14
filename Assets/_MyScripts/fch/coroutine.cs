@@ -102,8 +102,9 @@ private void AutoLoadExcel()
             JsonData jsonData= JsonMapper.ToObject(request.downloadHandler.text)["data"];
             for (int i = 0; i < jsonData.Count; i++)
             {
-                DicBrand.Add(jsonData[i]["id"].ToJson(),jsonData[i]["title"].ToJson());
+                DicBrand.Add(jsonData[i]["id"].ToJson(),jsonData[i]["title"].ToString());
             }
+            Debug.Log("server brand "+DicBrand.Count);
         }
     }
 
