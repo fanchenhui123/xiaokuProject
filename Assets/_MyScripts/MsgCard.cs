@@ -41,10 +41,7 @@ public class MsgCard : MonoBehaviour
     {
         MessageCenter.SetActive(false);
         MsgCenterCtrl.Instance.YJPage2.gameObject.GetComponent<NegotiatePrice>().curOrderId = MessaeID;
-        Debug.Log("messageID  "+ MessaeID);
-        MsgCenterCtrl.Instance.YJPage2.gameObject.GetComponent<NegotiatePrice>().dataIndex = MessaeIndex;
+       // MsgCenterCtrl.Instance.YJPage2.gameObject.GetComponent<NegotiatePrice>().dataIndex = MessaeIndex;
         MsgCenterCtrl.Instance.YJPage2.gameObject.SetActive(true);
-        
-        Debug.Log("orderID "+  MessaeID);
     }
 }

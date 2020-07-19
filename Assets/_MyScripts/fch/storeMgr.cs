@@ -126,8 +126,17 @@ public class storeMgr : MonoBehaviour
             gos = Instantiate(registorMgrItem, regisItemContainer);
             reItem = gos.GetComponent<RegistorItem>();
             StoreCarItems.Add(gos);
-            reItem.SetItemContent(countRe.ToString(), priceInfos[i].carNumber, priceInfos[i].vehicleSystem,
-                priceInfos[i].memo, CurcarType); //库存管理显示的
+            if (PriceManager.Instance.putSJ.Contains(priceInfos[i].carType))
+            {
+                 reItem.SetItemContent(countRe.ToString(), priceInfos[i].carNumber, priceInfos[i].vehicleSystem,
+                                priceInfos[i].memo, CurcarType,"已上架"); //库存管理显示的
+            }
+            else
+            {
+                reItem.SetItemContent(countRe.ToString(), priceInfos[i].carNumber, priceInfos[i].vehicleSystem,
+                    priceInfos[i].memo, CurcarType); //库存管理显示的
+            }
+          
             countRe++;
         }
     }
@@ -236,6 +245,7 @@ public class storeMgr : MonoBehaviour
                  {
                      if (priceInfos[k].carNumber==j && PriceManager.Instance!=null)
                      {
+                        
                          needRemoveCarNum.Add(priceInfos[k].carNumber);
                          needRemoveCarInfo.Add(priceInfos[k]);
                      }
@@ -243,6 +253,19 @@ public class storeMgr : MonoBehaviour
              }
          }
 
+         for (int i = 0; i < needRemoveCarInfo.Count; i++)
+         {
+             PriceManager.Instance.priceInfos.Remove(needRemoveCarInfo[i]);
+         }//本地priceinfos清除删除的
+         
+         for (int i = 0; i < needRemoveCarInfo.Count; i++)//如果清楚的有已将报价的，上传服务器删除
+         {
+             if (!PriceManager.Instance.putSJ.Contains(needRemoveCarInfo[i].carType))
+             {
+                 needRemoveCarInfo.Remove(needRemoveCarInfo[i]);
+             }
+         }
+         
          StartCoroutine(PostNeedRemoveCar(needRemoveCarNum));
        
      }
@@ -262,41 +285,48 @@ public class storeMgr : MonoBehaviour
      
      public IEnumerator PostNeedRemoveCar(List<string> carNumbers)
      {
-         carNumbs carNumbs=new carNumbs();
          StringBuilder stringBuilder=new StringBuilder();
-         for (int i = 0; i < carNumbers.Count; i++)
+         for (int i = 0; i < carNumbers.Count-1; i++)
          {
-             stringBuilder =stringBuilder.Append(',').Append(carNumbers[i]);
+             stringBuilder =stringBuilder.Append(carNumbers[i]).Append(',');
          }
-         carNumbs.car_numbers = stringBuilder.ToString();
-         String jsonData = JsonMapper.ToJson(carNumbers);
-         UnityWebRequest request=new UnityWebRequest(API.PostDeleteCarinfo,"POST");
+
+         stringBuilder.Append(carNumbers[carNumbers.Count - 1]);
+         WWWForm form=new WWWForm();
+         form.AddField("car_numbers",stringBuilder.ToString());
+         NetworkManager.Instance.DoPost(API.PostDeleteCarinfo, form,(responseCode,content) =>
+         {
+             if (responseCode=="200")
+             {
+                 for (int i = 0; i < StoreCarItems.Count; i++)
+                 {
+                     Destroy(StoreCarItems[i]);
+                 }
+
+                 for (int i = 0; i < needRemoveCarInfo.Count; i++)
+                 {
+                     PriceManager.Instance.priceInfos.Remove(needRemoveCarInfo[i]);
+                 }
+                 StoreCarItems.Clear();
+                 RefreshUi();
+                 PriceManager.Instance.SavePlayerJson(PriceManager.Instance.priceInfos);
+                 tip.instance.SetMessae("删除成功");
+                 needRemoveCarInfo.Clear();
+                 Debug.Log(stringBuilder);
+             
+             }
+             else
+             {
+                 tip.instance.SetMessae("删除失败"+responseCode);
+             }
+         },NetworkManager.Instance.token);
+         
+         /*UnityWebRequest request=new UnityWebRequest(API.PostDeleteCarinfo,"POST");
          request.SetRequestHeader("Authorization",   NetworkManager.Instance.token);
          request.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded");
          request.SetRequestHeader("Accept", "application/json");
          request.uploadHandler=new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonData));
-         yield return request.SendWebRequest();
-         if (request.responseCode==200)
-         {
-             for (int i = 0; i < StoreCarItems.Count; i++)
-             {
-                 Destroy(StoreCarItems[i]);
-             }
-
-             for (int i = 0; i < needRemoveCarInfo.Count; i++)
-             {
-                 PriceManager.Instance.priceInfos.Remove(needRemoveCarInfo[i]);
-             }
-             StoreCarItems.Clear();
-             RefreshUi();
-             PriceManager.Instance.SavePlayerJson(PriceManager.Instance.priceInfos);
-             tip.instance.SetMessae("删除成功");
-             
-             
-         }
-         else
-         {
-             tip.instance.SetMessae("删除失败"+request.responseCode);
-         }
+         yield return request.SendWebRequest();*/
+        yield break;  
      }
 }

@@ -40,7 +40,7 @@ public class Settings : MonoBehaviour
         pth.fileTitle = new string(new char[64]);
         pth.maxFileTitle = pth.fileTitle.Length;
         pth.initialDir = Application.dataPath;  // default path  
-        
+
         pth.title = "设置Excel文件路径";
        
         pth.defExt = "xls";
@@ -56,9 +56,17 @@ public class Settings : MonoBehaviour
 
             if (ExcelPath!=PlayerPrefs.GetString(keyName))//路径相同文件名不同也是！=,如果文件不同就删除数据重新读ExcelPath != PlayerPrefs.GetString(keyName)
             { 
+                List<string> clearPostCar=new List<string>();
+                for (int i = 0; i < PriceManager.Instance.putSJ.Count; i++)
+                {
+                    clearPostCar.Add(PriceManager.Instance.putSJ[i]);
+                }
+
+                StartCoroutine(coroutine.instance.PostNeedRemoveCar(clearPostCar));
                 PriceManager.Instance.ClearAllData();
                 MyLoginManager.instance.GetHadPrice();
                 PriceManager.Instance.isNeedCompare = false;
+                
                 PriceManager.Instance. loadExcelsTest(ExcelPath);
                 tip.instance.SetMessae("清除掉所有数据,读取表格文件");
             }
@@ -66,9 +74,9 @@ public class Settings : MonoBehaviour
             {
                 PriceManager.Instance.isNeedCompare = true;
                 PriceManager.Instance. loadExcelsTest(ExcelPath);
-                return;
             }
-            
+
+            coroutine.instance.time = Time.time;
            
             PlayerPrefs.SetString(keyName, ExcelPath);
         }

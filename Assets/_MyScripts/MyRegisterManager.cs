@@ -107,12 +107,11 @@ public class MyRegisterManager : MonoBehaviour
         {
             if ( brand.Value== inputFields[4].text)
             {
-                brand_id = brand.Key;
+                brand_id =brand.Key ;
+                Debug.Log(brand_id+"    "+brand.Value);
             }
-
-           
         }
-      //  brand_id=int.Parse(coroutine.instance.DicBrand[""])
+
         if (password != password2)
         {
             warnText.text = "两次密码不一致";

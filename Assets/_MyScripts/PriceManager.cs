@@ -23,7 +23,7 @@ public class PriceManager : MonoBehaviour
     public GameObject priceManagerItem;
     public Transform itemContainer;
 
-    public List<PriceInfo> priceInfos = new List<PriceInfo>();//读表得到的所有数据
+    public List<PriceInfo> priceInfos;//读表得到的所有数据
     public List<PriceInfo> priceInfosLast = new List<PriceInfo>();//为了方便新旧表对比，存入上一次读表数据
     public List<string> carNumberList = new List<string>();
     public List<string> carNumberListLast = new List<string>();
@@ -31,6 +31,7 @@ public class PriceManager : MonoBehaviour
     public List<string> carTypeListLast = new List<string>();
     public string curBrand;
     public List<string> putSJ=new List<string>();//存入已上架的车型，普通报价后存入
+    public List<string> putSJCB=new List<string>();
     public Button specialCarbtn;
     public int curUserBrandId=1;
     public string curUserBrand = "奥迪";
@@ -95,14 +96,19 @@ public class PriceManager : MonoBehaviour
     
     public List<string> priceInfosRemove=new List<string>();//删除的车但已经报价
     public bool isNeedCompare;//是否需要进行数据对比
-    
 
+   // private string savepath;
     private int currRegisterAreaType = 0;
 
     private void Awake()
     {
         Instance = this;
-        priceInfosLast = priceInfos;
+        if (priceInfos==null)
+        {
+            priceInfos   = new List<PriceInfo>(); 
+        }
+        
+        // savepath = Application.persistentDataPath + "save.xlsx";
     }
 
    
@@ -136,14 +142,14 @@ public class PriceManager : MonoBehaviour
 
     private void Init()
     {
-        curUserBrandId =int.Parse(PlayerPrefs.GetString("brand_id")) ;
-        curUserBrand = PlayerPrefs.GetString("Userbrand");
+       // curUserBrandId =int.Parse(PlayerPrefs.GetString("brand_id")) ;
+       // curUserBrand = PlayerPrefs.GetString("Userbrand");
         networkManager = NetworkManager.Instance;
         dBManager = DBManager._DBInstance();
         dBManager.CreateTable(typeof(PriceInfo));
-        LoadPlayerJson();
+        priceInfos= LoadPlayerJson();
         LoadPlayerJsonHadPrice();
-       //  SavePlayerJson(priceInfos);
+        //  SavePlayerJson(priceInfos);
       //  priceInfos = LoadPlayerJson();
        
       // Invoke(() => { tip.instance.SetMessae("读取数据库" + priceInfos.Count);},10f);
@@ -168,7 +174,8 @@ public class PriceManager : MonoBehaviour
             {
                 Debug.Log("????updateui");
                 UpdateUI();
-               // DoPostCarType();
+                loadEnd = true;
+                isNeedCompare = false;
             }
             else
             {
@@ -194,18 +201,19 @@ public class PriceManager : MonoBehaviour
     private bool comparaComplete;//判断是否对比完
     private void Update()
     {
+        Debug.Log("??" +loadEnd);
         if (loadEnd)
         {
-            Debug.Log("开始对比");
+            Debug.Log("加载完毕，要不要对比?");
             loadEnd = false;
             if (isNeedCompare)
             {
-                //todo 比较数据,获取需要删除的车（如果已报价需要上传），需要新增的车（如果已报价需上传）,让请求来的数据=ptsj，update里有筛选上架车型
-
-                Debug.Log("开始对比数据");
+                priceInfosLast = LoadPlayerJson();
+                Debug.Log("开始对比数据,当前数据长度 "+priceInfos.Count+"上次数据长度 "+priceInfosLast.Count);
                 tip.instance.SetMessae("开始对比数据");
                 for (int i = 0; i < priceInfos.Count; i++)
                 {
+                    
                     int same=0;
                     for (int j = 0; j < priceInfosLast.Count; j++)
                     {
@@ -221,42 +229,45 @@ public class PriceManager : MonoBehaviour
 
                     if (same==priceInfosLast.Count)
                     {
+                        Debug.Log("有新增车辆"+priceInfos[i].brand+ priceInfos[i].vehicleSystem);
                         if (putSJ.Contains(priceInfos[i].carType))
                         {
+                            Debug.Log("????brand "+ priceInfos[i].vehicleSystem);
+                            priceInfos[i].vehicleSystem= priceInfos[i].vehicleSystem.Replace("库存", "");
+                            Debug.Log("CurBrand "+ priceInfos[i].vehicleSystem);
                             priceInfosAdd.Add(priceInfos[i]);//新读表的第I个车架号跟旧表的所有的车架号都不一样，就说明是增加的车，再判断是否已经上架
+                        }
+                    }
+                  
+                }
+
+                if (priceInfosAdd.Count>0)
+                {
+                    StartCoroutine(postNewCarPrice(priceInfosAdd));
+                }
+               
+                for (int i = 0; i < priceInfosLast.Count; i++)
+                {
+                    if (!carNumberList.Contains(priceInfosLast[i].carNumber))
+                    {
+                        Debug.Log("需要删除的车辆11  "+priceInfosLast[i].carNumber);
+                        if (putSJ.Contains(priceInfosLast[i].carType))
+                        {
+
+                            Debug.Log("需要删除的车辆已经报价  "+priceInfosLast[i].carNumber);
+                            priceInfosRemove.Add(priceInfosLast[i].carNumber);
                         }
                         
                     }
                 }
-
-                for (int i = 0; i < priceInfosLast.Count; i++)
+                Debug.Log(priceInfosRemove.Count +"  "+priceInfosAdd.Count);
+                if (priceInfosRemove.Count > 0)
                 {
-                    int same=0;
-                    for (int j = 0; j < priceInfos.Count; j++)
-                    {
-                        if (priceInfosLast[i].carNumber==priceInfos[j].carNumber)
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            same++;
-                        }
-                    }
-                    if (same==priceInfos.Count)//旧表的第I个数据车架号跟新表的任何一个都不一样，就是需要移除的
-                    {
-                        priceInfosRemove.Add(priceInfosLast[i].carNumber);
-                    }
-                    
-                    /*if (!priceInfos.Contains(priceInfosLast[i]))
-                    {
-                        priceInfosLast.Remove(priceInfos[i]);
-                        priceInfosRemove.Add(priceInfos[i].carNumber);//
-                    }*/
+                    StartCoroutine( coroutine.instance.PostNeedRemoveCar(priceInfosRemove));
                 }
 
-                StartCoroutine(PostNeedRemoveCar(priceInfosRemove));
-                //priceInfos = priceInfosLast;
+
+                
                 comparaComplete = true;
             }
             else
@@ -281,12 +292,24 @@ public class PriceManager : MonoBehaviour
    
     public void loadExcelsTest(string ExcelPath)
     {
+        
+        
         string  SourceExcelPath = @ExcelPath.Replace(@"\",@"/");         // @"E:\C# Projects\ConsoleApplication1\";
         Debug.Log("   ??  "+SourceExcelPath);
         DirectoryInfo mydir = new DirectoryInfo(SourceExcelPath);
         if (SourceExcelPath.EndsWith(".xlsx"))
         {
-            PriceManager.Instance.DoLoadThread(SourceExcelPath);//读文件
+            if (File.Exists(Application.persistentDataPath + "/save.xlsx"))
+            {
+                File.SetAttributes(Application.persistentDataPath + "/save.xlsx", FileAttributes.Normal);
+                File.Delete(Application.persistentDataPath + "/save.xlsx");
+            }
+      
+            FileInfo newfile=new FileInfo(SourceExcelPath);
+            newfile.CopyTo(Application.persistentDataPath + "/save.xlsx");
+            SourceExcelPath = Application.persistentDataPath + "/save.xlsx";
+            Debug.Log("source   "+SourceExcelPath);
+            DoLoadThread(SourceExcelPath);//读文件
             filsCount = 1;//多选的文件数
         }
         else
@@ -315,15 +338,22 @@ public class PriceManager : MonoBehaviour
             }
 
            
-            /*if (isNeedCompare)
-            {
-                priceInfosLast = priceInfos;
-                priceInfos.Clear();
-            }*/
+          
             
+            Debug.Log("before doload "+priceInfos.Count);
             foreach(string str in list)
             { 
-                Instance.DoLoadThread(SourceExcelPath+@"/"+ str);//读文件夹里的文件
+                if (File.Exists(Application.persistentDataPath +@"/"+ str))
+                {
+                    File.SetAttributes(Application.persistentDataPath  +@"/"+ str, FileAttributes.Normal);
+                    File.Delete(Application.persistentDataPath +@"/" + str);
+                }
+      
+                FileInfo newfile=new FileInfo(ExcelPath +@"/"+str);
+                Debug.Log(Application.persistentDataPath +@"/" + str);
+                newfile.CopyTo(Application.persistentDataPath +@"/" + str);
+                SourceExcelPath = Application.persistentDataPath +@"/" + str;
+                Instance.DoLoadThread(SourceExcelPath);//读文件夹里的文件
             }
         }
         
@@ -334,10 +364,9 @@ public class PriceManager : MonoBehaviour
     }
     
     
- 
-    
     public void DoLoadThread(string path = "")
     {
+       
         
         loadThread = new Thread(new ThreadStart(() =>
         {
@@ -345,55 +374,62 @@ public class PriceManager : MonoBehaviour
             {
                 lock (objlock)
                 {
+                    
                     if (path != "")
                     {
                         ReadCarPrice(path);
-                        Debug.Log("startread "+path);
+                        Debug.Log("startread "+path+priceInfos.Count);
                     }
                     else
                         ReadCarPrice();
-                    
-                    
+
+
                 }
             }
             catch (Exception e)
             {
-                tip.instance.SetMessae("打开线程失败");
+              //  tip.instance.SetMessae("打开线程失败");
                 Debug.LogError("打开线程失败 : " + e.ToString());
             }
-
         }));
         loadThread.IsBackground = true;
         loadThread.Priority = System.Threading.ThreadPriority.Highest;
         loadThread.Start();
     }
-    
+   
     int Hadloadfiles;
     public void ReadCarPrice(string path = "")
     {
-      // Debug.Log("读表前 "+priceInfos.Count);
-       if (Hadloadfiles==0 && isNeedCompare)
-       {
-           priceInfosLast = priceInfos;
-           carNumberListLast = carNumberList;
-           carTypeListLast = carNumberList;
-           priceInfos.Clear();
-           carNumberList.Clear();
-           carTypeList.Clear();
-           Debug.Log("清除infos后  infosLastCount= "+priceInfosLast.Count);
-       }
-       
-        Debug.Log("priceonfos?"+priceInfos);
+        if (priceInfos==null)
+        {
+            priceInfos   = new List<PriceInfo>(); 
+        }
+        
+
+        if (Hadloadfiles == 0 && isNeedCompare)
+        {
+            if (priceInfosLast==null)
+            {
+             priceInfosLast=new List<PriceInfo>();   
+            }
+            priceInfosLast.Clear();
+            priceInfos.Clear();
+            carNumberList.Clear();
+            carTypeList.Clear();
+        }
+        
 
        if (path != "")
        {
            filePath = path;
+           Debug.Log("path  "+ filePath);
        }
 
        if (!File.Exists(filePath))
             return;
+       
        FileInfo newFile = new FileInfo(filePath);
-       Debug.Log("读表path     "+filePath);
+       newFile.IsReadOnly = true;
        using (ExcelPackage package = new ExcelPackage(newFile))
        {
            var worksheets = package.Workbook.Worksheets;
@@ -639,7 +675,8 @@ public class PriceManager : MonoBehaviour
 
                            item.note = note; //批注
                            item.vehicleSystem = w.Name; //车系
-                           item.brand = curUserBrand; // PlayerPrefs.GetString("brand_id");    //todo brandid未登录就使用，但是无法获取到，获取是在登录之后            
+                           item.brand = curUserBrand; // PlayerPrefs.GetString("brand_id");            
+                           Debug.Log("读表后添加 brand="+curUserBrand);
                            if (!carNumberList.Contains(item.carNumber))
                            {
                                if (string.IsNullOrEmpty(item.adviser) && string.IsNullOrEmpty(item.userName))
@@ -663,11 +700,30 @@ public class PriceManager : MonoBehaviour
            Debug.Log("infos.count    " + priceInfos.Count);
            Thread.CurrentThread.Join(1000); //阻止设定时间
        }
-       Debug.Log("读表后 "+priceInfos.Count);
+       Debug.Log("读表后priceInfos长度 "+priceInfos.Count);
        Hadloadfiles++;
+       File.SetAttributes(filePath,  FileAttributes.Normal);
+       string curCarType = "";
+       for (int i = 0; i < priceInfos.Count; i++)
+       {
+           if (!string.IsNullOrEmpty(priceInfos[i].carType) )
+           {
+               curCarType = priceInfos[i].carType;
+           }
+           else
+           {
+               priceInfos[i].carType = curCarType;
+           }
+           Debug.Log(i+"  "+priceInfos[i].carType);
+       }
+       
+       
+       
+       
        if (Hadloadfiles==filsCount)
        {
             Debug.Log("全部表加载完");
+            Debug.Log("last "+priceInfosLast.Count+"  infos "+priceInfos.Count);
             loadEnd = true;
             Hadloadfiles = 0;
        }
@@ -746,28 +802,7 @@ public class PriceManager : MonoBehaviour
       
     }
 
-    IEnumerator postNewCarPrice(List<PriceInfo> postList)//
-    {
-        WWWForm form = new WWWForm();
-        for (int i = 0; i < postList.Count; i++)
-        {
-            string jsonstring = JsonMapper.ToJson(postList[i]);
-            form.AddField("d[]",jsonstring);
-        }
-
-        networkManager.DoPost1(API.AddPostPrice, form, (responseCode, content) =>
-        {
-            Debug.Log("responseCode  " + responseCode+ content);
-            if (responseCode=="200")
-            {
-             tip.instance.SetMessae("数据已更新");
-             newCarPrice.Clear();
-            }
-        },
-          
-            networkManager.token);
-            yield break;
-    }
+  
 
 
     public void CleanBeforeUpdataUi()//初步筛选数据，去掉已销售
@@ -854,13 +889,11 @@ public class PriceManager : MonoBehaviour
  
     public void DoPostOfferPrice()//普通报价
     {
-        Debug.Log("提交表单信息 ！！！");
-        tip.instance.SetMessae("提交表单数据");
+      
         WWWForm form = new WWWForm();
         List<PriceInfo> tempInfoList = new List<PriceInfo>();
         string carType = currPriceInfo.carType;
-
-        tip.instance.SetMessae("提交表"+priceInfos.Count);
+        Debug.Log("提交表单信息 ！！！  "+priceInfos.Count+carType);
         for (int i = 0; i < priceInfos.Count; i++)
         {
             if (priceInfos[i].carType == carType)
@@ -875,10 +908,10 @@ public class PriceManager : MonoBehaviour
                 }
                 tempInfoList.Add(priceInfos[i]);
             }
-           
+         //   Debug.Log(i+"   "+priceInfos[i].carType);
         }
         
-        
+        Debug.Log("post car  ="+tempInfoList.Count);
         tip.instance.SetMessae("开始整合表单数据");
        
         for (int i = 0; i < tempInfoList.Count; i++)
@@ -909,12 +942,10 @@ public class PriceManager : MonoBehaviour
             form.AddField("d[]", json);
             tip.instance.SetMessae(tempInfoList.Count+"*****"+ i.ToString());
         }
-       
-        tip.instance.SetMessae("表单数据整合完成");
+        
         networkManager.DoPost1(API.PostCarsInfo, form, (responseCode, content) =>
         {
-            Debug.Log("____responseCode:" + responseCode + ", content:" + content);
-           
+            
             if (responseCode=="200")
             {
                 tip.instance.SetMessae("保存成功");
@@ -923,6 +954,11 @@ public class PriceManager : MonoBehaviour
                     if (!putSJ.Contains(tempInfoList[i].carType))
                     {
                         putSJ.Add(tempInfoList[i].carType);
+                    }
+
+                    if (!putSJCB.Contains(tempInfoList[i].carNumber))
+                    {
+                        putSJCB.Add(tempInfoList[i].carNumber);
                     }
                 }
                 SavePlayerJson(putSJ);
@@ -1078,33 +1114,42 @@ public class PriceManager : MonoBehaviour
     
    
 
-    public IEnumerator PostNeedRemoveCar(List<string> carNumbers)
-    {
-        carNumbs carNumbs=new carNumbs();
-        StringBuilder stringBuilder=new StringBuilder();
-        for (int i = 0; i < carNumbers.Count; i++)
-        {
-            stringBuilder =stringBuilder.Append(',').Append(carNumbers[i]);
-        }
-        carNumbs.car_numbers = stringBuilder.ToString();
-        String jsonData = JsonMapper.ToJson(carNumbers);
-        UnityWebRequest request=new UnityWebRequest(API.PostDeleteCarinfo,"POST");
-        request.uploadHandler=new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonData));
-        request.downloadHandler=new DownloadHandlerBuffer();
-        yield return request.SendWebRequest();
-        if (request.responseCode==200)
-        {
-            Debug.Log("新旧对比后删除成功");
-            //tip.instance.SetMessae("删除成功");
-        }
-        else
-        {
-            Debug.Log("新旧对比后删除失败" + request.responseCode+(request.downloadHandler.text));
-                   //   JsonMapper.ToObject(request.downloadHandler.text)["data"]);
-            tip.instance.SetMessae("删除失败"+request.responseCode);
-        }
-    }
+  
     
+    
+    
+    public IEnumerator postNewCarPrice(List<PriceInfo> postList)//
+    {
+        Debug.Log("删除数据");
+        WWWForm form = new WWWForm();
+        for (int i = 0; i < postList.Count; i++)
+        {
+            string jsonstring = JsonMapper.ToJson(postList[i]);
+            form.AddField("d[]",jsonstring);
+        }
+
+        networkManager.DoPost1(API.AddPostPrice, form, (responseCode, content) =>
+            {
+                if (responseCode=="200")
+                {
+                    tip.instance.SetMessae("数据已更新");
+                    for (int i = 0; i < postList.Count; i++)
+                    {
+                        Debug.Log("新增的车车架号：   "+postList[i].carNumber.ToString()); 
+                    }
+                   
+                    newCarPrice.Clear();
+                }
+                else
+                {
+                    Debug.Log("新增content"+content);
+                    Debug.Log("新增   "+JsonMapper.ToObject(content)["message"].ToString());
+                }
+            },
+          
+            networkManager.token);
+        yield break;
+    }
    
     /// <summary>
     /// Post上传车系车型
@@ -1116,6 +1161,7 @@ public class PriceManager : MonoBehaviour
 
         BrandCarTypeInfo bcti = new BrandCarTypeInfo();
         bcti.brand_name = curUserBrand; //todo  PlayerPrefs.GetString("brand_id");
+        Debug.Log("curbrand ="+curUserBrand);
         bcti.cart_lines = new List<CarLine>();
         foreach (var keyValuePair in vehicleSystemsDic)
         {
@@ -1144,8 +1190,8 @@ public class PriceManager : MonoBehaviour
             }
             else
             {
-                
-                tip.instance.SetMessae(JsonMapper.ToObject(data)["message"].ToJson());
+                Debug.Log(JsonMapper.ToObject(data).ToJson());
+                tip.instance.SetMessae(JsonMapper.ToObject(data).ToJson());
             }
 
         }, networkManager.token);
@@ -1158,6 +1204,8 @@ public class PriceManager : MonoBehaviour
     }
     public void ClearAllData()
     {
+        
+        
         Debug.Log("清除所有数据");
         priceManagerItems.Clear();//清除所有的items
         carNumberList.Clear();
@@ -1302,8 +1350,8 @@ public class PriceManager : MonoBehaviour
         }
         SaveFile saveFile=new SaveFile();
         saveFile.data = player;
-        saveFile.brandid = PlayerPrefs.GetString("brand_id");
-        saveFile.userbrand = PlayerPrefs.GetString("Userbrand");
+        saveFile.brandid = curUserBrandId.ToString();// PlayerPrefs.GetString("brand_id");
+        saveFile.userbrand = curUserBrand;//PlayerPrefs.GetString("Userbrand");
         var content = JsonMapper.ToJson(saveFile);
         File.WriteAllText(path,content);
     }
@@ -1361,7 +1409,7 @@ public class PriceManager : MonoBehaviour
     }
     
     //读取数据
-    public  void LoadPlayerJson()
+    public  List<PriceInfo> LoadPlayerJson()
     {
         string path = Application.persistentDataPath+"/priceinfos.json";
         if(File.Exists(path)){
@@ -1369,7 +1417,7 @@ public class PriceManager : MonoBehaviour
             Debug.Log(" content "+content);
             if (content.Length==0)
             {
-                return;
+                return null;
             }
             var playerData =JsonMapper.ToObject<SaveFile>(content) ;//JsonUtility.FromJson<SaveFile>(content);
             Debug.Log( JsonMapper.ToJson(playerData));
@@ -1378,24 +1426,24 @@ public class PriceManager : MonoBehaviour
                 if (playerData.data.Count!=0)
                 {
                     Debug.Log(playerData.data.Count .ToString());
-                    priceInfos= playerData.data;
+                    return playerData.data;
                 }
                 else
                 {
                    // loadExcelsTest(PlayerPrefs.GetString("XiaoKuExcelPath"));
-                    return ;
+                    return null ;
                 }
                 
             }
             else
             {
               //  loadExcelsTest(PlayerPrefs.GetString("XiaoKuExcelPath"));
-                return ;
+                return null ;
             }
            
         }else{
            // Debug.LogError("Save file not found in  "+path);
-            return ;
+            return null ;
         }
     }
 
@@ -1504,3 +1552,7 @@ public class SaveFileHadPrice
     public List<string> data;
 }
 
+public class sendStatus
+{
+    public string order_id;
+}

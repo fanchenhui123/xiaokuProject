@@ -38,15 +38,24 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
 
     public Transform YJPage2;
     public MessageDataItem curYJInfo=new MessageDataItem();
-  
-    
-    
-    
+    private bool isGetAllOreders;
+
     private void OnEnable()
+    {
+        if (!isGetAllOreders)
+        {
+            GetAllOrders();
+        }
+     
+        coroutine.instance.prompt.SetActive(false);
+    }
+
+    private void GetAllOrders()
     {
        // confirmAndBack.onClick.AddListener(OnClickConfirm);
       //  continueAndBack.onClick.AddListener(OnClickContinue);
         Debug.Log("获取所有订单消息");
+        isGetAllOreders = true;
         completedOrders.Clear();
         needFinalConfirm.Clear();
         repliesOrders.Clear();
@@ -90,6 +99,9 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                     msgCard.GetComponent<MsgCard>().text_yajin.text = "押金已支付";
                     msgCard.GetComponent<MsgCard>().text_yajin.color = Color.green;
                     msgCard.GetComponent<MsgCard>().text_status.text = "查看";
+                    msgCard.GetComponent<MsgCard>().MessaeID = completedOrders[i].id.ToString();   ;//每个消息卡的数据传过去
+                    Debug.Log("messid  "+ completedOrders[i].id.ToString());
+                    msgCard.GetComponent<MsgCard>().MessaeIndex = i;
                 }
               
                 
@@ -109,6 +121,9 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                     msgCard.GetComponent<MsgCard>().text_yajin.text = "";
                     msgCard.GetComponent<MsgCard>().text_yajin.color = Color.green;
                     msgCard.GetComponent<MsgCard>().text_status.text = "待处理";
+                    msgCard.GetComponent<MsgCard>().MessaeID = needFinalConfirm[i].id.ToString();   ;//每个消息卡的数据传过去
+                    Debug.Log("messid  "+ needFinalConfirm[i].id.ToString());
+                    msgCard.GetComponent<MsgCard>().MessaeIndex = i;
                 }
                 
                 
@@ -132,6 +147,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                     msgCard.GetComponent<MsgCard>().text_yajin.color = Color.green;
 
                     msgCard.GetComponent<MsgCard>().MessaeID = repliesOrders[i].id.ToString();   ;//每个消息卡的数据传过去
+                    Debug.Log("messid  "+ repliesOrders[i].id.ToString());
                     msgCard.GetComponent<MsgCard>().MessaeIndex = i;
                     
                 }
@@ -139,6 +155,8 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
             
            
         }
+
+        isGetAllOreders = false;
 
     }
 
@@ -183,8 +201,6 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                 //Response_Msg responseMsg = JsonMapper.ToObject<Response_Msg>(data);
                 JsonData jsonData = JsonMapper.ToObject(data);
                 Debug.Log(" datacount  "+jsonData["data"].Count);
-               // Debug.Log(" data  "+data);
-                //Debug.Log(jsonData["data"].Count);
                 foreach (JsonData obj in jsonData["data"])
                 {
                   
@@ -264,7 +280,9 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
             }
             else
             {
-                Debug.Log("Get YJinfo list error  "+responseCode.ToString());
+                tip.instance.SetMessae("获取订单列表错误"+responseCode);
+               // tip.instance.SetMessae(JsonMapper.ToObject(data)["message"].ToJson());
+                Debug.Log("Get YJinfo list error  "+responseCode+data.ToString());
             }
         }, networkManager.token);
 

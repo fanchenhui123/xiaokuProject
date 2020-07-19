@@ -11,9 +11,11 @@ public class coroutine : MonoBehaviour
     //每次读表后请求数据库获取已经报价的车辆的信息，对比新旧两个表，更改、删除、新增车辆。
     public static coroutine instance;
     private NetworkManager networkManager;
-    public int Interval = 20;
-    private float time;
-public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
+    private float GetAllOrderListTime;
+    public float time;
+    public GameObject prompt;
+    public Dictionary<string,string> messageDIc=new Dictionary<string, string>();
+    public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
     private void Awake()
     {
         instance = this;
@@ -21,6 +23,8 @@ public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
         StartCoroutine(GetServerBrand());
        // StartCoroutine(GetServerVeh());
       time =Time.time;
+      GetAllOrderListTime = Time.time;
+      prompt.SetActive(false);
     }
 
     public List<PriceInfo> priceInfosLast=new List<PriceInfo>(); 
@@ -67,24 +71,147 @@ public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
     }
 
 
-private float mins=1200f;
 private void Update()
 {
     
-    if (Time.time-time>1200f)
+    if (Time.time-time>120f)
     {
-        Debug.Log(Time.time.ToString()+"   "+(Time.time-time)+"   " );
         AutoLoadExcel();
     }
+
+
+    if ( NegotiatePrice.Instance!=null)
+    {
+        if ( Time.time - GetAllOrderListTime >= 60)
+        {
+            Debug.Log("再次请求");
+            StartCoroutine(GetYJinfo()); //每隔一定时间请求获得数据
+        }
+    }
+    
 }
 
+public  IEnumerator GetYJinfo()//获取订单详情
+{
+    Debug.Log("获取议价信息");
+    string url = API._GetMsgList1;
+    networkManager.DoGet1(url, (responseCode, data) =>
+    {
+        if (responseCode == 200) //获取到数据后更新msg刷新聊天内容
+        {
+            NegotiatePrice.Instance.resOrderInfo = data;
+            Debug.Log("all response  " + data);
+            GetAllOrderListTime = Time.time;
+            NegotiatePrice.Instance.needShow = true;
+            FlashWindow(data);
+        }
+        else
+        {
+            Debug.Log("responsecode  " + responseCode);
+        }
+    }, networkManager.token);
+        
+    /*UnityWebRequest request=new UnityWebRequest();
+    request.downloadHandler=new DownloadHandlerBuffer();
+    request.url = API._GetMsgList1;//+"?order_id="+id;*/
+    yield  break;// return request.SendWebRequest();
+       
+}
+
+public IEnumerator PostNeedRemoveCar(List<string> carNumbers)
+{
+    if (carNumbers.Count>0)
+    {
+        Debug.Log("请求删除");
+        StringBuilder stringBuilder=new StringBuilder();
+        for (int i = 0; i < carNumbers.Count-1; i++)
+        {
+            stringBuilder =stringBuilder.Append(carNumbers[i]).Append(',');
+        }
+        stringBuilder.Append(carNumbers[carNumbers.Count - 1]);
+        WWWForm form=new WWWForm();
+        form.AddField("car_numbers",stringBuilder.ToString());
+        NetworkManager.Instance.DoPost(API.PostDeleteCarinfo, form,(responseCode,content) =>
+        {
+            if (responseCode=="200")
+            {
+                tip.instance.SetMessae("删除成功");
+                priceInfosRemove.Clear();
+            }
+            else
+            {
+                // Debug.Log("删除失败"+content.ToString());
+                tip.instance.SetMessae("删除失败"+responseCode);
+            }
+        },NetworkManager.Instance.token);
+            
+    }
+    else
+    {
+        tip.instance.SetMessae("没有需要删除的数据");
+         
+    }
+    yield break;
+}
+
+private void FlashWindow(string data)
+{
+    JsonData jsonData = JsonMapper.ToObject(data);
+    if (messageDIc.Count==0)
+    {
+        for (int i = 0; i < jsonData["data"].Count; i++)
+        {
+            messageDIc.Add(jsonData["data"][i]["id"].ToJson(),jsonData["data"][i]["repies"].Count.ToString());
+        }
+    }
+    else
+    {
+        if ( jsonData["data"].Count-messageDIc.Count>0)
+        {
+            FlashWinTool.FlashWindow(FlashWinTool.GetProcessWnd());
+            tip.instance.SetMessae("有新订单");
+            prompt.SetActive(true);
+            return;
+        }
+        if ( jsonData["data"].Count==messageDIc.Count)
+        {
+            Dictionary<string,string> messageDicTempo=new Dictionary<string, string>();
+            for (int i = 0; i < jsonData["data"].Count; i++)
+            {
+                messageDicTempo.Add(jsonData["data"][i]["id"].ToJson(),jsonData["data"][i]["repies"].Count.ToString());
+            }
+
+            foreach (var dics in messageDicTempo)
+            {
+                if (messageDIc.ContainsKey(dics.Key))
+                {
+                    if (messageDIc[dics.Key]!=dics.Value)
+                    {
+                        FlashWinTool.FlashWindow(FlashWinTool.GetProcessWnd());
+                        tip.instance.SetMessae("有新消息");
+                        prompt.SetActive(true);
+                    }
+                }
+                else
+                {
+                    FlashWinTool.FlashWindow(FlashWinTool.GetProcessWnd());
+                    tip.instance.SetMessae("有新订单");
+                    prompt.SetActive(true);
+                }
+            }
+
+            messageDIc = messageDicTempo;
+        }
+    } 
+}
 private void AutoLoadExcel()
 {
-        Debug.Log("zidong重新读取");
+        Debug.Log("重新读取");
         tip.instance.SetMessae("自动重新读取表格");
         //考虑什么时候开始自动加载，决定了自动加载的路径是否是离线数据
-        PriceManager.Instance. loadExcelsTest(PlayerPrefs.GetString("XiaoKuExcelPath"));
         PriceManager.Instance.isNeedCompare = true;
+        PriceManager.Instance. loadExcelsTest(PlayerPrefs.GetString("XiaoKuExcelPath"));
+       
         time = Time.time;
 }
 
@@ -98,13 +225,15 @@ private void AutoLoadExcel()
         yield return request.SendWebRequest();
         if (request.responseCode==200)
         {
-            Debug.Log("serverBrand "+request.downloadHandler.text);
             JsonData jsonData= JsonMapper.ToObject(request.downloadHandler.text)["data"];
             for (int i = 0; i < jsonData.Count; i++)
             {
-                DicBrand.Add(jsonData[i]["id"].ToJson(),jsonData[i]["title"].ToJson());
+               // Debug.Log("brand  "+jsonData[i]["title"].ToString());
+                DicBrand.Add(jsonData[i]["id"].ToString(),jsonData[i]["title"].ToString());
             }
         }
+        
+        Debug.Log("bandid  ccount  "+   DicBrand.Count);
     }
 
     public IEnumerator GetServerVeh()

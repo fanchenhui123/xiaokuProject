@@ -31,12 +31,13 @@ public class API
 
 
     public static string _GetUserInfo = "https://service.xiaokucc.cn/api/merchant/user";
-    public static string _GetUserInfo1 = "http://test.cheyuw.cn/api/merchant/user";
+    public static string _GetUserInfo1 = "http://test.cheyuw.cn/api/merchant/auth/info";//获取商家信息
 
     public static string _GetMsgList = "https://service.xiaokucc.cn/api/merchant/order";
     public static string _GetMsgList1 = "http://test.cheyuw.cn/api/merchant/order";//获取订单消息和议价消息
     
     //2020.6.25新增
+    public static string SendOrderStatus = "http://test.cheyuw.cn/api/merchant/update/status";//发送状态6订单
     public static string _GetMsgList23 = "http://test.cheyuw.cn/api/merchant/order";//获取订单详情包括议价的记录
     public static string AddPostPrice = "http://test.cheyuw.cn/api/merchant/data/add";//已报价的车型增加车辆
     public static string PostYiJia = "http://test.cheyuw.cn/api/merchant/reply";//议价

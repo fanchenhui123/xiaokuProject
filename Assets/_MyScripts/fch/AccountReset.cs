@@ -24,7 +24,7 @@ public class AccountReset : MonoBehaviour
       accountResInfo.BankAccountName= infoTexts[7].text;
       accountResInfo.BankAccount= infoTexts[8].text;
       accountResInfo.BankInfo= infoTexts[9].text;
-      accountResInfo.brand_id = infoTexts[10].text;
+     // accountResInfo.brand_id = infoTexts[10].text;
       accountResInfo.ip=IPManager.GetIP(ADDRESSFAM.IPv4);
       StartCoroutine(CommitInfo(accountResInfo));
    }
@@ -112,7 +112,6 @@ public class AccountResInfo
    public string BankAccountName;
    public string BankAccount;
    public string BankInfo;
-   public string brand_id;
    public string ip;
    public string province;
    public string city;

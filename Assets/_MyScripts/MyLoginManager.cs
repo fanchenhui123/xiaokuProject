@@ -193,7 +193,7 @@ public class MyLoginManager : MonoBehaviour
     }
 
     List<string> hadPriceType=new List<string>(); 
-    List<string> hadPriceNumber=new List<string>(); 
+   public List<string> hadPriceNumber=new List<string>(); 
     public void GetHadPrice()//List<PriceInfo> newList,List<PriceInfo> oldList)获取已经报价车辆
     {
         
@@ -202,21 +202,24 @@ public class MyLoginManager : MonoBehaviour
             if (responsecode==200)
             {
                 JsonData jsonData= JsonMapper.ToObject(data)["data"]["data"];
-                Debug.Log("jsodnata   "+jsonData.Count+"   "+jsonData[0]["cart"]);
+              
+                hadPriceType.Clear();
+                hadPriceNumber.Clear();
                 for (int i = 0; i < jsonData.Count; i++)
                 {
                     if (jsonData[i]["cart"]!=null)
                     {
                         if (jsonData[i]["cart"]["carType"]!=null)
                         {
-                            hadPriceType.Add(jsonData[i]["cart"]["carType"].ToJson());//todo 请求，获取已报价的信息，竟然没有车型，后端得加上给我返回
+                            hadPriceType.Add(jsonData[i]["cart"]["carType"].ToJson());
                             hadPriceNumber.Add(jsonData[i]["cart"]["carNumber"].ToJson());
                         }
                     }
                      
                 }
-
+                Debug.Log("jsodnataHadPrice   "+  data);
                 PriceManager.Instance.putSJ=hadPriceType;
+                PriceManager.Instance.putSJCB = hadPriceNumber;
                 PriceManager.Instance.SavePlayerJson(PriceManager.Instance.putSJ);
                 Debug.Log("pusj count"+PriceManager.Instance.putSJ.Count);
             }
@@ -236,13 +239,22 @@ public class MyLoginManager : MonoBehaviour
                 JsonData dataObj = jsonData["data"];
                 //Debug.Log("nickname:" + dataObj["nickname"]);
                 //Debug.Log("email:" + dataObj["email"]);
+                for (int i = 0; i < jsonData["data"].Count; i++)
+                {
+                    if (jsonData["data"][i]==null)
+                    {
+                        jsonData["data"][i] = "NA";
+                    }
+                }
                 Debug.Log("id:" + dataObj.ToJson());
-                SecondPanelCtrl.Instance.textUserID.text = dataObj["id"].ToString();
+                SecondPanelCtrl.Instance.textUserID.text = dataObj["nickname"].ToString();
                 SecondPanelCtrl.Instance.textNickName.text = dataObj["email"].ToString();
-                Debug.Log("barandid  "+dataObj["brand_id"].ToString()+ "   ");
-                PlayerPrefs.SetString("brand_id",dataObj["brand_id"].ToString());
-                PlayerPrefs.SetString("Userbrand",coroutine.instance.DicBrand[(dataObj["brand_id"].ToString())]);
-               // PriceManager.Instance.
+                Debug.Log("barandid  "+dataObj["brand_id"].ToString()+ "   "+coroutine.instance.DicBrand[(dataObj["brand_id"].ToString())]);
+              //  PlayerPrefs.SetString("brand_id",dataObj["brand_id"].ToString());
+              //  PlayerPrefs.SetString("Userbrand",coroutine.instance.DicBrand[(dataObj["brand_id"].ToString())]);
+
+                PriceManager.Instance.curUserBrand = coroutine.instance.DicBrand[(dataObj["brand_id"].ToString())];
+                PriceManager.Instance.curUserBrandId =int.Parse( dataObj["brand_id"].ToString());
             }
             else
             {

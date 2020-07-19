@@ -56,6 +56,7 @@ public class AddStoreMgr : MonoBehaviour
             {
                 if (PriceManager.Instance.vehicleSystemsDic[texts[0].text].Contains(texts[1].text))
                 {
+                   
                     return;
                 }
                 else
@@ -121,9 +122,16 @@ public class AddStoreMgr : MonoBehaviour
         tip.instance.SetMessae("添加成功");
         CloseAddCar();
         PriceManager.Instance.SavePlayerJson(PriceManager.Instance.priceInfos);
-    }
 
-    public List<PriceInfo> StoreAddCar=new List<PriceInfo>();
+        
+        if (PriceManager.Instance.putSJ.Contains(_item.carType))
+        {
+            List<PriceInfo> newAdd=new List<PriceInfo>();
+            newAdd.Add(_item);
+            StartCoroutine(PriceManager.Instance.postNewCarPrice(newAdd));
+        }
+    }
+    
    
 
    

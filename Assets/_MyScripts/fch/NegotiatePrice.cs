@@ -32,8 +32,10 @@ public class NegotiatePrice : MonoBehaviour
     [HideInInspector]
     public string curOrderId="???";
     private MsgCenterCtrl.ReplyContent _replyContent;
-    public int dataIndex;
+  //  public int dataIndex;
     private NetworkManager _networkManager;
+    public string resOrderInfo = "??";
+    public bool needShow;
     private void Awake()
     {
         Instance = this;
@@ -44,22 +46,75 @@ public class NegotiatePrice : MonoBehaviour
         _networkManager=NetworkManager.Instance;
         Debug.Log("curID  "+   curOrderId);
         btnConfOrder.onClick.AddListener(ShowWindow);
+       
     }
 
     
     private void OnEnable()
     {
-        StartCoroutine(GetYJinfo());
+        updateChatInfo();
+        ShowData();
     }
 
     private void Update()
     {
-        if (continueChat==true && Time.time-requestEndTime>=60)
+        if (needShow)
         {
-            Debug.Log("再次请求");
-            StartCoroutine(GetYJinfo());//每隔一定时间请求获得数据
-
+            updateChatInfo();
         }
+    }
+
+    private void updateChatInfo()//显示聊天信息
+    {
+        StringBuilder stringBuilder = new StringBuilder();
+        JsonData jsonData = JsonMapper.ToObject(resOrderInfo);
+        JsonData datas=new JsonData();
+        for (int i = 0; i < jsonData["data"].Count; i++)
+        {
+            if (jsonData["data"][i]["id"].ToJson() == curOrderId)
+            {
+                datas = jsonData["data"][i];
+             //   Debug.Log("chat  curorderID  " + curOrderId);
+                for (int j = 0; j < datas.Count; j++)
+                {
+                    if (datas[j]==null)
+                    {
+                        datas[j] = "NA";
+                    }
+                }
+            }
+        }
+      
+        for (int i = 0; i < dialogContainer.childCount; i++)
+        {
+            Destroy(dialogContainer.GetChild(i).gameObject);
+        }
+
+       
+
+        GameObject go;
+        Debug.Log("repies  "+datas["repies"].ToJson());
+        for (int i = 0; i <datas["repies"].Count; i++)
+        {
+            go = Instantiate(dialogItem, dialogContainer);
+            if (datas["repies"][i]["type"].ToJson()=="1")
+            {
+                stringBuilder.Append("价格：").Append(datas["repies"][i]["price"]).Append("万元，备注：")
+                    .Append(datas["repies"][i]["content"]);
+                go.GetComponent<Image>().color = new Color(155/255f,108/255f,72/255f,255/255f);
+            }
+            if (datas["repies"][i]["type"].ToJson()=="2")
+            {
+                stringBuilder.Append("价格：").Append(datas["repies"][i]["price"]).Append("万元，备注：")
+                    .Append(datas["repies"][i]["content"]); 
+                go.GetComponent<Image>().color = new Color(72/255f,138/255f,155/255f,255/255f);
+            }
+            
+            go.transform.Find("dialogtext").GetComponent<Text>().text = stringBuilder.ToString();
+            stringBuilder.Clear();
+        }
+
+        needShow = false;
     }
 
 
@@ -67,75 +122,125 @@ public class NegotiatePrice : MonoBehaviour
     /// 显示议价方案的基本信息，根据请求得到的数据获取
     /// </summary>
     /// <param name="message"></param>
-    public void ShowData()//显示聊天记录
+    public void ShowData()//显示方案信息用户信息记录
     {
-       
+        for (int i = 0; i < Texts.Count; i++)
+        {
+            Texts[i].text = "";
+        }
+        
+        
         JsonData jsonData =JsonMapper.ToObject(resOrderInfo);
-        for (int i = 0; i < jsonData.Count; i++)
+       
+        /*for (int i = 0; i < jsonData.Count; i++)
         {
             if (jsonData[i]==null )
             {
                 jsonData[i] = "NA";
             }
         }
+        if (jsonData["data"] == null)
+        {
+            
+            return;
+        }*/
         
+       // Debug.Log("jsondata[data] "+jsonData["data"].ToJson());
         for (int i = 0; i < jsonData["data"].Count; i++)
         {
-            Debug.Log(curOrderId+"   id  "+ jsonData["data"][i]["id"]);
-            if (jsonData["data"][i]["id"].ToJson()==curOrderId)
+            if (jsonData["data"][i]["id"].ToJson() == curOrderId)
             {
-
-                for (int j = 0; j < (jsonData["data"][i].Count); j++)
+                for (int j = 0; j < jsonData["data"][i].Count; j++)
                 {
-                    if (jsonData["data"][i][j]==null)
+                    if (jsonData["data"][i][j] == null)
                     {
                         jsonData["data"][i][j] = "NA";
                     }
                 }
-
                 
-              
-                // curOrderId=(jsonData["data"][i]["id"]).ToJson() ;
-                UTF8String utf1=new UTF8String((jsonData["data"][i]["cart"]["carType"]).ToJson().Trim('"'));
-                UTF8String utf2=new UTF8String((jsonData["data"][i]["cart"]["vehicleSystem"]).ToJson().Trim('"'));
-                UTF8String utf3=new UTF8String((jsonData["data"][i]["cart"]["carNumber"]).ToJson().Trim('"') );
-                UTF8String utf4=new UTF8String((jsonData["data"][i]["cart"]["appear_color"]).ToJson().Trim('"'));
-                UTF8String utf5=new UTF8String( (jsonData["data"][i]["cart"]["note"]).ToJson().Trim('"'));
-                UTF8String utf6=new UTF8String( jsonData["data"][i]["cart"]["memo"].ToJson().Trim('"'));
-                Texts[0].text =utf1.ToString() ;
-                Texts[1].text = utf2.ToString() ;
-                Texts[2].text =utf3.ToString() ;
-                Texts[3].text = utf4.ToString() ;
-                Texts[4].text =utf5.ToString() + "    "+utf6.ToString() ;//配置
-                Texts[5].text = "";//按揭资质
-                Texts[6].text = jsonData["data"][i]["name"].ToString();
-                Texts[7].text = jsonData["data"][i]["phone"].ToString();
-                Texts[8].text = jsonData["data"][i]["id_card"].ToString();
-                Texts[9].text = jsonData["data"][i]["final_total"].ToString();
-                Texts[10].text = jsonData["data"][i]["pay_time"].ToString();
-
-                if (jsonData["data"][i]["status"].ToString()=="6")
+                if (jsonData["data"][i]["cart"] != null && jsonData["data"][i]["cart"].ToJson().Trim('"')!="NA")
                 {
-                    btnConfOrder.onClick.RemoveAllListeners();
-                    sendChatYJ.onClick.RemoveAllListeners();
-                    continueChat = false;
-                }
-                else if (jsonData["data"][i]["status"].ToString()=="5")
-                {
-                    btnConfOrder.onClick.RemoveAllListeners();
-                    sendChatYJ.onClick.RemoveAllListeners();
-                    continueChat = false;
-                        //todo 发送状态6
+                    Debug.Log(jsonData["data"][i]["cart"].ToJson());
+                    for (int j = 0; j < (jsonData["data"][i]["cart"].Count); j++)
+                    {
+                        if (jsonData["data"][i]["cart"][j] == null)
+                        {
+                            jsonData["data"][i]["cart"][j] = "NA";
+                        }
+                    }
+                    UTF8String utf1 = new UTF8String((jsonData["data"][i]["cart"]["carType"]).ToJson().Trim('"'));
+                    UTF8String utf2 = new UTF8String((jsonData["data"][i]["cart"]["vehicleSystem"]).ToJson().Trim('"'));
+                    UTF8String utf3 = new UTF8String((jsonData["data"][i]["cart"]["carNumber"]).ToJson().Trim('"'));
+                    UTF8String utf4 = new UTF8String((jsonData["data"][i]["cart"]["appear_color"]).ToJson().Trim('"'));
+                    UTF8String utf5 = new UTF8String((jsonData["data"][i]["cart"]["note"]).ToJson().Trim('"'));
+                    UTF8String utf6 = new UTF8String(jsonData["data"][i]["cart"]["memo"].ToJson().Trim('"'));
+                    Texts[0].text = utf1.ToString();
+                    Texts[1].text = utf2.ToString();
+                    Texts[2].text = utf3.ToString();
+                    Texts[3].text = utf4.ToString();
+                    Texts[4].text = utf5.ToString() + "    " + utf6.ToString(); //配置
+                    Texts[5].text = ""; //按揭资质
+                    Texts[11].text = jsonData["data"][i]["cart"]["cost"]["registration_price"].ToString();
+                    Texts[12].text = jsonData["data"][i]["cart"]["cost"]["insurance_price"].ToString();
+                    Texts[13].text = jsonData["data"][i]["cart"]["cost"]["purchase_tax"].ToString();
+                    Texts[14].text = jsonData["data"][i]["cart"]["cost"]["financial_agents_price"].ToString();
+                    Texts[15].text = jsonData["data"][i]["cart"]["cost"]["other_price_description"].ToString();
+                    
                 }
                 else
                 {
-                    continueChat = true;
-                    requestEndTime = Time.time;
+                    tip.instance.SetMessae("订单数据不完整");
                 }
+                
+                
+                   
+                    Texts[6].text = jsonData["data"][i]["name"].ToString();
+                    Texts[7].text = jsonData["data"][i]["phone"].ToString();
+                    Texts[8].text = jsonData["data"][i]["id_card"].ToString();
+                    Texts[9].text = jsonData["data"][i]["final_total"].ToString();
+                    Texts[10].text = jsonData["data"][i]["pay_time"].ToString();
 
-                Debug.Log("12312312312  "+utf1.ToString());
-
+                    if (jsonData["data"][i]["status"].ToString() == "6")
+                    {
+                        btnConfOrder.onClick.RemoveAllListeners();
+                        sendChatYJ.onClick.RemoveAllListeners();
+                        continueChat = false;
+                    }
+                    else if (jsonData["data"][i]["status"].ToString() == "5")
+                    {
+                        btnConfOrder.onClick.RemoveAllListeners();
+                        sendChatYJ.onClick.RemoveAllListeners();
+                        continueChat = false;
+                        WWWForm form = new WWWForm();
+                        form.AddField("order_id", curOrderId);
+                        _networkManager.DoPost1(API.SendOrderStatus, form, (responscode, content) =>
+                            {
+                                if (responscode == "200")
+                                {
+                                    tip.instance.SetMessae("订单完成");
+                                }
+                                else
+                                {
+                                    Debug.Log("订单未完成" + content);
+                                    tip.instance.SetMessae(
+                                        "订单未完成" + JsonMapper.ToObject(content)["message"].ToJson().ToString());
+                                }
+                            }
+                            , _networkManager.token); // 发送状态6
+                    }
+                    else
+                    {
+                        continueChat = true;
+                        requestEndTime = Time.time;
+                    }
+                    
+                // curOrderId=(jsonData["data"][i]["id"]).ToJson() ;
+                  break;
             }
+
+            
+            
+            
             
         }
       
@@ -287,10 +392,11 @@ public class NegotiatePrice : MonoBehaviour
         {
             tip.instance.SetMessae("发送成功");
             SkipWindowPanel.SetActive(false);
+            backToMsg();
         }
         else
         {
-            tip.instance.SetMessae("发送失败:"+JsonMapper.ToObject(webRequest.downloadHandler.text)["message"].ToJson());
+            tip.instance.SetMessae("发送失败:"+JsonMapper.ToObject(webRequest.downloadHandler.text)["message"]);
             /*if (webRequest.responseCode==400)
             {
                   tip.instance.SetMessae("请等待用户回复");
@@ -328,71 +434,10 @@ public class NegotiatePrice : MonoBehaviour
     public Transform dialogContainer;
    
 
-    private void updateChatInfo()//显示聊天信息
-    {
-        StringBuilder stringBuilder = new StringBuilder();
-        JsonData jsonData = JsonMapper.ToObject(resOrderInfo);
-       if (dialogContainer.childCount!= jsonData["data"][dataIndex]["repies"].Count)
-        {
-            FlashWinTool.FlashWindow(FlashWinTool.GetProcessWnd());
-        }
-        for (int i = 0; i < dialogContainer.childCount; i++)
-        {
-            Destroy(dialogContainer.GetChild(i).gameObject);
-        }
+  
 
-        
-        GameObject go;
-        for (int i = 0; i < jsonData["data"][dataIndex]["repies"].Count; i++)
-        {
-            Debug.Log(" chat "+jsonData["data"][dataIndex]["repies"][i]["type"].ToJson());
-            go = Instantiate(dialogItem, dialogContainer);
-            if (jsonData["data"][dataIndex]["repies"][i]["type"].ToJson()=="1")
-            {
-             stringBuilder.Append("价格：").Append(jsonData["data"][dataIndex]["repies"][i]["price"]).Append("万元，备注：")
-                    .Append(jsonData["data"][dataIndex]["repies"][i]["content"]);
-             go.GetComponent<Image>().color = new Color(155/255f,108/255f,72/255f,255/255f);
-            }
-            if (jsonData["data"][dataIndex]["repies"][i]["type"].ToJson()=="2")
-            {
-                stringBuilder.Append("价格：").Append(jsonData["data"][dataIndex]["repies"][i]["price"]).Append("万元，备注：")
-                    .Append(jsonData["data"][dataIndex]["repies"][i]["content"]); 
-                go.GetComponent<Image>().color = new Color(72/255f,138/255f,155/255f,255/255f);
-            }
-            
-            go.transform.Find("dialogtext").GetComponent<Text>().text = stringBuilder.ToString();
-            stringBuilder.Clear();
-        }
-
-       
-    }
-
-
-    private string resOrderInfo = "??";
-    public  IEnumerator GetYJinfo()//获取订单详情
-    {
-        string url = API._GetMsgList1;
-        _networkManager.DoGet1(url, (responseCode, data) =>
-        {
-            if (responseCode == 200) //获取到数据后更新msg刷新聊天内容
-            {
-                resOrderInfo = data;
-                updateChatInfo();
-                ShowData();
-            }
-            else
-            {
-                Debug.Log("responsecode  " + responseCode);
-            }
-        }, _networkManager.token);
-        /*UnityWebRequest request=new UnityWebRequest();
-        request.downloadHandler=new DownloadHandlerBuffer();
-        request.url = API._GetMsgList1;//+"?order_id="+id;*/
-        requestEndTime = Time.time;
-        yield  break;// return request.SendWebRequest();
-       
-    }
     
+  
     
     
     public void SendChatYJ()
@@ -448,7 +493,7 @@ public class NegotiatePrice : MonoBehaviour
         }
         else
         {
-            tip.instance.SetMessae("议价发送失败:"+webRequest.responseCode );
+            tip.instance.SetMessae("议价发送失败:"+JsonMapper.ToObject(webRequest.downloadHandler.text)["message"].ToJson());
             Debug.Log(JsonMapper.ToObject(webRequest.downloadHandler.text)["message"]);
         }
     }
@@ -485,6 +530,7 @@ public class NegotiatePrice : MonoBehaviour
             }
         },_networkManager.token);
     }
+    
     
     
 }
