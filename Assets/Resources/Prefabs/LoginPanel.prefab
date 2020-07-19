@@ -393,7 +393,7 @@ MonoBehaviour:
   m_SelectionColor: {r: 0.65882355, g: 0.80784315, b: 1, a: 0.7529412}
   m_Text: 
   m_CaretBlinkRate: 0.85
-  m_CaretWidth: 1
+  m_CaretWidth: 2
   m_ReadOnly: 0
 --- !u!1 &531531663277770656
 GameObject:
@@ -861,7 +861,7 @@ MonoBehaviour:
   m_SelectionColor: {r: 0.65882355, g: 0.80784315, b: 1, a: 0.7529412}
   m_Text: 
   m_CaretBlinkRate: 0.85
-  m_CaretWidth: 1
+  m_CaretWidth: 2
   m_ReadOnly: 0
 --- !u!1 &1026638882883469021
 GameObject:
@@ -1536,7 +1536,7 @@ MonoBehaviour:
   m_CustomCaretColor: 0
   m_SelectionColor: {r: 0.65882355, g: 0.80784315, b: 1, a: 0.7529412}
   m_Text: 
-  m_CaretBlinkRate: 0.85
+  m_CaretBlinkRate: 2
   m_CaretWidth: 1
   m_ReadOnly: 0
 --- !u!1 &1790071329697906799
@@ -1822,7 +1822,7 @@ MonoBehaviour:
   m_SelectionColor: {r: 0.65882355, g: 0.80784315, b: 1, a: 0.7529412}
   m_Text: 
   m_CaretBlinkRate: 0.85
-  m_CaretWidth: 1
+  m_CaretWidth: 2
   m_ReadOnly: 0
 --- !u!1 &1964193257842434765
 GameObject:
@@ -2750,7 +2750,7 @@ MonoBehaviour:
   m_SelectionColor: {r: 0.65882355, g: 0.80784315, b: 1, a: 0.7529412}
   m_Text: 
   m_CaretBlinkRate: 0.85
-  m_CaretWidth: 1
+  m_CaretWidth: 2
   m_ReadOnly: 0
 --- !u!1 &2961062897727756761
 GameObject:
@@ -2886,7 +2886,7 @@ MonoBehaviour:
   m_SelectionColor: {r: 0.65882355, g: 0.80784315, b: 1, a: 0.7529412}
   m_Text: 
   m_CaretBlinkRate: 0.85
-  m_CaretWidth: 1
+  m_CaretWidth: 2
   m_ReadOnly: 0
 --- !u!1 &3159654346320405943
 GameObject:
@@ -4972,7 +4972,6 @@ MonoBehaviour:
   cityDataStr: 
   ProDropdown: {fileID: 953964534581569476}
   CityDeopdown: {fileID: 3920868889502879160}
-  brandList: []
 --- !u!1 &6412203733919527706
 GameObject:
   m_ObjectHideFlags: 0
@@ -5837,7 +5836,7 @@ MonoBehaviour:
   m_SelectionColor: {r: 0.65882355, g: 0.80784315, b: 1, a: 0.7529412}
   m_Text: 
   m_CaretBlinkRate: 0.85
-  m_CaretWidth: 1
+  m_CaretWidth: 2
   m_ReadOnly: 0
 --- !u!1 &7271320721503547169
 GameObject:
@@ -6086,7 +6085,7 @@ MonoBehaviour:
   m_SelectionColor: {r: 0.65882355, g: 0.80784315, b: 1, a: 0.7529412}
   m_Text: 
   m_CaretBlinkRate: 0.85
-  m_CaretWidth: 1
+  m_CaretWidth: 2
   m_ReadOnly: 0
 --- !u!1 &7612947658098343270
 GameObject:

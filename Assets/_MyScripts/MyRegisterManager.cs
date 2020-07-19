@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Video;
 
 public class MyRegisterManager : MonoBehaviour
 {
@@ -105,7 +106,8 @@ public class MyRegisterManager : MonoBehaviour
 
         foreach (var brand in coroutine.instance.DicBrand)
         {
-            if ( brand.Value== inputFields[4].text)
+          //  Debug.Log(brand.Value.Trim('"').ToString()+"  "+inputFields[4].text);
+            if ( brand.Value.Trim('"')== inputFields[4].text)
             {
                 brand_id =brand.Key ;
                 Debug.Log(brand_id+"    "+brand.Value);
@@ -121,6 +123,7 @@ public class MyRegisterManager : MonoBehaviour
         if (brand_id=="")
         {
             warnText.text = "请输入正确的汽车品牌";
+            return;
         }
 
         
@@ -167,72 +170,10 @@ public class MyRegisterManager : MonoBehaviour
         {
             warnText.text = "注册失败"+responseCode;
         }
-       // Debug.Log("responseCode:" + responseCode + "|" + JsonMapper.ToObject(data).ToString());
     }
 
 
- //   public static List<string> brandList=new List<string>();
 
-    /*public  static void addBrand()
-    {
-        brandList.Add("无");
-        brandList.Add("奥迪");
-        brandList.Add("宝骏");
-        brandList.Add("宝马");
-        brandList.Add("宝沃");
-        brandList.Add("保时捷");
-        brandList.Add("奔驰");
-        brandList.Add("奔腾");
-        brandList.Add("本田");
-        brandList.Add("比速");
-        brandList.Add("比亚迪");
-        brandList.Add("标志");
-        brandList.Add("别克");
-        brandList.Add("宾利");
-        brandList.Add("大众");
-        brandList.Add("东风");
-        brandList.Add("法拉利");
-        brandList.Add("菲亚特");
-        brandList.Add("丰田");
-        brandList.Add("佛特");
-        brandList.Add("广汽传祺");
-        brandList.Add("哈佛");
-        brandList.Add("海马");
-        brandList.Add("红旗");
-        brandList.Add("吉利");
-        brandList.Add("吉普");
-        brandList.Add("江淮");
-        brandList.Add("捷豹");
-        brandList.Add("凯迪拉克");
-        brandList.Add("克莱斯勒");
-        brandList.Add("兰博基尼");
-        brandList.Add("劳斯莱斯");
-        brandList.Add("雷克萨斯");
-        brandList.Add("雷洛");
-        brandList.Add("陆风");
-        brandList.Add("路虎");
-        brandList.Add("马自达");
-        brandList.Add("玛莎拉蒂");
-        brandList.Add("迈凯伦");
-        brandList.Add("迷你");
-        brandList.Add("名爵");
-        brandList.Add("讴歌");
-        brandList.Add("欧宝");
-        brandList.Add("奇瑞");
-        brandList.Add("起亚");
-        brandList.Add("日产");
-        brandList.Add("荣威");
-        brandList.Add("斯巴鲁");
-        brandList.Add("斯柯达");
-        brandList.Add("沃尔沃");
-        brandList.Add("雪佛兰");
-        brandList.Add("雪铁龙");
-        brandList.Add("天津一汽");
-        brandList.Add("英菲尼迪");
-        brandList.Add("长安");
-        brandList.Add("长城");
-        brandList.Add("众泰");
-        brandList.Add("DS");
-    }*/
+   
 }
 
