@@ -11,11 +11,14 @@ public class coroutine : MonoBehaviour
     //每次读表后请求数据库获取已经报价的车辆的信息，对比新旧两个表，更改、删除、新增车辆。
     public static coroutine instance;
     private NetworkManager networkManager;
-    private float GetAllOrderListTime;
+    public float GetAllOrderListTime;
     public float time;
     public GameObject prompt;
     public Dictionary<string,string> messageDIc=new Dictionary<string, string>();
     public Dictionary<string,string> DicBrand=new Dictionary<string, string>();
+    public List<MsgCenterCtrl.MessageDataItem> curCompletedOrders = new List<MsgCenterCtrl.MessageDataItem>();
+    public List<MsgCenterCtrl.MessageDataItem> curNeedFinalConfirm = new List<MsgCenterCtrl.MessageDataItem>();
+    public List<MsgCenterCtrl.MessageDataItem> curRepliesOrders = new List<MsgCenterCtrl.MessageDataItem>();
     private void Awake()
     {
         instance = this;
@@ -25,6 +28,7 @@ public class coroutine : MonoBehaviour
       time =Time.time;
       GetAllOrderListTime = Time.time;
       prompt.SetActive(false);
+    
     }
 
     public List<PriceInfo> priceInfosLast=new List<PriceInfo>(); 
@@ -73,49 +77,59 @@ public class coroutine : MonoBehaviour
 
 private void Update()
 {
-    
-    if (Time.time-time>120f)
+    //Debug.Log(Time.time-GetAllOrderListTime+"  ??");
+    if (Time.time-time>1200f)
     {
         AutoLoadExcel();
     }
 
 
-    if ( NegotiatePrice.Instance!=null)
-    {
-        if ( Time.time - GetAllOrderListTime >= 60)
-        {
-            Debug.Log("再次请求");
-            StartCoroutine(GetYJinfo()); //每隔一定时间请求获得数据
-        }
-    }
+   // 一分钟重新获取订单信息，获取数据对比提示，Editor状态下Unity是没问题的，打包后没有提示。要做的人可以看一下BUG在哪，我实在不想搞了
+   //
+        // if ( Time.time - GetAllOrderListTime >= 60)
+        // {
+        //     Debug.Log("再次请求");
+        //     StartCoroutine(GetYJinfo()); //每隔一定时间请求获得数据
+        // }
+    
     
 }
 
 public  IEnumerator GetYJinfo()//获取订单详情
 {
-    Debug.Log("获取议价信息");
     string url = API._GetMsgList1;
-    networkManager.DoGet1(url, (responseCode, data) =>
+    NetworkManager.Instance.DoGet1(url, (responseCode, data) =>
     {
         if (responseCode == 200) //获取到数据后更新msg刷新聊天内容
         {
-            NegotiatePrice.Instance.resOrderInfo = data;
-            Debug.Log("all response  " + data);
-            GetAllOrderListTime = Time.time;
-            NegotiatePrice.Instance.needShow = true;
+            if (NegotiatePrice.Instance != null)
+            {
+                NegotiatePrice.Instance.resOrderInfo = data;
+                NegotiatePrice.Instance.needShow = true;
+            }
+
+           
             FlashWindow(data);
+
         }
         else
         {
+           
             Debug.Log("responsecode  " + responseCode);
         }
-    }, networkManager.token);
-        
+      
+    }, NetworkManager.Instance.token);
+    GetAllOrderListTime = Time.time;   
     /*UnityWebRequest request=new UnityWebRequest();
     request.downloadHandler=new DownloadHandlerBuffer();
     request.url = API._GetMsgList1;//+"?order_id="+id;*/
     yield  break;// return request.SendWebRequest();
        
+}
+
+public void postPost(List<string>  strlist)
+{
+    StartCoroutine(PostNeedRemoveCar(strlist));
 }
 
 public IEnumerator PostNeedRemoveCar(List<string> carNumbers)
@@ -135,6 +149,7 @@ public IEnumerator PostNeedRemoveCar(List<string> carNumbers)
         {
             if (responseCode=="200")
             {
+                Debug.Log("删除数据长度"+carNumbers.Count);
                 tip.instance.SetMessae("删除成功");
                 priceInfosRemove.Clear();
             }
@@ -153,56 +168,95 @@ public IEnumerator PostNeedRemoveCar(List<string> carNumbers)
     }
     yield break;
 }
-
-private void FlashWindow(string data)
+ Dictionary<string, string> messageDicTempo = new Dictionary<string, string>();
+public void FlashWindow(string data)
 {
-    JsonData jsonData = JsonMapper.ToObject(data);
-    if (messageDIc.Count==0)
+    
+    GetAllMsg(data);
+
+    if (curCompletedOrders.Count!=MsgCenterCtrl.Instance.completedOrders.Count || curRepliesOrders.Count!=MsgCenterCtrl.Instance.repliesOrders.Count || 
+        curNeedFinalConfirm.Count!=MsgCenterCtrl.Instance.needFinalConfirm.Count)
     {
-        for (int i = 0; i < jsonData["data"].Count; i++)
+        Debug.Log("订单有变化");
+        tip.instance.SetMessae("订单有变化");
+        FlashWinTool.FlashWindow(FlashWinTool.GetProcessWnd());
+        prompt.SetActive(true);
+    }else   
+    {
+        if(curCompletedOrders.Count==MsgCenterCtrl.Instance.completedOrders.Count)
         {
-            messageDIc.Add(jsonData["data"][i]["id"].ToJson(),jsonData["data"][i]["repies"].Count.ToString());
+             for(int i=0;i<curCompletedOrders.Count;i++)
+             {
+                 if(curCompletedOrders[i]!=MsgCenterCtrl.Instance.completedOrders[i])
+                 {
+                      tip.instance.SetMessae("订单有变化");
+        FlashWinTool.FlashWindow(FlashWinTool.GetProcessWnd());
+        prompt.SetActive(true);
+        break; 
+                 }
+             }
+        }
+        
+         if(curNeedFinalConfirm.Count==MsgCenterCtrl.Instance.needFinalConfirm.Count)
+        {
+             for(int i=0;i<curNeedFinalConfirm.Count;i++)
+             {
+                 if(curNeedFinalConfirm[i]!=MsgCenterCtrl.Instance.needFinalConfirm[i])
+                 {
+                      tip.instance.SetMessae("订单有变化");
+        FlashWinTool.FlashWindow(FlashWinTool.GetProcessWnd());
+        prompt.SetActive(true);
+        break; 
+                 }
+             }
+        }
+         if(curRepliesOrders.Count==MsgCenterCtrl.Instance.repliesOrders.Count)
+        {
+             for(int i=0;i<curRepliesOrders.Count;i++)
+             {
+                 if(curRepliesOrders[i]!=MsgCenterCtrl.Instance.repliesOrders[i])
+                 {
+                      tip.instance.SetMessae("订单有变化");
+        FlashWinTool.FlashWindow(FlashWinTool.GetProcessWnd());
+        prompt.SetActive(true);
+        break; 
+                 }
+             }
         }
     }
-    else
+   
+    
+
+   
+    JsonData jsonData = JsonMapper.ToObject(data);
+
+
+   
+    foreach (var dics in messageDicTempo)
     {
-        if ( jsonData["data"].Count-messageDIc.Count>0)
+        if (messageDIc.ContainsKey(dics.Key))
         {
+            if (messageDIc[dics.Key] != dics.Value)
+            {
+                FlashWinTool.FlashWindow(FlashWinTool.GetProcessWnd());
+                tip.instance.SetMessae("有新消息");
+                prompt.SetActive(true);
+            }
+        }
+        else
+        {
+           
             FlashWinTool.FlashWindow(FlashWinTool.GetProcessWnd());
             tip.instance.SetMessae("有新订单");
             prompt.SetActive(true);
-            return;
         }
-        if ( jsonData["data"].Count==messageDIc.Count)
-        {
-            Dictionary<string,string> messageDicTempo=new Dictionary<string, string>();
-            for (int i = 0; i < jsonData["data"].Count; i++)
-            {
-                messageDicTempo.Add(jsonData["data"][i]["id"].ToJson(),jsonData["data"][i]["repies"].Count.ToString());
-            }
+    }
 
-            foreach (var dics in messageDicTempo)
-            {
-                if (messageDIc.ContainsKey(dics.Key))
-                {
-                    if (messageDIc[dics.Key]!=dics.Value)
-                    {
-                        FlashWinTool.FlashWindow(FlashWinTool.GetProcessWnd());
-                        tip.instance.SetMessae("有新消息");
-                        prompt.SetActive(true);
-                    }
-                }
-                else
-                {
-                    FlashWinTool.FlashWindow(FlashWinTool.GetProcessWnd());
-                    tip.instance.SetMessae("有新订单");
-                    prompt.SetActive(true);
-                }
-            }
+    messageDIc = messageDicTempo;
+    MsgCenterCtrl.Instance.completedOrders = curCompletedOrders;
+    MsgCenterCtrl.Instance.repliesOrders = curRepliesOrders;
+    MsgCenterCtrl.Instance.needFinalConfirm = curNeedFinalConfirm;
 
-            messageDIc = messageDicTempo;
-        }
-    } 
 }
 private void AutoLoadExcel()
 {
@@ -267,6 +321,88 @@ private void AutoLoadExcel()
             }
         }*/
         yield break;
+    }
+    
+       public void GetAllMsg(string data)
+    {
+                curCompletedOrders.Clear();
+                curNeedFinalConfirm.Clear();
+                curRepliesOrders.Clear();
+                messageDicTempo.Clear();
+                JsonData jsonData = JsonMapper.ToObject(data);
+                messageDIc.Clear();
+                for (int i = 0; i < jsonData["data"].Count; i++)
+                {
+                    messageDicTempo.Add(jsonData["data"][i]["id"].ToString(), jsonData["data"][i]["repies"].Count.ToString());
+                }
+                MsgCenterCtrl.Instance.msgItemList.Clear();
+                foreach (JsonData obj in jsonData["data"])
+                {
+                    try
+                    {
+                        MsgCenterCtrl.MessageDataItem item = new MsgCenterCtrl.MessageDataItem();
+                        item.id = int.Parse(obj["id"].ToString());
+                      //  Debug.Log("item id   "+   item.id);
+                        item.user_id = int.Parse(obj["user_id"].ToString());
+                        item.cart_id = int.Parse(obj["cart_id"].ToString());
+
+                        item.order_no = obj["order_no"].ToString();
+                        
+                        //Debug.Log("data "+obj["id"].ToString()+"  "+ item.status);
+                        
+                        item.cart = new MsgCenterCtrl.CarInfo();
+                        JsonData jsonData_cart = obj["cart"];
+                        if (jsonData_cart != null)
+                        {
+                            item.cart.carType = jsonData_cart["carType"].ToString();
+                            item.cart.vehicleSystem = obj["cart"]["vehicleSystem"].ToString();
+
+                            item.cart.carNumber = obj["cart"]["carNumber"].ToString();
+
+                            if (obj["cart"]["appear_color"] != null)
+                                item.cart.appear_color = obj["cart"]["appear_color"].ToString();           //null
+                            else
+                                item.cart.appear_color = "NA";
+                        }
+
+                        item.repies = new MsgCenterCtrl.ReplyContent[obj["repies"].Count];
+                        for (int i = 0; i < item.repies.Length; i++)
+                        {
+                            MsgCenterCtrl.ReplyContent rc = new MsgCenterCtrl.ReplyContent();
+                            rc.id = int.Parse(obj["repies"][i]["id"].ToString());
+                            rc.price = obj["repies"][i]["price"].ToString();
+                            rc.user_id = int.Parse(obj["repies"][i]["user_id"].ToString());
+                            item.repies[i] = rc;
+                        }
+
+                        item.status = int.Parse(obj["status"].ToString());
+                        item.last_reply_user_type = int.Parse(obj["last_reply_user_type"].ToString());
+
+                        MsgCenterCtrl.Instance.msgItemList.Add(item);
+
+                       // Debug.Log("item.status  "+ item.status);
+                        if (item.status == 6)
+                        {
+                            curCompletedOrders.Add(item);
+                           // MsgCenterCtrl.Instance. completedOrders.Add(item);          //交易完成
+                        }
+                        else if (item.status == 1)
+                        {
+                            curRepliesOrders.Add(item);
+                          //  MsgCenterCtrl.Instance. repliesOrders.Add(item);        //议价列表
+                            
+                        }else if (item.status == 5)//需要商家查看确认
+                        {
+                            curNeedFinalConfirm.Add(item);
+                           // MsgCenterCtrl.Instance. needFinalConfirm.Add(item);
+                        }
+                    }
+                    catch (System.Exception E)
+                    {
+                        Debug.LogError(E.ToString());
+                    }
+                    
+                }
     }
 
     /*public IEnumerator CreatCarTypeVehic(ChangeCarTypeVehic changeData )

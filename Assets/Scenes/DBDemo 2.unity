@@ -1946,6 +1946,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a6320842edca9643a0344551f4eec24, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  GetAllOrderListTime: 0
   time: 0
   prompt: {fileID: 3532602250837963135}
   priceInfosRemove: []
@@ -3185,7 +3186,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -30.398407}
+  m_AnchoredPosition: {x: 0, y: -30.398438}
   m_SizeDelta: {x: -1276.6, y: -751.6}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1383188270
@@ -6651,6 +6652,11 @@ PrefabInstance:
       propertyPath: skipWindow
       value: 
       objectReference: {fileID: 1460045285}
+    - target: {fileID: 1106968199016349981, guid: 6d9f2da2a9b3fb14dbc420f9a5a3cfd0,
+        type: 3}
+      propertyPath: skipWindow
+      value: 
+      objectReference: {fileID: 1460045285}
     - target: {fileID: 1106968199016349990, guid: 6d9f2da2a9b3fb14dbc420f9a5a3cfd0,
         type: 3}
       propertyPath: skipWindow
@@ -6681,6 +6687,12 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -121.299805
       objectReference: {fileID: 0}
+    - target: {fileID: 1106968199016352380, guid: 6d9f2da2a9b3fb14dbc420f9a5a3cfd0,
+        type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 64d11ac4c9b283e4ca86a4ae60382494,
+        type: 3}
     - target: {fileID: 1106968199016355180, guid: 6d9f2da2a9b3fb14dbc420f9a5a3cfd0,
         type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -6692,6 +6704,11 @@ PrefabInstance:
       value: -121.299805
       objectReference: {fileID: 0}
     - target: {fileID: 1106968199016356078, guid: 6d9f2da2a9b3fb14dbc420f9a5a3cfd0,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1106968199016356358, guid: 6d9f2da2a9b3fb14dbc420f9a5a3cfd0,
         type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -6787,6 +6804,11 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1106968199016357867, guid: 6d9f2da2a9b3fb14dbc420f9a5a3cfd0,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1106968199016357872, guid: 6d9f2da2a9b3fb14dbc420f9a5a3cfd0,
         type: 3}
       propertyPath: m_IsActive
       value: 1

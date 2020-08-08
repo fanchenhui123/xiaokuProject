@@ -177,10 +177,10 @@ public class SpecialCarr : MonoBehaviour
                      TJSJ.Add(tempInfoList[i].carType); 
                   }
 
-                  if (!PriceManager.Instance.putSJCB.Contains(tempInfoList[i].carNumber))
+                  /*if (!PriceManager.Instance.putSJCB.Contains(tempInfoList[i].carNumber))
                   {
                      PriceManager.Instance.putSJCB.Add(tempInfoList[i].carNumber);
-                  }
+                  }*/
 
                   if (!PriceManager.Instance.putSJ.Contains(tempInfoList[i].carType))
                   {

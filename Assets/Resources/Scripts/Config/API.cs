@@ -49,7 +49,7 @@ public class API
     public static string PostDeleteCarinfo = "http://test.cheyuw.cn/api/merchant/data/delete";//删除车辆信息
     public static string GetServerBrand = "http://test.cheyuw.cn/api/client/brand";//获取服务器品牌列表
     public static string _PostCarType = "http://test.cheyuw.cn/api/merchant/data/up_lines_models";//更新车型车系
-
+    public static string GetHadPriceInfo = "http://test.cheyuw.cn/api/merchant/info";
     public static string GetHadPriceCars = "http://test.cheyuw.cn/api/merchant/auth/datail";//获取已报价的车
     //2020.6.25新增
 

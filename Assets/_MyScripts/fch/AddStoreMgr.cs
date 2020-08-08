@@ -130,6 +130,7 @@ public class AddStoreMgr : MonoBehaviour
             newAdd.Add(_item);
             StartCoroutine(PriceManager.Instance.postNewCarPrice(newAdd));
         }
+        PriceManager.Instance.UpdateUI();
     }
     
    

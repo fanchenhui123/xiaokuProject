@@ -34,7 +34,7 @@ public class NegotiatePrice : MonoBehaviour
     private MsgCenterCtrl.ReplyContent _replyContent;
   //  public int dataIndex;
     private NetworkManager _networkManager;
-    public string resOrderInfo = "??";
+    public string resOrderInfo = "";
     public bool needShow;
     private void Awake()
     {
@@ -52,8 +52,10 @@ public class NegotiatePrice : MonoBehaviour
     
     private void OnEnable()
     {
-        updateChatInfo();
-        ShowData();
+       
+        FirstGetYJ();
+        
+      
     }
 
     private void Update()
@@ -66,6 +68,11 @@ public class NegotiatePrice : MonoBehaviour
 
     private void updateChatInfo()//显示聊天信息
     {
+        if (string.IsNullOrEmpty(resOrderInfo))
+        {
+            tip.instance.SetMessae("无回复信息");
+            return;
+        }
         StringBuilder stringBuilder = new StringBuilder();
         JsonData jsonData = JsonMapper.ToObject(resOrderInfo);
         JsonData datas=new JsonData();
@@ -93,7 +100,6 @@ public class NegotiatePrice : MonoBehaviour
        
 
         GameObject go;
-        Debug.Log("repies  "+datas["repies"].ToJson());
         for (int i = 0; i <datas["repies"].Count; i++)
         {
             go = Instantiate(dialogItem, dialogContainer);
@@ -158,9 +164,8 @@ public class NegotiatePrice : MonoBehaviour
                     }
                 }
                 
-                if (jsonData["data"][i]["cart"] != null && jsonData["data"][i]["cart"].ToJson().Trim('"')!="NA")
+                if (jsonData["data"][i]["cart"] != null )
                 {
-                    Debug.Log(jsonData["data"][i]["cart"].ToJson());
                     for (int j = 0; j < (jsonData["data"][i]["cart"].Count); j++)
                     {
                         if (jsonData["data"][i]["cart"][j] == null)
@@ -248,6 +253,27 @@ public class NegotiatePrice : MonoBehaviour
     }
 
     private float requestEndTime;
+
+    private void FirstGetYJ()
+    {
+        string url = API._GetMsgList1;
+        NetworkManager.Instance.DoGet1(url, (responseCode, data) =>
+        {
+            if (responseCode == 200) //获取到数据后更新msg刷新聊天内容
+            {
+                NegotiatePrice.Instance.resOrderInfo = data;
+                coroutine.instance.GetAllOrderListTime = Time.time;
+                NegotiatePrice.Instance.needShow = true;
+                updateChatInfo();
+                ShowData();
+              // coroutine.instance.FlashWindow(data);
+            }
+            else
+            {
+                Debug.Log("responsecode  " + responseCode);
+            }
+        }, NetworkManager.Instance.token);
+    }
     ////////////////////////////////////////////////////////////////以下是没用的方法了删除用户编辑方案的功能////////////////////////////////////////////
     
     /// <summary>

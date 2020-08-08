@@ -30,6 +30,7 @@ public class MyLoginManager : MonoBehaviour
     private ClickEvent clickEvent;
 
     private UserInfo userInfo;
+    public bool isSameCount;
 
 
     bool isFirst = true;
@@ -100,6 +101,7 @@ public class MyLoginManager : MonoBehaviour
             Debug.Log("记住密码");
             userName.text = PlayerPrefs.GetString("username", "");
             pwd.text = PlayerPrefs.GetString("password", ""); ;
+            isSameCount = true;
         }
         else
         {
@@ -110,14 +112,21 @@ public class MyLoginManager : MonoBehaviour
 
     public void Login()
     {
-        PlayerPrefs.SetString("username", userName.text);
-        PlayerPrefs.SetString("password", pwd.text);
+      
 
         var form = new WWWForm();
         if (userName.text == string.Empty)
         {
             warnText.text = "邮箱不能为空";
             return;
+        }
+        if (PlayerPrefs.GetString("username")!=userName.text)
+        {
+            isSameCount = false;
+        }
+        else
+        {
+            isSameCount = true;
         }
         form.AddField("ip", this.ip);
         form.AddField("email", userName.text);
@@ -127,7 +136,12 @@ public class MyLoginManager : MonoBehaviour
         {
             if (responseCode == "200")
             {
+               
+                PlayerPrefs.SetString("username", userName.text);
+                PlayerPrefs.SetString("password", pwd.text);
+                
                 JsonData jdata = JsonMapper.ToObject(data);
+                
                 //if (jdata["code"].ToString() == "0")
                 //{
                 //    warnText.text = jdata["msg"].ToString();
@@ -142,7 +156,6 @@ public class MyLoginManager : MonoBehaviour
                 {
                     warnText.text = "登陆成功";
                     networkManager.token ="Bearer"+ jdata["data"].ToString();
-                    Debug.Log("token:  "+networkManager.token);
                     LoginSuccess();
                 }
                 else
@@ -152,7 +165,6 @@ public class MyLoginManager : MonoBehaviour
             }
             else
             {
-                Debug.Log(responseCode+JsonMapper.ToObject(data)["message"]);
                 warnText.text = JsonMapper.ToObject(data)["message"].ToString();
                 LoginFail();
             }
@@ -178,10 +190,27 @@ public class MyLoginManager : MonoBehaviour
         #region  2.0  登录成功后，加载价格管理数据、消息数目等
 
         DoGetUserInfo();
+        
         GetHadPrice();
+        if (isSameCount == false)
+        {
+            List<string> clearPostCar = new List<string>();
+            for (int i = 0; i < PriceManager.Instance.putSJ.Count; i++)
+            {
+                clearPostCar.Add(PriceManager.Instance.putSJ[i]);
+            }
+            coroutine.instance.postPost(clearPostCar);
+            PriceManager.Instance.ClearAllData();
+            PriceManager.Instance.isNeedCompare = false;
+            PriceManager.Instance.loadExcelsTest(PlayerPrefs.GetString("XiaoKuExcelPath"));
+            
+            tip.instance.SetMessae("清除掉所有数据,读取表格文件");
+        }
+
         isLoginSuccess = true;
         //请求获取数据库里已经报价的车辆信息
 
+        
       //  coroutine.instance.StartCompare();
 
         #endregion
@@ -201,31 +230,21 @@ public class MyLoginManager : MonoBehaviour
         {
             if (responsecode==200)
             {
-                JsonData jsonData= JsonMapper.ToObject(data)["data"]["data"];
-              
+                JsonData jsonData= JsonMapper.ToObject(data);
+                JsonData js = jsonData["data"];
                 hadPriceType.Clear();
                 hadPriceNumber.Clear();
-                for (int i = 0; i < jsonData.Count; i++)
+                for (int i = 0; i < js.Count; i++)
                 {
-                    if (jsonData[i]["cart"]!=null)
-                    {
-                        if (jsonData[i]["cart"]["carType"]!=null)
-                        {
-                            hadPriceType.Add(jsonData[i]["cart"]["carType"].ToJson());
-                            hadPriceNumber.Add(jsonData[i]["cart"]["carNumber"].ToJson());
-                        }
-                    }
-                     
+                    hadPriceType.Add(js[i].ToString());
                 }
-                Debug.Log("jsodnataHadPrice   "+  data);
                 PriceManager.Instance.putSJ=hadPriceType;
-                PriceManager.Instance.putSJCB = hadPriceNumber;
+             Debug.Log("已经报价 "+ PriceManager.Instance.putSJ.Count);
                 PriceManager.Instance.SavePlayerJson(PriceManager.Instance.putSJ);
-                Debug.Log("pusj count"+PriceManager.Instance.putSJ.Count);
+                PriceManager.Instance.UpdateUI();
             }
         },NetworkManager.Instance.token);
-        // StartCoroutine(CompareData( newList, oldList, hadPrice));
-        // return oldList;
+       
     }
     public void DoGetUserInfo()
     {
@@ -237,8 +256,7 @@ public class MyLoginManager : MonoBehaviour
             {
                 JsonData jsonData = JsonMapper.ToObject(data);
                 JsonData dataObj = jsonData["data"];
-                //Debug.Log("nickname:" + dataObj["nickname"]);
-                //Debug.Log("email:" + dataObj["email"]);
+               
                 for (int i = 0; i < jsonData["data"].Count; i++)
                 {
                     if (jsonData["data"][i]==null)
@@ -246,15 +264,13 @@ public class MyLoginManager : MonoBehaviour
                         jsonData["data"][i] = "NA";
                     }
                 }
-                Debug.Log("id:" + dataObj.ToJson());
                 SecondPanelCtrl.Instance.textUserID.text = dataObj["nickname"].ToString();
                 SecondPanelCtrl.Instance.textNickName.text = dataObj["email"].ToString();
-                Debug.Log("barandid  "+dataObj["brand_id"].ToString()+ "   "+coroutine.instance.DicBrand[(dataObj["brand_id"].ToString())]);
-              //  PlayerPrefs.SetString("brand_id",dataObj["brand_id"].ToString());
-              //  PlayerPrefs.SetString("Userbrand",coroutine.instance.DicBrand[(dataObj["brand_id"].ToString())]);
-
+                
                 PriceManager.Instance.curUserBrand = coroutine.instance.DicBrand[(dataObj["brand_id"].ToString())];
                 PriceManager.Instance.curUserBrandId =int.Parse( dataObj["brand_id"].ToString());
+                PriceManager.Instance.DoPostCarType();
+                
             }
             else
             {

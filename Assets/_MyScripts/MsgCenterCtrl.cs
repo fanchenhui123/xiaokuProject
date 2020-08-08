@@ -46,7 +46,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
         {
             GetAllOrders();
         }
-     
+       
         coroutine.instance.prompt.SetActive(false);
     }
 
@@ -127,7 +127,7 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
                 }
                 
                 
-                
+                Debug.Log("replies"+repliesOrders.Count);
                 
                 for (int i = 0; i < repliesOrders.Count; i++)//待回复
                 {
@@ -199,100 +199,31 @@ public class MsgCenterCtrl : ISingleton<MsgCenterCtrl>
             if (responseCode == 200)
             {
                 //Response_Msg responseMsg = JsonMapper.ToObject<Response_Msg>(data);
-                JsonData jsonData = JsonMapper.ToObject(data);
-                Debug.Log(" datacount  "+jsonData["data"].Count);
-                foreach (JsonData obj in jsonData["data"])
-                {
-                  
-                    
-                    try
-                    {
-                        MessageDataItem item = new MessageDataItem();
-                        item.id = int.Parse(obj["id"].ToString());
-                      //  Debug.Log("item id   "+   item.id);
-                        item.user_id = int.Parse(obj["user_id"].ToString());
-                        item.cart_id = int.Parse(obj["cart_id"].ToString());
 
-                        item.order_no = obj["order_no"].ToString();
-                        
-                        //Debug.Log("data "+obj["id"].ToString()+"  "+ item.status);
-                        
-                        item.cart = new CarInfo();
-                        JsonData jsonData_cart = obj["cart"];
-                        if (jsonData_cart != null)
-                        {
-                            item.cart.carType = jsonData_cart["carType"].ToString();
-                            item.cart.vehicleSystem = obj["cart"]["vehicleSystem"].ToString();
-
-                            item.cart.carNumber = obj["cart"]["carNumber"].ToString();
-
-                            if (obj["cart"]["appear_color"] != null)
-                                item.cart.appear_color = obj["cart"]["appear_color"].ToString();           //null
-                            else
-                                item.cart.appear_color = "NA";
-                        }
-
-                        item.repies = new ReplyContent[obj["repies"].Count];
-                        for (int i = 0; i < item.repies.Length; i++)
-                        {
-                            ReplyContent rc = new ReplyContent();
-                            rc.id = int.Parse(obj["repies"][i]["id"].ToString());
-                            rc.price = obj["repies"][i]["price"].ToString();
-                            rc.user_id = int.Parse(obj["repies"][i]["user_id"].ToString());
-                            item.repies[i] = rc;
-                        }
-
-                        item.status = int.Parse(obj["status"].ToString());
-
-                        item.last_reply_user_type = int.Parse(obj["last_reply_user_type"].ToString());
-
-                        msgItemList.Add(item);
-
-                       // Debug.Log("item.status  "+ item.status);
-                        if (item.status == 6)
-                        {
-                            completedOrders.Add(item);          //交易完成
-                        }
-                        else if (item.status == 1)
-                        {
-                            if (item.repies.Length > 0)
-                            {
-                                repliesOrders.Add(item);        //议价列表
-                            }
-                        }else if (item.status == 5)//需要商家查看确认
-                        {
-                            needFinalConfirm.Add(item);
-                        }
-                    }
-                    catch (System.Exception E)
-                    {
-                        Debug.LogError(E.ToString());
-                    }
-                    
-                }
-
-                if (jsonData["data"].Count==0)
+                coroutine.instance.GetAllMsg(data);
+                Debug.Log("msgdata  "+data);
+                if (JsonMapper.ToObject(data)["data"].Count==0)
                 {
                      tip.instance.SetMessae("没有订单信息");
                 }
+                MsgCenterCtrl.Instance.completedOrders =coroutine.instance.curCompletedOrders;
+                MsgCenterCtrl.Instance.repliesOrders =coroutine.instance.curRepliesOrders;
+                MsgCenterCtrl.Instance.needFinalConfirm =coroutine.instance. curNeedFinalConfirm;
                 updateUI();
                 //Debug.Log("________" + msgItemList[msgItemList.Count - 1].cart_id);
             }
             else
             {
                 tip.instance.SetMessae("获取订单列表错误"+responseCode);
-               // tip.instance.SetMessae(JsonMapper.ToObject(data)["message"].ToJson());
-                Debug.Log("Get YJinfo list error  "+responseCode+data.ToString());
+              
+              
             }
         }, networkManager.token);
 
     }
 
 
-    private void GetAllMsg()
-    {
-
-    }
+   
 
 
 
