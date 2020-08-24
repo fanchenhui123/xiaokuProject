@@ -105,13 +105,13 @@ public class NegotiatePrice : MonoBehaviour
             go = Instantiate(dialogItem, dialogContainer);
             if (datas["repies"][i]["type"].ToJson()=="1")
             {
-                stringBuilder.Append("价格：").Append(datas["repies"][i]["price"]).Append("万元，备注：")
+                stringBuilder.Append("价格：").Append(datas["repies"][i]["price"]).Append("元，备注：")
                     .Append(datas["repies"][i]["content"]);
                 go.GetComponent<Image>().color = new Color(155/255f,108/255f,72/255f,255/255f);
             }
             if (datas["repies"][i]["type"].ToJson()=="2")
             {
-                stringBuilder.Append("价格：").Append(datas["repies"][i]["price"]).Append("万元，备注：")
+                stringBuilder.Append("价格：").Append(datas["repies"][i]["price"]).Append("元，备注：")
                     .Append(datas["repies"][i]["content"]); 
                 go.GetComponent<Image>().color = new Color(72/255f,138/255f,155/255f,255/255f);
             }
@@ -282,10 +282,10 @@ public class NegotiatePrice : MonoBehaviour
     public void CreatMethod()//根据输入添加方案
     {
         string methName = NM.text;
-        methName = methName + " : 首付" + SF.text + "万元 > " +
+        methName = methName + " : 首付" + SF.text + "元 > " +
                    FQ.text + "期 > 月供" + 
                    YG.text + "元 > 总利息" +
-                   LX.text + "万元";
+                   LX.text + "元";
         if (methodList.Count<3)
         {
             methodList.Add(methName);
@@ -511,7 +511,7 @@ public class NegotiatePrice : MonoBehaviour
         {
             tip.instance.SetMessae("议价发送成功");
             GameObject go = Instantiate(dialogItem,dialogContainer);
-            stringBuilder.Append("价格：") .Append(chatPrice.text).Append("万元, 备注：").Append(chatMemo.text);
+            stringBuilder.Append("价格：") .Append(chatPrice.text).Append("元, 备注：").Append(chatMemo.text);
             go.transform.GetChild(0).GetComponent<Text>().text = stringBuilder.ToString();
             go.GetComponent<Image>().color = new Color(72/255f,138/255f,155/255f,255/255f);
             chatPrice.transform.parent.GetComponent<InputField>().text = "";

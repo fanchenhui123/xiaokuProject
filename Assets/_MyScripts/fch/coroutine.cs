@@ -78,7 +78,7 @@ public class coroutine : MonoBehaviour
 private void Update()
 {
     //Debug.Log(Time.time-GetAllOrderListTime+"  ??");
-    if (Time.time-time>1200f)
+    if (Time.time-time>1800f)
     {
         AutoLoadExcel();
     }
@@ -168,6 +168,35 @@ public IEnumerator PostNeedRemoveCar(List<string> carNumbers)
     }
     yield break;
 }
+
+
+public IEnumerator GetDeleteAllCar()
+{
+        Debug.Log("请求删除");
+       
+    
+       
+        NetworkManager.Instance.DoGet1(API.GetDeleteAllCarinfo,(responseCode,content) =>
+        {
+            if (responseCode==200)
+            {
+               
+                tip.instance.SetMessae("删除成功");
+                priceInfosRemove.Clear();
+            }
+            else
+            {
+                // Debug.Log("删除失败"+content.ToString());
+                tip.instance.SetMessae("删除失败"+responseCode);
+            }
+        },NetworkManager.Instance.token);
+            
+   
+    yield break;
+}
+
+
+
  Dictionary<string, string> messageDicTempo = new Dictionary<string, string>();
 public void FlashWindow(string data)
 {

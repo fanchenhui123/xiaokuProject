@@ -230,8 +230,10 @@ public class MyLoginManager : MonoBehaviour
         {
             if (responsecode==200)
             {
+               
                 JsonData jsonData= JsonMapper.ToObject(data);
                 JsonData js = jsonData["data"];
+                 Debug.Log("已经报价  "+jsonData.ToJson() .ToString());
                 hadPriceType.Clear();
                 hadPriceNumber.Clear();
                 for (int i = 0; i < js.Count; i++)
@@ -239,7 +241,7 @@ public class MyLoginManager : MonoBehaviour
                     hadPriceType.Add(js[i].ToString());
                 }
                 PriceManager.Instance.putSJ=hadPriceType;
-             Debug.Log("已经报价 "+ PriceManager.Instance.putSJ.Count);
+                Debug.Log("已经报价 "+ PriceManager.Instance.putSJ.Count);
                 PriceManager.Instance.SavePlayerJson(PriceManager.Instance.putSJ);
                 PriceManager.Instance.UpdateUI();
             }

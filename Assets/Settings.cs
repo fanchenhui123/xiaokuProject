@@ -56,13 +56,13 @@ public class Settings : MonoBehaviour
 
             if (ExcelPath!=PlayerPrefs.GetString(keyName))//路径相同文件名不同也是！=,如果文件不同就删除数据重新读ExcelPath != PlayerPrefs.GetString(keyName)
             { 
-                List<string> clearPostCar=new List<string>();
-                for (int i = 0; i < PriceManager.Instance.putSJ.Count; i++)
-                {
-                    clearPostCar.Add(PriceManager.Instance.putSJ[i]);
-                }
+                // List<string> clearPostCar=new List<string>();
+                // for (int i = 0; i < PriceManager.Instance.putSJ.Count; i++)
+                // {
+                //     clearPostCar.Add(PriceManager.Instance.putSJ[i]);
+                // }
 
-                StartCoroutine(coroutine.instance.PostNeedRemoveCar(clearPostCar));
+                StartCoroutine(coroutine.instance.GetDeleteAllCar());//clearPostCar));
                 PriceManager.Instance.ClearAllData();
                 MyLoginManager.instance.GetHadPrice();
                 PriceManager.Instance.isNeedCompare = false;
@@ -84,7 +84,7 @@ public class Settings : MonoBehaviour
 
     private string SourceExcelPath;
    
-
+  
    
 
 }

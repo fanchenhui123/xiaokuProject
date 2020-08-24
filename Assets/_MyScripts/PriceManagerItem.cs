@@ -52,6 +52,7 @@ public class PriceManagerItem : MonoBehaviour
         text_type.text = type;
         text_status.text = status;
         carNumber = carNum;
+        //Debug.Log("carnum  "+carNum);
         carType = type;
         btn_bjsz.onClick.RemoveAllListeners();
         btn_bjsz.onClick.AddListener(OnBtnBjszClick);
@@ -73,6 +74,7 @@ public class PriceManagerItem : MonoBehaviour
                 if (num==200)
                 {
                     PriceManager.Instance.hadPriceInfo = content;
+                    Debug.Log("已经报价 "+content);
                     JsonData jsonData = JsonMapper.ToObject(content)["data"];
                     for (int i = 0; i < jsonData.Count; i++)
                     {
@@ -107,8 +109,6 @@ public class PriceManagerItem : MonoBehaviour
             priceManager.ChangeToPage(2);
         }
 
-  
-       
       
     }
 

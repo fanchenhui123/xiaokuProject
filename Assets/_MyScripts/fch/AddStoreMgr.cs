@@ -30,7 +30,7 @@ public class AddStoreMgr : MonoBehaviour
             else
             {
                tip.instance.SetMessae("缺少信息"); 
-                return;
+               return;
             }
         }
 
@@ -46,42 +46,58 @@ public class AddStoreMgr : MonoBehaviour
         
         if (string.IsNullOrEmpty(texts[0].text)|| string.IsNullOrEmpty(texts[1].text))
         {
-            tip.instance.SetMessae("缺少信息");
+            tip.instance.SetMessae("缺少信息  ");
         }
         else
         {
-            UpdateItems();
+            
+          
+             UpdateItems();
             _carCode = null;
             if (PriceManager.Instance.vehicleSystemsDic.ContainsKey(texts[0].text))
             {
-                if (PriceManager.Instance.vehicleSystemsDic[texts[0].text].Contains(texts[1].text))
+              
+                if (!PriceManager.Instance.vehicleSystemsDic[texts[0].text].Contains(texts[1].text))
                 {
-                   
-                    return;
+                
+                     PriceManager.Instance.vehicleSystemsDic[texts[0].text].Add(texts[1].text);
                 }
-                else
-                {
-                    PriceManager.Instance.vehicleSystemsDic[texts[0].text].Add(texts[1].text);
-                }
+              
             }
             else
             {
+               
                 List<string> carTypes=new  List<string>();
+        
                 carTypes.Add(texts[1].text);
                 PriceManager.Instance.vehicleSystemsDic.Add(texts[0].text,carTypes);
                 PriceManager.Instance.DoPostCarType();
             }
+
+            PriceManager.Instance.SavePlayerJson(PriceManager.Instance.priceInfos);
+
+        
+        if (PriceManager.Instance.putSJ.Contains(_item.carType))
+        {
+            List<PriceInfo> newAdd=new List<PriceInfo>();
+            newAdd.Add(_item);
+            StartCoroutine(PriceManager.Instance.postNewCarPrice(newAdd));
         }
+        PriceManager.Instance.UpdateUI();
+          
+        }
+
+        
     }
 
-    
+    PriceInfo _item ;
     
     private RegistorItem _registorItem;
     private GameObject _gameObject,go;
-
+  
     public void UpdateItems()
     {
-        PriceInfo _item = new PriceInfo();
+      _item = new PriceInfo();
         string defa="NA";
         _item.guidancePrice = texts[3].text;
         _item.carNumber = _carCode;
@@ -117,20 +133,14 @@ public class AddStoreMgr : MonoBehaviour
         {
             texts[i].text = "";
         }
-        PriceManager.Instance.priceInfos.Add(_item);
-        PriceManager.Instance.StoreAddCar.Add(_item);
-        tip.instance.SetMessae("添加成功");
-        CloseAddCar();
-        PriceManager.Instance.SavePlayerJson(PriceManager.Instance.priceInfos);
 
+        PriceManager.Instance.priceInfos.Add(_item);
+        // PriceManager.Instance.StoreAddCar.Add(_item);
+        Debug.Log("ccar   "+_item.carNumber);
+        tip.instance.SetMessae("添加成功");
+       
+        CloseAddCar();
         
-        if (PriceManager.Instance.putSJ.Contains(_item.carType))
-        {
-            List<PriceInfo> newAdd=new List<PriceInfo>();
-            newAdd.Add(_item);
-            StartCoroutine(PriceManager.Instance.postNewCarPrice(newAdd));
-        }
-        PriceManager.Instance.UpdateUI();
     }
     
    

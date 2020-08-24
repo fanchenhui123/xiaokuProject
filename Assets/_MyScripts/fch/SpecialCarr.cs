@@ -20,7 +20,7 @@ public class SpecialCarr : MonoBehaviour
    public PriceInfo needPost=new PriceInfo();
    public Dropdown SearchResDropdown;
    public List<Dropdown.OptionData>  optionList;//精品方案
-   public List<string> TJSJ=new List<string>();//特价车上架
+   public List<PriceInfo> TJSJ=new List<PriceInfo>();//特价车上架
   // private NetworkManager networkManager = NetworkManager.Instance;
   
    
@@ -158,7 +158,7 @@ public class SpecialCarr : MonoBehaviour
                   jsonData[j] = "NA";
                }
             }
-            //  Debug.Log("________准备上传的 jsonData:" + jsonData.ToJson());
+              Debug.Log("________准备上传的 jsonData:" + jsonData.ToJson());
             //jsonString = JsonMapper.ToJson(jsonData);
             string json = jsonData.ToJson();
 
@@ -170,12 +170,32 @@ public class SpecialCarr : MonoBehaviour
             if (responseCode=="200")
             {
                tip.instance.SetMessae("保存成功");
+
+              
                for (int i = 0; i < tempInfoList.Count; i++)
                {
-                  if (!TJSJ.Contains(tempInfoList[i].carType))
+                  for (int j = 0; j < TJSJ.Count; j++)
                   {
-                     TJSJ.Add(tempInfoList[i].carType); 
+                     if(tempInfoList[i].carNumber==TJSJ[j].carNumber)
+                    {
+                     TJSJ[j] = tempInfoList[i];
+                     tempInfoList.Remove(TJSJ[j]); 
+                    }
                   }
+               }
+
+               for (int i = 0; i < tempInfoList.Count; i++)
+               {
+                  
+               
+
+                    TJSJ.Add(tempInfoList[i]); 
+
+
+                  // if (!TJSJ.Contains(tempInfoList[i].carNumber))
+                  // {
+                  //    TJSJ.Add(tempInfoList[i].carNumber); 
+                  // }
 
                   /*if (!PriceManager.Instance.putSJCB.Contains(tempInfoList[i].carNumber))
                   {
@@ -194,6 +214,10 @@ public class SpecialCarr : MonoBehaviour
                for (int i = 0; i < InfoTexts.Count; i++)
                {
                   InfoTexts[i].text = "";
+               }
+               for (int i = 0; i < TJSJ.Count; i++)
+               {
+                   Debug.Log(TJSJ[i]);
                }
             }
             else

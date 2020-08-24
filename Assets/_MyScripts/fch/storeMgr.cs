@@ -122,7 +122,7 @@ public class storeMgr : MonoBehaviour
                 CurcarType = priceInfos[i].carType;
 
             }
-            
+            Debug.Log(" store  "+priceInfos[i].carNumber);
             gos = Instantiate(registorMgrItem, regisItemContainer);
             reItem = gos.GetComponent<RegistorItem>();
             StoreCarItems.Add(gos);
@@ -231,11 +231,8 @@ public class storeMgr : MonoBehaviour
         
          Toggle[] allRegistor = regisItemContainer.gameObject.GetComponentsInChildren<Toggle>().ToArray();
          string j=null;
-         if (allRegistor.Length==0)
-         {
-             tip.instance.SetMessae("请选择要删除的车辆");
-         }
         
+     //   Debug.Log("alltoggle  "+  allRegistor.Length);
          for (int i = 0; i < allRegistor.Length; i++)
          {
              if (allRegistor[i].isOn)
@@ -253,6 +250,10 @@ public class storeMgr : MonoBehaviour
              }
          }
 
+        if (needRemoveCarNum.Count==0)
+         {
+             tip.instance.SetMessae("请选择要删除的车辆");
+         }
          for (int i = 0; i < needRemoveCarInfo.Count; i++)
          {
              PriceManager.Instance.priceInfos.Remove(needRemoveCarInfo[i]);
@@ -266,6 +267,7 @@ public class storeMgr : MonoBehaviour
              }
          }
          
+        // Debug.Log(" need "+needRemoveCarNum.Count);
          StartCoroutine(PostNeedRemoveCar(needRemoveCarNum));
        
      }
@@ -286,14 +288,26 @@ public class storeMgr : MonoBehaviour
      public IEnumerator PostNeedRemoveCar(List<string> carNumbers)
      {
          StringBuilder stringBuilder=new StringBuilder();
-         for (int i = 0; i < carNumbers.Count-1; i++)
+           WWWForm form=new WWWForm();
+
+
+        //  Debug.Log(" need1 "+needRemoveCarNum.Count);  
+         if(carNumbers.Count==1)
+         {
+            form.AddField("car_numbers",carNumbers[0]);
+         }else
+         {
+          for (int i = 0; i < carNumbers.Count-1; i++)
          {
              stringBuilder =stringBuilder.Append(carNumbers[i]).Append(',');
          }
 
          stringBuilder.Append(carNumbers[carNumbers.Count - 1]);
-         WWWForm form=new WWWForm();
+       
          form.AddField("car_numbers",stringBuilder.ToString());
+         }
+         //
+          // Debug.Log(" need2 "+needRemoveCarNum.Count);
          NetworkManager.Instance.DoPost(API.PostDeleteCarinfo, form,(responseCode,content) =>
          {
              if (responseCode=="200")
@@ -312,7 +326,7 @@ public class storeMgr : MonoBehaviour
                  PriceManager.Instance.SavePlayerJson(PriceManager.Instance.priceInfos);
                  tip.instance.SetMessae("删除成功");
                  needRemoveCarInfo.Clear();
-                 Debug.Log(stringBuilder);
+                // Debug.Log(stringBuilder);
              
              }
              else

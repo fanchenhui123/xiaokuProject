@@ -7082,7 +7082,8 @@ MonoBehaviour:
   btnConfOrder: {fileID: 7706165849943291288}
   OptionDatas: []
   curOrderId: ???
-  dataIndex: 0
+  resOrderInfo: 
+  needShow: 0
   dialogContainer: {fileID: 4847994662170895578}
 --- !u!1 &5915041795408056530
 GameObject:

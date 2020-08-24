@@ -47,6 +47,8 @@ public class API
     public static string PostCarsInfo = "http://test.cheyuw.cn/api/merchant/data/batch";//车辆报价
     public static string GetServerVehcle = "http://test.cheyuw.cn/api/client/line";//获取服务器车系列表
     public static string PostDeleteCarinfo = "http://test.cheyuw.cn/api/merchant/data/delete";//删除车辆信息
+
+    public static string GetDeleteAllCarinfo = "http://test.cheyuw.cn/api/merchant/data/deleteAll";//删除所有车辆信息
     public static string GetServerBrand = "http://test.cheyuw.cn/api/client/brand";//获取服务器品牌列表
     public static string _PostCarType = "http://test.cheyuw.cn/api/merchant/data/up_lines_models";//更新车型车系
     public static string GetHadPriceInfo = "http://test.cheyuw.cn/api/merchant/info";

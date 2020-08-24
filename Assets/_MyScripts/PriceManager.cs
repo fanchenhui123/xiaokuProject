@@ -116,7 +116,7 @@ public class PriceManager : MonoBehaviour
     private void OnEnable()
     {
        // ChangeToPage(1);
-      //  UpdateUI();
+        UpdateUI();
        // DoPostCarType();
 
     }
@@ -172,7 +172,7 @@ public class PriceManager : MonoBehaviour
         {
             if (priceInfos.Count > 0)
             {
-                Debug.Log("????updateui");
+               // Debug.Log("????updateui");
                 UpdateUI();
                 loadEnd = true;
                 isNeedCompare = false;
@@ -227,7 +227,7 @@ public class PriceManager : MonoBehaviour
 
                     if (same==priceInfosLast.Count)
                     {
-                        Debug.Log("有新增车辆"+priceInfos[i].brand+ priceInfos[i].vehicleSystem);
+                       // Debug.Log("有新增车辆"+priceInfos[i].brand+ priceInfos[i].vehicleSystem);
                         if (putSJ.Contains(priceInfos[i].carType))
                         {
                             priceInfos[i].vehicleSystem= priceInfos[i].vehicleSystem.Replace("库存", "");
@@ -246,17 +246,17 @@ public class PriceManager : MonoBehaviour
                 {
                     if (!carNumberList.Contains(priceInfosLast[i].carNumber))
                     {
-                        Debug.Log("需要删除的车辆11  "+priceInfosLast[i].carNumber);
+                      //  Debug.Log("需要删除的车辆11  "+priceInfosLast[i].carNumber);
                         if (putSJ.Contains(priceInfosLast[i].carType))
                         {
 
-                            Debug.Log("需要删除的车辆已经报价  "+priceInfosLast[i].carNumber);
+                            //Debug.Log("需要删除的车辆已经报价  "+priceInfosLast[i].carNumber);
                             priceInfosRemove.Add(priceInfosLast[i].carNumber);
                         }
                         
                     }
                 }
-                Debug.Log(priceInfosRemove.Count +"  "+priceInfosAdd.Count);
+              //  Debug.Log(priceInfosRemove.Count +"  "+priceInfosAdd.Count);
                 if (priceInfosRemove.Count > 0)
                 {
                     StartCoroutine( coroutine.instance.PostNeedRemoveCar(priceInfosRemove));
@@ -268,7 +268,7 @@ public class PriceManager : MonoBehaviour
             }
             else
             {
-                Debug.Log("无需对比");
+               // Debug.Log("无需对比");
                 comparaComplete = true;
             }
 
@@ -276,7 +276,7 @@ public class PriceManager : MonoBehaviour
 
         if (comparaComplete)
         {
-            Debug.Log("      comparaComlete");
+          //  Debug.Log("      comparaComlete");
             comparaComplete = false;
             UpdateUI();
             DoPostCarType();
@@ -289,7 +289,7 @@ public class PriceManager : MonoBehaviour
     public void loadExcelsTest(string ExcelPath)
     {
         
-        
+        Debug.Log("开始分析路径");
         string  SourceExcelPath = @ExcelPath.Replace(@"\",@"/");         // @"E:\C# Projects\ConsoleApplication1\";
         DirectoryInfo mydir = new DirectoryInfo(SourceExcelPath);
         if (SourceExcelPath.EndsWith(".xlsx"))
@@ -303,7 +303,7 @@ public class PriceManager : MonoBehaviour
             FileInfo newfile=new FileInfo(SourceExcelPath);
             newfile.CopyTo(Application.persistentDataPath + "/save.xlsx");
             SourceExcelPath = Application.persistentDataPath + "/save.xlsx";
-            Debug.Log("source   "+SourceExcelPath);
+           // Debug.Log("source   "+SourceExcelPath);
             DoLoadThread(SourceExcelPath);//读文件
             filsCount = 1;//多选的文件数
         }
@@ -316,7 +316,7 @@ public class PriceManager : MonoBehaviour
             }
             else
             {
-                Debug.Log("文件夹里有文件");
+               // Debug.Log("文件夹里有文件");
             }
             ArrayList list = new ArrayList();
             foreach (FileSystemInfo fsi in mydir.GetFileSystemInfos())
@@ -344,7 +344,7 @@ public class PriceManager : MonoBehaviour
                 }
       
                 FileInfo newfile=new FileInfo(ExcelPath +@"/"+str);
-                Debug.Log(Application.persistentDataPath +@"/" + str);
+               // Debug.Log(Application.persistentDataPath +@"/" + str);
                 newfile.CopyTo(Application.persistentDataPath +@"/" + str);
                 SourceExcelPath = Application.persistentDataPath +@"/" + str;
                 Instance.DoLoadThread(SourceExcelPath);//读文件夹里的文件
@@ -361,7 +361,7 @@ public class PriceManager : MonoBehaviour
     public void DoLoadThread(string path = "")
     {
        
-        
+          Debug.Log("开启线程");
         loadThread = new Thread(new ThreadStart(() =>
         {
             try
@@ -381,8 +381,9 @@ public class PriceManager : MonoBehaviour
             }
             catch (Exception e)
             {
+                  Debug.Log("打开线程失败 : " + e.ToString());
               //  tip.instance.SetMessae("打开线程失败");
-                Debug.LogError("打开线程失败 : " + e.ToString());
+              //  Debug.LogError("打开线程失败 : " + e.ToString());
             }
         }));
         loadThread.IsBackground = true;
@@ -393,6 +394,7 @@ public class PriceManager : MonoBehaviour
     int Hadloadfiles;
     public void ReadCarPrice(string path = "")
     {
+         Debug.Log("开始读表");
         if (priceInfos==null)
         {
             priceInfos   = new List<PriceInfo>(); 
@@ -419,7 +421,7 @@ public class PriceManager : MonoBehaviour
 
         if (!File.Exists(filePath))
             return;
-       
+        Debug.Log("开始读表0.2");
        FileInfo newFile = new FileInfo(filePath);
        newFile.IsReadOnly = true;
        using (ExcelPackage package = new ExcelPackage(newFile))
@@ -430,7 +432,7 @@ public class PriceManager : MonoBehaviour
            foreach (var w in worksheets)
            {
                if (!w.Name.Contains("库存")) continue; //只读工作表名中带  库存  俩字的
-               Debug.Log(w + " " + w.Index);
+              // Debug.Log(w + " " + w.Index);
                int minColumnNum = w.Dimension.Start.Column; //工作区开始列
                int maxColumnNum = w.Dimension.End.Column; //工作区结束列
                int minRowNum = w.Dimension.Start.Row; //工作区开始行号
@@ -668,7 +670,7 @@ public class PriceManager : MonoBehaviour
                            item.note = note; //批注
                            item.vehicleSystem = w.Name; //车系
                            item.brand = curUserBrand; // PlayerPrefs.GetString("brand_id");            
-                           Debug.Log("读表后添加 brand="+curUserBrand);
+                         //  Debug.Log("读表后添加 brand="+curUserBrand);
                            if (!carNumberList.Contains(item.carNumber))
                            {
                                if (string.IsNullOrEmpty(item.adviser) && string.IsNullOrEmpty(item.userName))
@@ -689,12 +691,12 @@ public class PriceManager : MonoBehaviour
                wIndex = wIndex + 1;
                //Debug.Log("__________current product infos count: " + priceInfos.Count);
            }
-           Debug.Log("infos.count    " + priceInfos.Count);
+          // Debug.Log("infos.count    " + priceInfos.Count);
            Thread.CurrentThread.Join(1000); //阻止设定时间
        }
      
        File.SetAttributes(filePath,  FileAttributes.Normal);
-       Debug.Log("什么情况");
+      
        string curCarType = "";
        for (int i = 0; i < priceInfos.Count; i++)
        {
@@ -713,7 +715,7 @@ public class PriceManager : MonoBehaviour
        Hadloadfiles++;
        if (Hadloadfiles==filsCount)
        {
-           Debug.Log("load end");
+         //  Debug.Log("load end");
             loadEnd = true;
             Hadloadfiles = 0;
        }
@@ -732,7 +734,7 @@ public class PriceManager : MonoBehaviour
     List<PriceInfo> newCarPrice=new List<PriceInfo>();
     public void UpdateUI()
     {
-        Debug.Log("刷新价格管理UI"+priceInfos.Count);
+      //  Debug.Log("刷新价格管理UI"+priceInfos.Count);
         carTypeList.Clear();
         GameObject go;
         PriceManagerItem item;
@@ -877,13 +879,13 @@ public class PriceManager : MonoBehaviour
 
     public void DoGetCarList(string page = "1", string pageSize = "10", string brand_id = "1", string vehicleSystem = "Q3", string carType = "车型")
     {
-        Debug.Log("token: " + networkManager.token);
+      //  Debug.Log("token: " + networkManager.token);
         //string url = API.GetMsgList + "&page=" + page + "&pageSize=" + pageSize + "&brand_id=" + brand_id
         //    + "&vehicleSystem=" + vehicleSystem + "&carType=" + carType;
         string url = API._GetCarList;
         networkManager.DoGet1(url, (responseCode, data) =>
         {
-            Debug.Log("responseCode:" + responseCode + "|" + data);
+          //  Debug.Log("responseCode:" + responseCode + "|" + data);
         }, networkManager.token);
 
     }
@@ -904,11 +906,12 @@ public class PriceManager : MonoBehaviour
         WWWForm form = new WWWForm();
         List<PriceInfo> tempInfoList = new List<PriceInfo>();
         string carType = currPriceInfo.carType;
-       
+       // Debug.Log("curCarType  " + carType);
         for (int i = 0; i < priceInfos.Count; i++)
         {
             if (priceInfos[i].carType == carType)
             {
+             //   Debug.Log("有");
                 JsonData jsonData = JsonMapper.ToObject(JsonMapper.ToJson(priceInfos[i]));
                 for (int j = 0; j < jsonData.Count; j++)
                 {
@@ -918,7 +921,7 @@ public class PriceManager : MonoBehaviour
                     }
                 }
                 tempInfoList.Add(priceInfos[i]);
-                Debug.Log(i+"   "+priceInfos[i].carNumber);
+              //  Debug.Log(i+"   "+priceInfos[i].carNumber);
             } 
            
         }
@@ -928,6 +931,8 @@ public class PriceManager : MonoBehaviour
         for (int i = 0; i < tempInfoList.Count; i++)
         {
             tempInfoList[i].vehicleSystem = tempInfoList[i].vehicleSystem.Replace("库存", "");
+            tempInfoList[i].brand=curUserBrand;
+          //  Debug.Log(tempInfoList[i].vehicleSystem+"   brand  "+tempInfoList[i].brand);
             string jsonString = JsonMapper.ToJson(tempInfoList[i]);
             JsonData jsonData = JsonMapper.ToObject(jsonString);
             jsonData["net_price"] = inputCarPrice.text;
@@ -950,7 +955,8 @@ public class PriceManager : MonoBehaviour
             string json = jsonData.ToJson();
 
             form.AddField("d[]", json);
-            tip.instance.SetMessae(tempInfoList.Count+"*****"+ i.ToString());
+            tip.instance.SetMessae(tempInfoList.Count+"   "+ i.ToString());
+            Debug.Log(jsonData["carType"]+"  cartype");
         }
         
         networkManager.DoPost1(API.PostCarsInfo, form, (responseCode, content) =>
@@ -959,8 +965,10 @@ public class PriceManager : MonoBehaviour
             if (responseCode=="200")
             {
                 tip.instance.SetMessae("保存成功");
+
                 for (int i = 0; i < tempInfoList.Count; i++)
                 {
+                    Debug.Log(tempInfoList[i].carType);
                     if (!putSJ.Contains(tempInfoList[i].carType))
                     {
                         putSJ.Add(tempInfoList[i].carType);
@@ -977,6 +985,7 @@ public class PriceManager : MonoBehaviour
             }
             else
             {
+                Debug.Log(JsonMapper.ToObject(content)["message"].ToString());
                 tip.instance.SetMessae(JsonMapper.ToObject(content)["message"].ToString());
             }
         }, networkManager.token);
@@ -998,6 +1007,14 @@ public class PriceManager : MonoBehaviour
                     priceItems[i].SetActive(false);
                 }
 
+
+                for (int i = 0; i < specialItems.Count; i++)
+                {
+                 Destroy(specialItems[i]);
+                }
+
+                specialItems.Clear();
+
                 
                 for (int i = 0; i < SpecialCarr.instance.TJSJ.Count; i++)
                 {
@@ -1007,12 +1024,13 @@ public class PriceManager : MonoBehaviour
                     }
                     else
                     {
+                        
                         GameObject go;
                         go = Instantiate(priceManagerItem, itemContainer);
                         specialItems.Add(go);
                         PriceManagerItem  item = go.GetComponent<PriceManagerItem>();
-                        item.SetItemContent(i.ToString(), priceInfos[i].carNumber, priceInfos[i].guidancePrice,
-                            priceInfos[i].vehicleSystem, priceInfos[i].carType, "已上架"); //订单管理显示的
+                        item.SetItemContent(i+1.ToString(), priceInfos[i].carNumber, priceInfos[i].guidancePrice,
+                            priceInfos[i].vehicleSystem, priceInfos[i].carType, "已报价"); //订单管理显示的
                         
                     }
                    
@@ -1130,7 +1148,7 @@ public class PriceManager : MonoBehaviour
     
     public IEnumerator postNewCarPrice(List<PriceInfo> postList)//
     {
-        Debug.Log("删除数据");
+      //  Debug.Log("删除数据");
         WWWForm form = new WWWForm();
         for (int i = 0; i < postList.Count; i++)
         {
@@ -1145,15 +1163,15 @@ public class PriceManager : MonoBehaviour
                     tip.instance.SetMessae("数据已更新");
                     for (int i = 0; i < postList.Count; i++)
                     {
-                        Debug.Log("新增的车车架号：   "+postList[i].carNumber.ToString()); 
+                      //  Debug.Log("新增的车车架号：   "+postList[i].carNumber.ToString()); 
                     }
                    
                     newCarPrice.Clear();
                 }
                 else
                 {
-                    Debug.Log("新增content"+content);
-                    Debug.Log("新增   "+JsonMapper.ToObject(content)["message"].ToString());
+                  //  Debug.Log("新增content"+content);
+                   // Debug.Log("新增   "+JsonMapper.ToObject(content)["message"].ToString());
                 }
             },
           
@@ -1170,12 +1188,13 @@ public class PriceManager : MonoBehaviour
         {
             return;
         }
+    
         string url = API._PostCarType;
         WWWForm form = new WWWForm();
 
+      
         BrandCarTypeInfo bcti = new BrandCarTypeInfo();
         bcti.brand_name = curUserBrand; //todo  PlayerPrefs.GetString("brand_id");
-        Debug.Log("curbrand ="+curUserBrand);
         bcti.cart_lines = new List<CarLine>();
         foreach (var keyValuePair in vehicleSystemsDic)
         {
@@ -1191,8 +1210,8 @@ public class PriceManager : MonoBehaviour
             bcti.cart_lines.Add(cl);
         }
         
-        Debug.Log(  "dic count     "+vehicleSystemsDic.Count);
-        
+    
+      //  Debug.Log(curUserBrand+"  当前品牌  "+bcti.brand_name );
         string jsonData = JsonMapper.ToJson(bcti);
         form.AddField("d[]", jsonData);
         networkManager.DoPost1(url, form, (responseCode, data) =>
@@ -1200,11 +1219,11 @@ public class PriceManager : MonoBehaviour
             if (responseCode=="200")
             {
             
-                Debug.Log("responseCode:" + responseCode + "|" + data);
+               // Debug.Log("responseCode:" + responseCode + "|" + data);
             }
             else
             {
-                Debug.Log(JsonMapper.ToObject(data).ToJson());
+              //  Debug.Log("没添加成功"+ JsonMapper.ToObject(data).ToString());
                 tip.instance.SetMessae(JsonMapper.ToObject(data).ToJson());
             }
 
@@ -1220,7 +1239,7 @@ public class PriceManager : MonoBehaviour
     {
         
         
-        Debug.Log("清除所有数据");
+      //  Debug.Log("清除所有数据");
         priceManagerItems.Clear();//清除所有的items
         carNumberList.Clear();
         carTypeList.Clear();
@@ -1271,6 +1290,7 @@ public class PriceManager : MonoBehaviour
     /// <param name="item"></param>
     public void SetItemForPage2(PriceManagerItem item)
     {
+       //ug.Log("????没设置？？"+item.priceInfo.brand);
         currPriceInfo = item.priceInfo;
 
         currPriceManagerItem = item;
@@ -1300,7 +1320,7 @@ public class PriceManager : MonoBehaviour
      
         if (item.text_status.text == "已报架")
         {
-            Debug.Log("已经报价");
+           // Debug.Log("已经报价");
             inputCarPrice.text = offerPriceMsg.net_price;
             inputRegistrationPrice.text = offerPriceMsg.registration_price;
             inputFinancial.text = offerPriceMsg.financial_agents_price;
@@ -1313,7 +1333,7 @@ public class PriceManager : MonoBehaviour
 
             inputOfferPrice.text = offerPriceMsg.officialPrice;
             inputBargainPrice.text = offerPriceMsg.bargainPrice;
-            Debug.Log( inputCarPrice.text+"   "+offerPriceMsg.net_price);
+        
             Toggle toggle;
             switch (offerPriceMsg.registration_area_type)
             {
@@ -1363,7 +1383,7 @@ public class PriceManager : MonoBehaviour
     //保存数据
     public  void SavePlayerJson(List<PriceInfo> player)//保存车辆信息
     {
-        Debug.Log("保存数据，长度"+player.Count);
+       // Debug.Log("保存数据，长度"+player.Count);
         string path = Application.persistentDataPath+"/priceinfos.json";
         if (!File.Exists(path))
         {
@@ -1379,7 +1399,7 @@ public class PriceManager : MonoBehaviour
 
     public  void SavePlayerJson(List<string> player)//保存议价信息
     {
-        Debug.Log("保存数据，长度"+player.Count);
+      //  Debug.Log("保存数据，长度"+player.Count);
         string path = Application.persistentDataPath+"/hadPrice.json";
         if (!File.Exists(path))
         {
@@ -1395,7 +1415,7 @@ public class PriceManager : MonoBehaviour
         string path = Application.persistentDataPath+"/hadPrice.json";
         if(File.Exists(path)){
             var content = File.ReadAllText(path);
-            Debug.Log(" content "+content);
+           // Debug.Log(" content "+content);
             if (content.Length==0)
             {
                 return;
@@ -1406,7 +1426,7 @@ public class PriceManager : MonoBehaviour
             {
                 if (playerData.data.Count!=0)
                 {
-                    Debug.Log(playerData.data.Count .ToString());
+                   // Debug.Log(playerData.data.Count .ToString());
                     putSJ= playerData.data;
                     
                 }
@@ -1435,18 +1455,18 @@ public class PriceManager : MonoBehaviour
         string path = Application.persistentDataPath+"/priceinfos.json";
         if(File.Exists(path)){
             var content = File.ReadAllText(path);
-            Debug.Log(" content "+content);
+           // Debug.Log(" content "+content);
             if (content.Length==0)
             {
                 return null;
             }
             var playerData =JsonMapper.ToObject<SaveFile>(content) ;//JsonUtility.FromJson<SaveFile>(content);
-            Debug.Log( JsonMapper.ToJson(playerData));
+          //  Debug.Log( JsonMapper.ToJson(playerData));
             if (playerData.data!=null  )
             {
                 if (playerData.data.Count!=0)
                 {
-                    Debug.Log(playerData.data.Count .ToString());
+                   // Debug.Log(playerData.data.Count .ToString());
                     return playerData.data;
                 }
                 else
